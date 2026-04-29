@@ -1,9 +1,24 @@
 # Approaches to Branching and Merging
 
 - How long should a branch live?
+
+Branches should live a week or less 
+
 - What is the process for merging?
+
+Main branch is protected. Use pull requests for all merges on to main. 
+
 - Will your tribe use pull requests?
+
+Yes, but a different person has to review. Thorough PR description.
+
 - What are the naming conventions for branches and commits?
+
+action verb + description
+
+feature/
+fix/
+
 
 You may want to read [Trunk-Based Development for Beginners](https://medium.com/@J.R.Ingram/trunk-based-development-for-beginners-rules-styles-and-release-strategies-e48c4e214ef1) or alternatively [A Comprehensive Guide to Git Branching Strategies](https://dev.to/karmpatel/git-branching-strategies-a-comprehensive-guide-24kh_)
 )
