@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      react-runtime:
+        patterns:
+          - react
+          - react-dom
+          - '@types/react'
+          - '@types/react-dom'
+      vite-vitest:
+        patterns:
+          - vite
+          - '@vitejs/plugin-react'
+          - vitest
+          - '@vitest/ui'
+          - '@vitest/coverage-v8'
+          - jsdom
+      eslint-tooling:
+        patterns:
+          - eslint
+          - '@typescript-eslint/*'
+          - eslint-*
+      formatting-maintenance:
+        patterns:
+          - prettier
+          - lint-staged
+          - husky
