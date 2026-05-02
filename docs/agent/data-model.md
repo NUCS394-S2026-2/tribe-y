@@ -7,7 +7,7 @@ Owned by **WORKING_GROUP_ARCH_DESIGN**. Read before writing any code that touche
 ```typescript
 // Move to src/shared/types/User.ts once finalized
 export interface User {
-  uid: string;        // Firebase Auth UID — primary key
+  uid: string; // Firebase Auth UID — primary key
   email: string;
   displayName: string;
   // TODO: add fields as guild decides

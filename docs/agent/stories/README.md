@@ -8,6 +8,6 @@ Use `docs/agent/stories/_template.md` for new stories.
 
 ## Index
 
-| Slug | Title | State | GitHub issue |
-|---|---|---|---|
+| Slug         | Title                   | State   | GitHub issue    |
+| ------------ | ----------------------- | ------- | --------------- |
 | _STORY_SLUG_ | _Your first story here_ | _Draft_ | _#ISSUE_NUMBER_ |

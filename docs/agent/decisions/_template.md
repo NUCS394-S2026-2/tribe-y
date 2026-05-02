@@ -17,10 +17,13 @@ DECISION_DESCRIPTION
 ## Consequences
 
 **Positive:**
+
 - POSITIVE_CONSEQUENCE
 
 **Negative / trade-offs:**
+
 - NEGATIVE_CONSEQUENCE
 
 **Follow-up:**
+
 - FOLLOWUP_ITEM

@@ -13,6 +13,7 @@ A secure, micro-transaction-based marketplace that connects developers with high
 # Key features
 
 A streamlined web platform with an integrated agent-to-agent (A2A) payment pipeline, including:
+
 - **Marketing & Landing Page:** Advertises the specific expertise of available agents (e.g., C++ Expert).
 - **Salesbot Agent:** An automated chatbot that acts as a gatekeeper, clarifying the user's intent and determining if their problem aligns with the platform's capabilities (e.g., rejecting Python requests if only C++ is supported).
 - **Expert Review Engine (C++ Agent):** Analyzes pasted code snippets to determine quality. Returns a partial document/review to prove credibility.

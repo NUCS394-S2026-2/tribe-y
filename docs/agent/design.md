@@ -26,9 +26,9 @@ Every shipped component must have:
 
 ## Team Color Spike (Iteration 0 only)
 
-| Team | Hex | Notes |
-|---|---|---|
-| Red | #D32F2F | Colorblind accessible |
+| Team   | Hex     | Notes                 |
+| ------ | ------- | --------------------- |
+| Red    | #D32F2F | Colorblind accessible |
 | Orange | #E65100 | Colorblind accessible |
-| Blue | #1565C0 | Colorblind accessible |
+| Blue   | #1565C0 | Colorblind accessible |
 | Yellow | #F9A825 | Colorblind accessible |

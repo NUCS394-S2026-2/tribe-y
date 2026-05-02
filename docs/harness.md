@@ -6,20 +6,20 @@ This is the registry of every harness control in our tribe. Every time we add a 
 
 ## Controls
 
-| Control | Direction | Type | File or command | Owner |
-|---|---|---|---|---|
-| Agent brief | feedforward | inferential | `/AGENTS.md` | WORKING_GROUP_DEV_PRACTICES |
-| Claude Code wrapper | feedforward | inferential | `/CLAUDE.md` | WORKING_GROUP_DEV_PRACTICES |
-| Copilot instructions | feedforward | inferential | `/.github/copilot-instructions.md` | WORKING_GROUP_DEV_PRACTICES |
-| Architecture guide | feedforward | inferential | `/docs/agent/architecture.md` | WORKING_GROUP_ARCH_DESIGN |
-| Design guide | feedforward | inferential | `/docs/agent/design.md` | WORKING_GROUP_ARCH_DESIGN |
-| Testing guide | feedforward | inferential | `/docs/agent/testing.md` | WORKING_GROUP_DEV_PRACTICES |
-| Data model guide | feedforward | inferential | `/docs/agent/data-model.md` | WORKING_GROUP_ARCH_DESIGN |
-| Story spec requirement | feedforward | inferential | `/docs/agent/stories/` | WORKING_GROUP_CUSTOMER |
-| ESLint | feedback | computational | `npm run lint` (pre-commit + CI) | WORKING_GROUP_DEV_PRACTICES |
-| TypeScript strict | feedback | computational | `npm run build` (CI) | WORKING_GROUP_DEV_PRACTICES |
-| Vitest | feedback | computational | `npm test` (CI) | WORKING_GROUP_DEV_PRACTICES |
-| CI workflow | feedback | computational | `.github/workflows/ci.yml` | WORKING_GROUP_DEV_PRACTICES |
+| Control                | Direction   | Type          | File or command                    | Owner                       |
+| ---------------------- | ----------- | ------------- | ---------------------------------- | --------------------------- |
+| Agent brief            | feedforward | inferential   | `/AGENTS.md`                       | WORKING_GROUP_DEV_PRACTICES |
+| Claude Code wrapper    | feedforward | inferential   | `/CLAUDE.md`                       | WORKING_GROUP_DEV_PRACTICES |
+| Copilot instructions   | feedforward | inferential   | `/.github/copilot-instructions.md` | WORKING_GROUP_DEV_PRACTICES |
+| Architecture guide     | feedforward | inferential   | `/docs/agent/architecture.md`      | WORKING_GROUP_ARCH_DESIGN   |
+| Design guide           | feedforward | inferential   | `/docs/agent/design.md`            | WORKING_GROUP_ARCH_DESIGN   |
+| Testing guide          | feedforward | inferential   | `/docs/agent/testing.md`           | WORKING_GROUP_DEV_PRACTICES |
+| Data model guide       | feedforward | inferential   | `/docs/agent/data-model.md`        | WORKING_GROUP_ARCH_DESIGN   |
+| Story spec requirement | feedforward | inferential   | `/docs/agent/stories/`             | WORKING_GROUP_CUSTOMER      |
+| ESLint                 | feedback    | computational | `npm run lint` (pre-commit + CI)   | WORKING_GROUP_DEV_PRACTICES |
+| TypeScript strict      | feedback    | computational | `npm run build` (CI)               | WORKING_GROUP_DEV_PRACTICES |
+| Vitest                 | feedback    | computational | `npm test` (CI)                    | WORKING_GROUP_DEV_PRACTICES |
+| CI workflow            | feedback    | computational | `.github/workflows/ci.yml`         | WORKING_GROUP_DEV_PRACTICES |
 
 ## Terminology
 
@@ -38,6 +38,6 @@ This is the registry of every harness control in our tribe. Every time we add a 
 
 _When the tribe adds a control in response to an incident, record it here: what went wrong, what was added, what sprint._
 
-| Sprint | Incident | Control added |
-|---|---|---|
+| Sprint      | Incident          | Control added    |
+| ----------- | ----------------- | ---------------- |
 | _SPRINT_ID_ | _What went wrong_ | _What was added_ |

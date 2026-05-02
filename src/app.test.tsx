@@ -1,44 +1,59 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { describe, expect, test } from 'vitest';
 
 import App from './App';
 
 describe('App component', () => {
-  test('renders the heading and links', () => {
+  test('renders the TRIBE Y Teams banner', () => {
     render(<App />);
-    expect(screen.getByText(/Vite \+ React \+ Typescript/)).toBeInTheDocument();
-    expect(screen.getByText('Learn React')).toBeInTheDocument();
-    expect(screen.getByText('Vite Docs')).toBeInTheDocument();
-    expect(screen.getByText('Vitest Docs')).toBeInTheDocument();
+    expect(screen.getByText('TRIBE Y Teams')).toBeInTheDocument();
   });
 
-  test('counter should be 0 at the start', () => {
+  test('renders all Orange team members', () => {
     render(<App />);
-    expect(screen.getByText('count is: 0')).toBeInTheDocument();
+    const orangeNames = [
+      'Miggiani, Abigail',
+      'Ma, Fay',
+      'Press, Jack',
+      'Turinumugisha, Souvenir',
+      'Iyer, Damini',
+    ];
+    orangeNames.forEach((name) => {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    });
   });
 
-  test('counter should increment by one when clicked', async () => {
-    const user = userEvent.setup();
+  test('renders all Yellow team members', () => {
     render(<App />);
-    const counter = screen.getByRole('button');
-    await user.click(counter);
-    expect(screen.getByText('count is: 1')).toBeInTheDocument();
+    const yellowNames = [
+      'Wu, Andy',
+      'Wu, Jefferson',
+      'Hir, Stanley',
+      'Huang, Yimin',
+      'Hsieh, Gabriel P.',
+    ];
+    yellowNames.forEach((name) => {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    });
   });
 
-  test('counter should increment multiple times', async () => {
-    const user = userEvent.setup();
+  test('renders clickable email links for all members', () => {
     render(<App />);
-    const counter = screen.getByRole('button');
-    await user.click(counter);
-    await user.click(counter);
-    await user.click(counter);
-    expect(screen.getByText('count is: 3')).toBeInTheDocument();
-  });
-
-  test('renders the logo image', () => {
-    render(<App />);
-    const logo = screen.getByAltText('logo');
-    expect(logo).toBeInTheDocument();
+    const emails = [
+      'abbymiggiani2026@u.northwestern.edu',
+      'fayma2029@u.northwestern.edu',
+      'jackpress2027@u.northwestern.edu',
+      'souvenirturinumugisha2028@u.northwestern.edu',
+      'daminiiyer2026@u.northwestern.edu',
+      'andywu2025@u.northwestern.edu',
+      'jeffersonwu2027@u.northwestern.edu',
+      'stanleyhir2027@u.northwestern.edu',
+      'yiminhuang2028@u.northwestern.edu',
+      'gabrielhsieh2026@u.northwestern.edu',
+    ];
+    emails.forEach((email) => {
+      const link = screen.getByRole('link', { name: email });
+      expect(link).toHaveAttribute('href', `mailto:${email}`);
+    });
   });
 });
