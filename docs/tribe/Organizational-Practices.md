@@ -14,11 +14,10 @@ Since Team Yellow and Team Orange are working in parallel on the compass.tne.ai 
 * **Required attendance:** The two active Product Owners and at least one technical representative from both Team Yellow and Team Orange must be present. (All members are highly encouraged to attend).
 
 ## Team Communication
-Our principal method of asynchronous communication is **Discord**. 
+Our principal method of asynchronous communication is **iMessage**. 
 
-* We maintain a dedicated Tribe Discord server with specific channels for `#general-chat`, `#team-yellow`, `#team-orange`, and `#github-alerts` (where PRs and issue updates are piped via webhook).
-* **Join Link:** `[Insert Discord Invite Link Here]`
-* For formal client communications and deliverables with Rich, we use Email, managed by the active Product Owners.
+* We maintain a dedicated Tribe Group Chat 
+* For formal client communications and deliverables with Rich, we use WhatsApp, managed by the active Product Owners.
 
 ## Client Meeting Time
 * **Meeting Cadence:** Weekly on `[Insert Day of the Week, e.g., Thursdays]` at `[Insert Time]`.
