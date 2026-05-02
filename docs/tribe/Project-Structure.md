@@ -1,19 +1,15 @@
-What are the folders within the repository the team is using?
+# Project Structure
 
-for example:
+Our repository is organized to clearly separate human-readable documentation, AI agent instructions, and the actual application source code. 
 
-The `src/` folder contains the code for the project.
+As a React/TypeScript project with a Firebase backend, the codebase follows a standard component-driven architecture.
 
-```
-src/
-    components/    # React components
-    hooks/         # Custom React hooks
-    utils/         # Utility functions
-    types/         # TypeScript types and interfaces
-    services/      # API calls, Firebase interactions, etc.
-    styles/        # CSS or styling files
+## Root Directory Overview
 
-```
-
-It's a web/typescript project
-...
+```text
+/
+├── docs/               # All project documentation (Tribe and Agent)
+├── src/                # Main application source code
+├── public/             # Static assets (images, favicon, etc.)
+├── package.json        # Node.js dependencies and scripts
+└── firebase.json       # Firebase hosting and deployment configuration
