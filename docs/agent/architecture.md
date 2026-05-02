@@ -1,25 +1,28 @@
 # Architecture Guide
 
-Owned by **WORKING_GROUP_ARCH_DESIGN**. Read before touching more than one file or crossing a team boundary.
+Owned by **Architecture/Design Guild**. Read before touching more than one file or crossing a team boundary.
 
 ## System Context
 
-TRIBE_NAME builds a React SPA for CLIENT_NAME. Firebase Auth handles identity; Cloud Firestore handles persistence. No backend services in scope for 2026 — all logic runs client-side except Firestore security rules.
+Tribe Y builds a React SPA for compass.tne.ai. Firebase Auth handles identity; Cloud Firestore handles persistence. No backend services in scope for 2026 — all logic runs client-side except Firestore security rules.
 
 ## ADRs
 
 | #                                                    | Title                      | Status   |
 | ---------------------------------------------------- | -------------------------- | -------- |
 | [0001](decisions/0001-use-this-harness-structure.md) | Use this harness structure | Accepted |
-| NNNN                                                 | DECISION_TITLE             | STATUS   |
 
 ## File
 
-Link back to the [Project Structure](/docs//tribe/Project-Structure.md) doc. If there are variations or autonomy per team/guild describe and/or link here.
+See [Project Structure](../tribe/Project-Structure.md) for details. Team Yellow owns the chat and payment UI; Team Orange owns the agent logic and backend integration. Shared utilities are in `src/shared/` and require approval from both teams for changes.
 
 ## Team Ownership
 
-Describe team ownership of the codebase here, or link to a separate doc if more appropriate. Describe anything about the structure of the files in the codebase. Include any cross-team dependencies and how to navigate them.
+| Team   | Owned path    | Notes                                 |
+| ------ | ------------- | ------------------------------------- |
+| Yellow | `src/chat/`   | Chat UI, payment, receipt, onboarding |
+| Orange | `src/agents/` | Bjarne-bot, code review, A2A, X.402   |
+| Shared | `src/shared/` | Types, utilities, billing logic       |
 
 <!-- | Team | Owned path | Notes |
 |---|---|---|
@@ -34,4 +37,4 @@ Until the ownership map is filled in, treat all of `src/` as shared; any structu
 
 ## Cross-Team Dependencies
 
-Describe any shared utilities, components, or contracts here, along with who owns them and how to get approval for changes. e.g. a firebase hook.
+Shared: `src/shared/` (types, billing, Firestore hooks). Changes require approval from both teams. Example: Firestore hooks for payment status, billing, and code review results.

@@ -1,18 +1,16 @@
 # Design Guide
 
-Owned by **WORKING_GROUP_ARCH_DESIGN**. Read before creating or modifying any component.
+Owned by **Architecture/Design Guild**. Read before creating or modifying any component.
 
 ## Styling — decide in Iteration 0
 
-No styling approach is committed. **Do not assume Tailwind or any CSS framework.** WORKING_GROUP_ARCH_DESIGN records the decision as ADR 0002. Options to evaluate (must work with Vite 8 + React 19): CSS modules, Tailwind, CSS-in-JS.
-
-**Current status:** STYLING_APPROACH_STATUS
+**Styling approach:** CSS Modules (no Tailwind, no CSS-in-JS). All components use locally-scoped styles. Color palette is defined below.
 
 ## Component Conventions
 
-- When to create new vs extend existing: COMPONENT_CREATION_GUIDELINES
-- File organization (co-location, naming): COMPONENT_FILE_ORGANIZATION
-- Token names (colors, spacing) once styling is decided: COLOR_AND_SPACING_TOKENS
+- Create a new component for each major UI element (chat, payment modal, receipt, agent card). Extend only if the UI logic is shared.
+- Co-locate styles with components. Use PascalCase for React components, kebab-case for folders.
+- Color tokens: `primary: #1565C0`, `secondary: #F9A825`, `danger: #D32F2F`, `success: #388E3C`.
 
 ## Accessibility Minimums
 
@@ -22,7 +20,8 @@ Every shipped component must have:
 - Meaningful `alt` text on images (`alt=""` for decorative)
 - WCAG AA contrast (4.5:1 normal text, 3:1 large text)
 - `<label>` elements associated with inputs
-- ADDITIONAL_A11Y_REQUIREMENTS
+
+- All interactive elements must be keyboard accessible. Use ARIA roles for custom widgets. All modals must trap focus.
 
 ## Team Color Spike (Iteration 0 only)
 

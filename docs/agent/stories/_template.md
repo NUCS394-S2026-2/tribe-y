@@ -1,43 +1,74 @@
-# Story: STORY_TITLE
+# Story: Chat with Bjarne-bot and Secure Code Review
 
-**Slug:** `STORY_SLUG` | **Status:** Draft | Ready | In Progress | Done
-**Issue:** #ISSUE_NUMBER | **Team:** TEAM_COLOR
-
-<!-- See Agile Samurai for more on user stories, chapter 6.  We will also discuss in more detail in class.  LLM's are familiar with the format from their training set and it helps frame the work in terms of user value and testable acceptance criteria.  A good approach is often to have the LLM generate the fist draft from your prompt. For example "Write a user story for a feature that allows users to reset their password, use (reference this file) as a template including acceptance criteria and a test plan." Then you can edit the output to fit your specific needs. -->
-
--->
+**Slug:** `chat-bjarne-bot` | **Status:** Draft
+**Issue:** #1 | **Team:** Yellow
 
 ---
 
 ## User Story
 
-> As a USER_ROLE, I want DESIRED_ACTION so that BENEFIT.
+> As a Technical Manager (ICP), I want to interact with a Bjarne-bot via a web chat interface, submit C++ code for review, and receive actionable feedback, so that I can quickly assess code quality and make informed decisions about my codebase or acquisition target.
 
 ## Acceptance Criteria
 
-**AC-1:** Given GIVEN_CONDITION, When WHEN_ACTION, Then THEN_OUTCOME.
-**AC-2:** Given GIVEN_CONDITION_2, When WHEN_ACTION_2, Then THEN_OUTCOME_2.
-**AC-3 (error):** Given GIVEN_ERROR_CONDITION, When WHEN_ERROR_ACTION, Then THEN_ERROR_OUTCOME.
+**AC-1:** Given a new user lands on the homepage, When they open the chat, Then the Bjarne-bot greets them and asks about their goals and pain points (PAS: Problem, Anxiety, Solution).
+
+**AC-2:** Given the user pastes a C++ code snippet, When they submit it, Then the Bjarne-bot analyzes the code and returns a partial review (teaser) with actionable comments.
+
+**AC-3:** Given the user requests the full review, When prompted for payment, Then the system issues an X.402 payment request and displays wallet/testnet instructions.
+
+**AC-4:** Given the user completes the payment on the testnet, When the transaction is confirmed, Then the full review is unlocked and a Solid Vault Receipt is issued.
+
+**AC-5 (error):** Given the payment fails or is not confirmed, When the user requests the full review, Then the system displays an error and instructions to retry or contact support.
 
 ## Technical Approach
 
-_2–3 paragraphs. Reference `docs/agent/` guides. Don't over-specify._
+The chat interface is implemented as a React component using TypeScript, styled with CSS modules. The Bjarne-bot agent is powered by a backend LLM (Claude or Copilot) and integrates with a C++ code analysis engine. The A2A (agent-to-agent) model card and advertising system are surfaced in the chat sidebar, showing available expert agents and their specialties.
 
-| File                | Change             |
-| ------------------- | ------------------ |
-| `src/PATH/FILE.tsx` | CHANGE_DESCRIPTION |
+Payment is handled via the X.402 draft standard, using a testnet wallet for crypto transactions. The system tracks token usage and billing via a Firestore collection. Upon payment, the backend verifies the transaction and unlocks the full review, issuing a Solid Vault Receipt.
+
+All user interactions, code submissions, and payment events are logged for auditability. The architecture follows the guides in `docs/agent/architecture.md`, `docs/agent/data-model.md`, and `docs/agent/design.md`.
+
+| File                         | Change                                     |
+| ---------------------------- | ------------------------------------------ |
+| `src/components/Chat.tsx`    | New chat interface with Bjarne-bot         |
+| `src/agents/bjarneBot.ts`    | LLM-powered agent logic                    |
+| `src/components/Payment.tsx` | X.402 payment modal and wallet integration |
+| `src/utils/billing.ts`       | Token counting and billing logic           |
+| `src/pages/Receipt.tsx`      | Solid Vault Receipt display                |
 
 ## Interfaces
 
 ```typescript
-interface NEW_TYPE {
-  field: TYPE;
+interface ChatMessage {
+  sender: 'user' | 'bjarne-bot';
+  content: string;
+  timestamp: string; // ISO 8601
+}
+
+interface PaymentRequest {
+  amount: number;
+  currency: 'TESTNET';
+  walletAddress: string;
+  status: 'pending' | 'confirmed' | 'failed';
+}
+
+interface CodeReview {
+  code: string;
+  partialFeedback: string;
+  fullFeedback?: string;
+  paid: boolean;
+  receiptId?: string;
 }
 ```
 
 ## Test Plan
 
-- **Unit:** UNIT_TEST_DESCRIPTION (mirrors AC-1)
+- **Unit:** Bjarne-bot greets user and asks PAS questions (AC-1)
+- **Unit:** Code analysis returns partial review for C++ snippet (AC-2)
+- **Integration:** Payment modal issues X.402 request and updates on testnet confirmation (AC-3, AC-4)
+- **Integration:** Full review unlocks and receipt is generated after payment (AC-4)
+- **Error:** Payment failure displays error and retry instructions (AC-5)
 - **Integration:** INTEGRATION_TEST_DESCRIPTION
 - **Manual:** MANUAL_VERIFICATION_STEP
 

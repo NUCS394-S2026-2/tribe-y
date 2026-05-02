@@ -4,12 +4,12 @@ All `ALL_CAPS` placeholders that should be replaced before agents can be fully u
 
 ## Global Setup Tokens
 
-| Token                         | Description                      |
-| ----------------------------- | -------------------------------- |
-| `TRIBE_NAME`                  | Your tribe/team name             |
-| `CLIENT_NAME`                 | Client the app is built for      |
-| `WORKING_GROUP_ARCH_DESIGN`   | Architecture & design guild name |
-| `WORKING_GROUP_DEV_PRACTICES` | Dev practices guild name         |
+| Token                         | Description                 |
+| ----------------------------- | --------------------------- |
+| `TRIBE_NAME`                  | Tribe Y                     |
+| `CLIENT_NAME`                 | compass.tne.ai              |
+| `WORKING_GROUP_ARCH_DESIGN`   | Architecture/Design Guild   |
+| `WORKING_GROUP_DEV_PRACTICES` | Development Practices Guild |
 
 ## Architecture Tokens
 
