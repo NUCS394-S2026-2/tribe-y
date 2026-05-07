@@ -1,20 +1,62 @@
-# Purpose
+# Tribe Home: compass.tne.ai
 
-This is the example project documentation for a Tribe. The home page should discuss which teams are part of the tribe and who the client is. Each Team should have a page and list the people who are part of that team.
+Welcome to the documentation for our Tribe. We are tasked with building the foundation for **compass.tne.ai**, an AI-driven code review and marketplace platform.
 
-# Key Elements of the Tribe Project Documentation
+This Iteration 0 repository defines our architectural spike, development rules, and team structures as we prepare to implement the core agent-to-agent (A2A) and X.402 micropayment workflows.
 
-Additionally, the home page should link to an area for the tribe's [Organizational Practices](Organizational-Practices.md), [Development Practices](Development-Practices.md), and [Client Information](Client-Information.md).
+## Our Teams
 
-Go to the [Architecture Overview](Architecture-Overview.md) to see how this application is structured at a high level
+To fulfill the project requirements, our tribe is divided into two core teams working in parallel:
 
-# Attribution
+### [Team Yellow](Team-Yellow.md)
 
-to help with attributing work in the project documentation; please indicate who and what team worked on authoring the page, e.g. (written by team gray @toddwseattle). Project Documentations are repos; so the commits can help with who authored what but we expect you to collaborate so the commits will only sort of be representative. If a "guild" is working on a page, create a page indicating who is in the guild that authored the page; e.g.
+- Stanley
+- Jefferson
+- Gabe
+- Yimin
+- Andy
 
-## Teaching Guild
+### [Team Orange](Team-Orange.md)
 
-| Team | Name          |
-| ---- | ------------- |
-| Gray | Todd Warren   |
-| Gray | Paula Kayango |
+- Jack
+- Fay
+- Souvenir
+- Damini
+- Abby
+
+_(Note: Please click the links above to see specific team rosters and responsibilities)._
+
+---
+
+## Tribe Documentation Navigation
+
+Here are the core guidelines and practices that govern how our teams operate together:
+
+- **[Organizational Practices](Organizational-Practices.md):** How we communicate, merge code, and manage our GitHub Kanban backlog.
+- **[Development Practices](Development-Practices.md):** Our coding standards, AI agent instructions (Claude/Copilot), and testing expectations.
+- **[Architecture Overview](Architecture-Overview.md):** A high-level look at our Firebase container setup, data models, and CSS styling decisions.
+- **[Client Information](Client-Information.md):** Details on the compass.tne.ai MVP, including the Priority Stack and user personas.
+
+---
+
+## Attribution & Guilds
+
+Since we are operating as a lean, team we have formed "Guilds" to establish the foundational rules across the tribe.
+
+### Architecture / Design Guild
+
+_Focuses on the structural spike, UI decisions, and data modeling._
+| Team | Name |
+| :--- | :--- |
+| Yellow | Jefferson |
+| Yellow | Stanley |
+
+### Organizational & Development Practices Guild
+
+_Focuses on the `docs/tribe` backlog processes and the AI Agent Harness (`AGENTS.md`)._
+| Team | Name |
+| :--- | :--- |
+| Yellow | Stanley |
+| Yellow | Jefferson |
+
+_(Written and maintained by Team Yellow & Team Orange)_

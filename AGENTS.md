@@ -1,23 +1,21 @@
-# AGENTS.md — Agent Brief for TRIBE_NAME
-
-<!-- Placeholder — replace ALL_CAPS tokens with your tribe's values. Delete this comment when done. -->
+# AGENTS.md — Agent Brief for Tribe Y
 
 ## Project Summary
 
-TRIBE_NAME is a Northwestern CS394 2026 multi-team client project building a web application for CLIENT_NAME. The tribe consists of approximately 15 students split across four color-coded teams (Red, Orange, Blue, Yellow). All teams contribute to a single shared codebase. This file is the canonical entry point for any coding agent working in this repository; read it before doing anything else, then follow the pointers into `docs/agent/` for detail.
+Tribe Y is a Northwestern CS394 2026 multi-team client project building a web application for compass.tne.ai. The tribe consists of approximately 15 students split across two core teams (Yellow, Orange). All teams contribute to a single shared codebase. This file is the canonical entry point for any coding agent working in this repository; read it before doing anything else, then follow the pointers into `docs/agent/` for detail.
 
 ## Stack
 
-| Layer              | Technology                                        |
-| ------------------ | ------------------------------------------------- |
-| UI framework       | React 19 (strict mode)                            |
-| Language           | TypeScript 5.9 (strict)                           |
-| Build tool         | Vite 8                                            |
-| Test runner        | Vitest 4 + React Testing Library                  |
-| Linter / formatter | ESLint 9 (flat config) + Prettier                 |
-| Pre-commit         | Husky + lint-staged                               |
-| Backend            | Firebase / Firestore (configuration TBD by tribe) |
-| Styling            | TBD by tribe — do not assume Tailwind             |
+| Layer              | Technology                        |
+| ------------------ | --------------------------------- |
+| UI framework       | React 19 (strict mode)            |
+| Language           | TypeScript 5.9 (strict)           |
+| Build tool         | Vite 8                            |
+| Test runner        | Vitest 4 + React Testing Library  |
+| Linter / formatter | ESLint 9 (flat config) + Prettier |
+| Pre-commit         | Husky + lint-staged               |
+| Backend            | Firebase / Firestore              |
+| Styling            | CSS Modules (no Tailwind)         |
 
 ## Repo Layout
 

@@ -1,61 +1,41 @@
 import './App.css';
 
-import React, { useState } from 'react';
+import React from 'react';
 
-import logo from './394-2026-Logo.png';
+import TeamFrame from './components/TeamFrame';
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p className="header">
-          {' '}
-          🚀 Vite + React + Typescript + Vitest 🤘 & <br />
-          Eslint 🔥+ Prettier for Wildcats
-        </p>
-
-        <div className="body">
-          {' '}
-          <button onClick={() => setCount((count) => count + 1)}>
-            count is: {count}
-          </button>
-          <p> Don&apos;t forgot to install Eslint and Prettier in Your Vscode.</p>
-          <p>
-            Mess up the code in <code>App.tsx </code> and save the file.
-          </p>
-          <p>
-            <a
-              className="App-link"
-              href="https://reactjs.org"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn React
-            </a>
-            {' | '}
-            <a
-              className="App-link"
-              href="https://vitejs.dev/guide/features.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Vite Docs
-            </a>
-            {' | '}
-            <a
-              className="App-link"
-              href="https://vitest.dev/guide/features.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Vitest Docs
-            </a>
-          </p>
-        </div>
-      </header>
+    <div className="App" style={{ minHeight: '100vh', background: '#fafafa' }}>
+      <div
+        style={{
+          width: '100%',
+          background: '#222',
+          color: '#fff',
+          padding: '16px 0',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 1000,
+          textAlign: 'center',
+          fontSize: 28,
+          fontWeight: 700,
+          letterSpacing: 2,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        }}
+      >
+        TRIBE Y Teams
+      </div>
+      <main
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: 80,
+          padding: 24,
+        }}
+      >
+        <TeamFrame />
+      </main>
     </div>
   );
 }

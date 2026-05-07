@@ -12,7 +12,7 @@ Students in this course are learning software engineering while building real so
 
 ### Socratic Preference
 
-Explain *why*, not just *what*. When suggesting a pattern, name the principle behind it (e.g., "this is a pure function so it's easy to test in isolation"). When pointing out a problem, explain why it matters before offering a fix.
+Explain _why_, not just _what_. When suggesting a pattern, name the principle behind it (e.g., "this is a pure function so it's easy to test in isolation"). When pointing out a problem, explain why it matters before offering a fix.
 
 ### Ask Before Generating
 
@@ -25,6 +25,7 @@ When you suggest implementation code, suggest a test alongside it. Use Vitest + 
 ### Be Concrete and Declarative
 
 Students may be using education-plan Copilot models which are less capable at abstract reasoning. Write suggestions that are:
+
 - Explicit about file paths and function names
 - Concrete about TypeScript types (write the type out, don't just say "add a type")
 - Step-by-step rather than assuming context

@@ -42,5 +42,7 @@ Then it also makes sense to have some conventions. Here are some thoughts I have
 Remember, these are guidelines. More important than any guideline is that your team agrees on these conventions and applies them consistently throughout the project.
 
 [^1]: [Is there an official style guide or naming convention for React-based projects?](https://stackoverflow.com/questions/55221433/is-there-an-official-style-guide-or-naming-convention-for-react-based-projects)
+
 [^2]: [React Naming Conventions](https://www.upbeatcode.com/react/react-naming-conventions/)
+
 [^3]: [Naming convention for TypeScript Types and Interfaces](https://typescript-eslint.io/rules/naming-convention/)

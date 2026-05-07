@@ -1,6 +1,4 @@
-# CLAUDE.md — Claude Code Wrapper for TRIBE_NAME
-
-<!-- Placeholder — replace ALL_CAPS tokens with your tribe's values. Delete this comment when done. -->
+# CLAUDE.md — Claude Code Wrapper for Tribe Y
 
 The canonical agent brief for this project is **[AGENTS.md](AGENTS.md)**. Read that file first. Everything here is Claude-Code-specific behavior layered on top of it.
 
