@@ -2,14 +2,15 @@
 .shell {
   display: flex;
   height: 100vh;
-  background: #212121;
-  color: #ececec;
+  background: var(--primary);
+  color: var(--contrast);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .sidebar {
   width: 260px;
-  background: #171717;
+  background: var(--surface);
+  border-right: 1px solid var(--surface-border);
   display: flex;
   flex-direction: column;
   padding: 12px 8px;
@@ -17,18 +18,21 @@
 }
 
 .sidebarLogo {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #ececec;
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--contrast);
   padding: 10px 12px;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.03em;
 }
 
 .sidebarSub {
   font-size: 0.7rem;
-  color: #8e8ea0;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   padding: 0 12px 16px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--surface-border);
 }
 
 .newChatBtn {
@@ -36,43 +40,22 @@
   align-items: center;
   gap: 10px;
   background: transparent;
-  border: 1px solid #3a3a3a;
-  border-radius: 8px;
-  color: #ececec;
+  border: 1px solid var(--surface-border);
+  color: var(--contrast);
   padding: 10px 12px;
   font-size: 0.875rem;
   cursor: pointer;
   margin-top: 12px;
   width: 100%;
   text-align: left;
-  transition: background 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .newChatBtn:hover {
-  background: #2a2a2a;
-}
-
-.sidebarSection {
-  font-size: 0.7rem;
-  color: #8e8ea0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 20px 12px 8px;
-}
-
-.sidebarItem {
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  color: #c5c5d2;
-  cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sidebarItem:hover {
-  background: #2a2a2a;
+  background: var(--surface-bright);
+  border-color: var(--accent);
 }
 
 /* ── Main ── */
@@ -81,6 +64,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--primary);
 }
 
 .topbar {
@@ -88,12 +72,12 @@
   align-items: center;
   justify-content: center;
   padding: 14px 24px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--surface-border);
   font-size: 0.875rem;
   font-weight: 600;
-  color: #ececec;
+  color: var(--contrast);
   flex-shrink: 0;
-  position: relative;
+  background: var(--surface);
 }
 
 .topbarModel {
@@ -101,13 +85,18 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  color: #ececec;
+  color: var(--contrast);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .topbarModel svg {
   width: 14px;
   height: 14px;
-  opacity: 0.6;
+  opacity: 0.5;
+  color: var(--accent);
 }
 
 /* ── Messages ── */
@@ -122,7 +111,7 @@
   width: 6px;
 }
 .messages::-webkit-scrollbar-thumb {
-  background: #3a3a3a;
+  background: var(--surface-border);
   border-radius: 3px;
 }
 
@@ -148,47 +137,44 @@
 .avatar {
   width: 32px;
   height: 32px;
-  border-radius: 4px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
   margin-top: 2px;
+  border: 1px solid var(--surface-border);
 }
 
 .avatarUser {
-  background: #19c37d;
-  color: #fff;
+  background: var(--surface-bright);
+  color: var(--contrast);
 }
 
 .avatarBot {
-  background: #ab68ff;
-  color: #fff;
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--accent);
+  border-color: rgba(34, 211, 238, 0.3);
 }
 
 .messageBubble {
   flex: 1;
   font-size: 0.9375rem;
   line-height: 1.7;
-  color: #ececec;
+  color: var(--contrast);
   padding-top: 4px;
-}
-
-.userBubble {
-  background: transparent;
 }
 
 /* ── Code block in message ── */
 .codeBlock {
-  background: #1e1e2e;
-  border: 1px solid #313244;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   padding: 16px;
-  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.8rem;
-  color: #cdd6f4;
+  color: var(--accent);
   overflow-x: auto;
   white-space: pre;
   margin-top: 8px;
@@ -196,28 +182,28 @@
 
 /* ── Review card ── */
 .reviewCard {
-  background: #1a1a2e;
-  border: 1px solid #2a2a4a;
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   padding: 20px;
   margin-top: 8px;
 }
 
 .reviewCardTitle {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #ab68ff;
+  letter-spacing: 0.1em;
+  color: var(--accent);
   margin-bottom: 12px;
 }
 
 .reviewCardBody {
   font-size: 0.875rem;
-  color: #c5c5d2;
+  color: var(--text-muted);
   line-height: 1.7;
   white-space: pre-wrap;
-  font-family: 'Fira Code', monospace;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .reviewCardActions {
@@ -228,20 +214,20 @@
 
 /* ── Payment card ── */
 .paymentCard {
-  background: #1a1a1a;
-  border: 1px solid #3a3a3a;
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   padding: 20px;
   margin-top: 8px;
   max-width: 440px;
 }
 
 .paymentCardTitle {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #f9a825;
+  letter-spacing: 0.1em;
+  color: var(--status-warning);
   margin-bottom: 12px;
 }
 
@@ -250,7 +236,7 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 8px 0;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--surface-border);
   font-size: 0.8rem;
   gap: 12px;
 }
@@ -260,33 +246,34 @@
 }
 
 .paymentLabel {
-  color: #8e8ea0;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .paymentValue {
-  color: #ececec;
-  font-family: monospace;
+  color: var(--contrast);
+  font-family: 'JetBrains Mono', monospace;
   word-break: break-all;
   text-align: right;
 }
 
 /* ── Receipt card ── */
 .receiptCard {
-  background: #0f1a0f;
-  border: 1px solid #1e3a1e;
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: 3px solid var(--status-success);
   padding: 20px;
   margin-top: 8px;
   max-width: 440px;
 }
 
 .receiptCardTitle {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #19c37d;
+  letter-spacing: 0.1em;
+  color: var(--status-success);
   margin-bottom: 12px;
 }
 
@@ -295,7 +282,7 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 8px 0;
-  border-bottom: 1px solid #1e3a1e;
+  border-bottom: 1px solid var(--surface-border);
   font-size: 0.8rem;
   gap: 12px;
 }
@@ -305,13 +292,13 @@
 }
 
 .receiptLabel {
-  color: #8e8ea0;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .receiptValue {
-  color: #ececec;
-  font-family: monospace;
+  color: var(--contrast);
+  font-family: 'JetBrains Mono', monospace;
   word-break: break-all;
   text-align: right;
 }
@@ -327,7 +314,8 @@
 .typingDot {
   width: 6px;
   height: 6px;
-  background: #8e8ea0;
+  background: var(--accent);
+  opacity: 0.5;
   border-radius: 50%;
   animation: bounce 1.2s infinite;
 }
@@ -352,30 +340,29 @@
 
 /* ── Code input card ── */
 .codeInputCard {
-  background: #1e1e2e;
-  border: 1px solid #313244;
-  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   padding: 16px;
   margin-top: 8px;
 }
 
 .codeInputLabel {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #ab68ff;
+  letter-spacing: 0.1em;
+  color: var(--accent);
   margin-bottom: 10px;
 }
 
 .codeInputArea {
   width: 100%;
   min-height: 180px;
-  background: #13131f;
-  border: 1px solid #313244;
-  border-radius: 6px;
-  color: #cdd6f4;
-  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  background: var(--primary);
+  border: 1px solid var(--surface-border);
+  color: var(--accent);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.8rem;
   padding: 12px;
   resize: vertical;
@@ -385,7 +372,7 @@
 }
 
 .codeInputArea:focus {
-  border-color: #ab68ff;
+  border-color: var(--accent);
 }
 
 .codeInputActions {
@@ -396,10 +383,9 @@
 
 /* ── Buttons ── */
 .btnPrimary {
-  background: #19c37d;
-  color: #fff;
+  background: var(--accent);
+  color: var(--primary);
   border: none;
-  border-radius: 6px;
   padding: 8px 18px;
   font-size: 0.8rem;
   font-weight: 700;
@@ -408,18 +394,17 @@
 }
 
 .btnPrimary:hover:not(:disabled) {
-  background: #1aab6d;
+  background: var(--contrast);
 }
 .btnPrimary:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .btnGold {
-  background: #f9a825;
-  color: #111;
+  background: var(--status-warning);
+  color: var(--primary);
   border: none;
-  border-radius: 6px;
   padding: 8px 18px;
   font-size: 0.8rem;
   font-weight: 700;
@@ -428,27 +413,29 @@
 }
 
 .btnGold:hover:not(:disabled) {
-  background: #ffc107;
+  background: #fcd34d;
 }
 .btnGold:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .btnGhost {
   background: transparent;
-  color: #ececec;
-  border: 1px solid #3a3a3a;
-  border-radius: 6px;
+  color: var(--contrast);
+  border: 1px solid var(--surface-border);
   padding: 8px 18px;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .btnGhost:hover {
-  background: #2a2a2a;
+  background: var(--surface-bright);
+  border-color: var(--contrast);
 }
 
 /* ── Bottom input bar ── */
@@ -456,15 +443,15 @@
   padding: 16px 24px 20px;
   display: flex;
   justify-content: center;
-  background: #212121;
+  background: var(--primary);
+  border-top: 1px solid var(--surface-border);
 }
 
 .inputWrap {
   width: 100%;
   max-width: 720px;
-  background: #2f2f2f;
-  border: 1px solid #3a3a3a;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   display: flex;
   align-items: flex-end;
   padding: 10px 14px;
@@ -473,14 +460,14 @@
 }
 
 .inputWrap:focus-within {
-  border-color: #555;
+  border-color: var(--accent);
 }
 
 .textInput {
   flex: 1;
   background: transparent;
   border: none;
-  color: #ececec;
+  color: var(--contrast);
   font-size: 0.9375rem;
   outline: none;
   resize: none;
@@ -491,14 +478,13 @@
 }
 
 .textInput::placeholder {
-  color: #6e6e80;
+  color: var(--text-muted);
 }
 
 .sendBtn {
-  background: #19c37d;
-  color: #fff;
+  background: var(--accent);
+  color: var(--primary);
   border: none;
-  border-radius: 8px;
   width: 32px;
   height: 32px;
   display: flex;
@@ -510,19 +496,21 @@
 }
 
 .sendBtn:disabled {
-  background: #3a3a3a;
+  background: var(--surface-border);
   cursor: not-allowed;
 }
 
 .sendBtn:hover:not(:disabled) {
-  background: #1aab6d;
+  background: var(--contrast);
 }
 
 .inputDisclaimer {
   text-align: center;
   font-size: 0.72rem;
-  color: #6e6e80;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
   padding: 6px 24px 0;
+  letter-spacing: 0.03em;
 }
 
 /* ── Welcome screen ── */
@@ -538,11 +526,13 @@
 
 .welcomeTitle {
   font-size: 2rem;
-  font-weight: 700;
-  color: #ececec;
+  font-weight: 900;
+  color: var(--contrast);
+  letter-spacing: -0.03em;
 }
 
 .welcomeSub {
   font-size: 0.9rem;
-  color: #8e8ea0;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
 }

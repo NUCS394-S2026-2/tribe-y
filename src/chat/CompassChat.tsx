@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { useCodeReview } from '../agents/useCodeReview';
 import { useSalesbot } from '../agents/useSalesbot';
@@ -132,12 +131,6 @@ export function CompassChat() {
     setStage('full-review');
   };
 
-  const navigate = useNavigate();
-
-  const handleNewChat = () => {
-    navigate('/');
-  };
-
   const showWelcome = displayMessages.length === 0 && stage === 'chat';
 
   return (
@@ -146,13 +139,6 @@ export function CompassChat() {
       <aside className={styles.sidebar}>
         <div className={styles.sidebarLogo}>compass.tne.ai</div>
         <div className={styles.sidebarSub}>C++ Expert Review</div>
-        <button className={styles.newChatBtn} onClick={handleNewChat}>
-          <span>＋</span> New review
-        </button>
-        <div className={styles.sidebarSection}>Recent</div>
-        <div className={styles.sidebarItem}>Inventory memory leaks</div>
-        <div className={styles.sidebarItem}>Smart pointer refactor</div>
-        <div className={styles.sidebarItem}>Template metaprogramming</div>
       </aside>
 
       {/* Main */}
