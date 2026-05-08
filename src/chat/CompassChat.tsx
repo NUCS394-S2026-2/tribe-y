@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useCodeReview } from '../agents/useCodeReview';
 import { useSalesbot } from '../agents/useSalesbot';
@@ -131,8 +132,10 @@ export function CompassChat() {
     setStage('full-review');
   };
 
+  const navigate = useNavigate();
+
   const handleNewChat = () => {
-    window.location.reload();
+    navigate('/');
   };
 
   const showWelcome = displayMessages.length === 0 && stage === 'chat';
