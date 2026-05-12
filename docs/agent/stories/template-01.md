@@ -1,4 +1,5 @@
 # Story: Landing Page — NE.ai Hero & CTA
+
 **Slug:** `landing-page-hero-cta` | **Status:** Draft
 **Issue:** #ISSUE_NUMBER | **Team:** Tribe Y
 
@@ -30,13 +31,13 @@ The how-it-works section should render the three-step flow (Submit → Preview �
 
 Performance is a first-class concern. All above-the-fold assets should be inlined or preloaded. The CTA button must render without JavaScript as a plain anchor fallback so that visitors on slow connections can still navigate into the intake flow.
 
-| File | Change |
-|---|---|
-| `src/app/page.tsx` | Root route — composes `HeroSection` and `HowItWorks` |
-| `src/components/landing/HeroSection.tsx` | Headline, subheadline, CTA button |
-| `src/components/landing/HowItWorks.tsx` | 3-step explainer with icons |
-| `src/components/ui/CTAButton.tsx` | Shared primary CTA button, accessible, anchor fallback |
-| `src/app/layout.tsx` | Ensure no auth guard wraps the root route |
+| File                                     | Change                                                 |
+| ---------------------------------------- | ------------------------------------------------------ |
+| `src/app/page.tsx`                       | Root route — composes `HeroSection` and `HowItWorks`   |
+| `src/components/landing/HeroSection.tsx` | Headline, subheadline, CTA button                      |
+| `src/components/landing/HowItWorks.tsx`  | 3-step explainer with icons                            |
+| `src/components/ui/CTAButton.tsx`        | Shared primary CTA button, accessible, anchor fallback |
+| `src/app/layout.tsx`                     | Ensure no auth guard wraps the root route              |
 
 ---
 
