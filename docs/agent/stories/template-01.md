@@ -1,7 +1,7 @@
 # Story: Landing Page — NE.ai Hero & CTA
 
 **Slug:** `landing-page-hero-cta` | **Status:** Draft
-**Issue:** #ISSUE_NUMBER | **Team:** TEAM_COLOR
+**Issue:** #ISSUE_NUMBER | **Team:** Tribe Y
 
 ---
 
