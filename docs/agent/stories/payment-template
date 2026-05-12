@@ -1,0 +1,149 @@
+
+# Story: X.402 Testnet Payment — Unlock Full Code Review
+
+**Slug:** `payment-x402` | **Status:** Draft  
+**Issue:** #ISSUE_NUMBER | **Team:** Yellow
+
+---
+
+## Summary
+
+This story implements a testnet X.402 payment flow that unlocks a full C++ code review previously shown as a partial teaser in chat. The flow must be secure, idempotent, server-verified, and produce a verifiable receipt stored in the vault.
+
+---
+
+## User Story
+
+> As a Technical Manager (ICP) who received a partial C++ code review teaser in the chat, I want to complete an X.402 testnet payment from a web payment portal (providing my wallet info and optionally uploading my codebase), so that once the transaction is confirmed the full review is delivered into a secure vault only I can access and I receive a verifiable receipt as proof of purchase.
+
+---
+
+## Acceptance Criteria
+
+**AC-1 (UI):** Given the user clicks "Request Full Review" in chat, When the payment flow opens, Then the UI shows a payment modal/portal with: amount, currency label `TESTNET`, a payment URI and QR fallback, wallet copy instructions, TTL countdown, and a visible "I paid" action.
+
+**AC-2 (persistence):** Given a payment request is issued, When the backend creates a PaymentRequest, Then the Firestore document stores: id, amount, currency, generated walletAddress/paymentURI, status=`pending`, createdAt, expiresAt (TTL), and codeReviewId.
+
+**AC-3 (verification):** Given the user sends funds on-testnet, When the server verifies the tx (txHash or webhook), Then PaymentRequest.status → `confirmed`, CodeReview.paid → `true`, and a Receipt is created and linked to the CodeReview; the vault gets the full review and access is restricted to the purchaser.
+
+**AC-4 (errors):** Given payment fails, is invalid, or TTL expires, When the user attempts to unlock the review, Then the UI shows a clear error with retry instructions and contact support; no review is unlocked.
+
+**AC-5 (idempotency):** Given duplicate tx notifications or retries, When backend processes them, Then processing is idempotent: no double-credit, receipts remain unique, and subsequent notifications are no-ops.
+
+**AC-6 (security):** Given front-end and back-end components, When implementing the flow, Then no secrets are committed; verification uses env-backed credentials and server-side logic only.
+
+---
+
+## Technical Approach
+
+- UI
+  - `src/components/Payment.tsx` — presentational payment modal/portal. Must render all fields server-provided (amount, currency, walletAddress/paymentURI, QR fallback, TTL, copy button, "I paid" button). Provide a non-JS fallback anchor with the payment URI for high-latency clients.
+  - `src/app/payment/page.tsx` — route for full portal that also accepts a file-upload component for the codebase (optional) and basic wallet metadata input. This page is reachable from the chat CTA.
+- Backend / Agents (server-side)
+  - `src/agents/payments.ts` — server-only helpers (createPaymentRequest, verifyTransaction, handleWebhook, markConfirmed). These run in secure environment (Cloud Function / server endpoint).
+  - Firestore collections: `paymentRequests`, `receipts`. Follow data model in `docs/agent/data-model.md`.
+  - Verification is performed via a testnet provider (RPC or block-explorer API). Do verification server-side only; accept webhooks for efficiency and/or periodic polling for confirmation.
+  - On confirmation: set PaymentRequest.status = `confirmed`, set codeReview.paid = true, persist receipt, and trigger storing full review into user's vault (vault access control enforced server-side).
+- Constraints
+  - Testnet only in preview/dev.
+  - Do not commit private keys or provider credentials. Provide placeholders in `.env.example`.
+  - TypeScript strict mode enforced; no any/ts-ignore.
+  - Keep the UI accessible (keyboard, screen-readers) and performant.
+
+Files to create / modify
+- `docs/agent/stories/payment-template` (this file) — finalize story
+- `src/components/Payment.tsx` — UI modal component (Yellow)
+- `src/app/payment/page.tsx` — payment portal route (Yellow)
+- `src/agents/payments.ts` — server-side payment helpers (Orange / server)
+- `src/utils/billing.ts` — amount calculation, TTL helpers (shared)
+- Firestore rules / indexes as needed: `paymentRequests`, `receipts`
+
+---
+
+## Interfaces
+
+```typescript
+// Recommended exact types to export / use
+
+interface PaymentRequest {
+  id: string;
+  amount: number;
+  currency: 'TESTNET';
+  walletAddress: string; // or paymentURI
+  status: 'pending' | 'confirmed' | 'failed' | 'expired';
+  createdAt: string; // ISO 8601
+  expiresAt: string; // ISO 8601
+  txHash?: string;
+  codeReviewId: string;
+  receiptId?: string;
+}
+
+interface Receipt {
+  id: string;
+  codeReviewId: string;
+  paymentRequestId: string;
+  issuedAt: string; // ISO 8601
+  issuer: 'tribe-y';
+  metadata: Record<string, unknown>;
+}
+```
+
+---
+
+## API / Server Endpoints (suggested)
+
+- POST /api/payments/create
+  - Body: { codeReviewId: string, amount?: number, returnUrl?: string }
+  - Creates PaymentRequest doc and returns { paymentRequestId, walletAddress, paymentURI, amount, expiresAt }
+- POST /api/payments/verify
+  - Body (server-to-server): { paymentRequestId, txHash }
+  - Verifies tx and marks confirmed if valid
+- POST /api/payments/webhook
+  - Optional webhook receiver for provider notifications — must validate signatures server-side
+
+---
+
+## Test Plan (Vitest + React Testing Library + unit tests for backend logic)
+
+Write tests with Given/When/Then names matching ACs.
+
+UI tests (Vitest + RTL)
+- "Given a user opens the payment modal, When it renders, Then amount, TESTNET label, walletAddress/paymentURI, QR fallback, TTL, and 'I paid' are visible"
+- "Given JS is disabled, When the portal loads, Then the payment URI anchor is present and navigable"
+
+Backend unit tests
+- "Given a code review needs payment, When createPaymentRequest is called, Then a pending PaymentRequest is persisted with correct TTL and fields"
+- "Given a pending PaymentRequest and a valid txHash, When verifyTransaction runs, Then PaymentRequest becomes 'confirmed', CodeReview.paid = true, and a Receipt is created"
+- "Given duplicate tx notifications, When processed twice, Then only one Receipt is created and state remains consistent"
+- "Given a payment that expires, When TTL elapses, Then PaymentRequest.status becomes 'expired' and no review is unlocked"
+
+Integration / End-to-end (mock provider)
+- Simulate full flow: create request → simulate tx broadcast → webhook/poll verification → confirm → assert vault contains full review and receipt exists
+
+Manual verification
+- Deploy to preview, use a testnet wallet, complete a tx, verify receipt issuance and vault access.
+
+---
+
+## Security & Ops Notes
+
+- Provide `.env.example` keys only; actual RPC credentials and service accounts must live in CI/secret manager.
+- Use Firestore security rules to ensure only server processes set `status` to `confirmed` and only the purchaser can access vault content.
+- Log payment events for auditability (audit log collection).
+
+---
+
+## Done When
+
+- [ ] All ACs implemented and tests green
+- [ ] `npm run lint`, `npm test`, and `npm run build` pass
+- [ ] No secrets committed; `.env.example` updated with placeholders
+- [ ] PR reviewed by owning team(s) and merged
+- [ ] Flow manually verified on preview testnet: payment → confirmed → receipt → full review unlocked in vault
+- [ ] CI and Firestore rules updated to support the new collections
+
+--- 
+
+Notes
+- This story is intentionally scoped to the payment flow only. Orchestration, chat UI, and code-review agent behavior are covered in separate stories and should call these payment endpoints rather than duplicating logic.
+
