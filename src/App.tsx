@@ -1,10 +1,10 @@
-import './App.css';
-
 import React from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
+import { CodeReviewPage } from './agents/CodeReviewPage';
 import TeamFrame from './components/TeamFrame';
 
-function App() {
+function TribeHome() {
   return (
     <div className="App" style={{ minHeight: '100vh', background: '#fafafa' }}>
       <div
@@ -37,6 +37,17 @@ function App() {
         <TeamFrame />
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<TribeHome />} />
+        <Route path="/code-review" element={<CodeReviewPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
