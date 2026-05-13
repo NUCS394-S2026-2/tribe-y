@@ -1,0 +1,79 @@
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  height: 4rem;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--surface-border);
+  box-sizing: border-box;
+}
+
+.navGroup {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--text-main);
+  letter-spacing: -0.05em;
+}
+
+.nav {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .nav {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+}
+
+.link {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.active {
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 0.25rem;
+}
+
+.ctaButton {
+  background-color: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 0.5rem 1.25rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ctaButton:hover,
+.ctaButton:focus-visible {
+  background-color: var(--accent);
+  color: var(--primary);
+  outline: 2px solid var(--contrast);
+  outline-offset: 2px;
+}

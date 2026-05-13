@@ -1,59 +1,62 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, test } from 'vitest';
 
-import App from './App';
+import { LandingPage } from './chat/LandingPage';
+import { SalesbotChat } from './chat/SalesbotChat';
 
-describe('App component', () => {
-  test('renders the TRIBE Y Teams banner', () => {
-    render(<App />);
-    expect(screen.getByText('TRIBE Y Teams')).toBeInTheDocument();
+describe('LandingPage', () => {
+  test('renders the headline', () => {
+    render(
+      <MemoryRouter>
+        <LandingPage />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
-  test('renders all Orange team members', () => {
-    render(<App />);
-    const orangeNames = [
-      'Miggiani, Abigail',
-      'Ma, Fay',
-      'Press, Jack',
-      'Turinumugisha, Souvenir',
-      'Iyer, Damini',
-    ];
-    orangeNames.forEach((name) => {
-      expect(screen.getByText(name)).toBeInTheDocument();
-    });
+  test('renders the Start with Salesbot CTA button', () => {
+    render(
+      <MemoryRouter>
+        <LandingPage />
+      </MemoryRouter>,
+    );
+    expect(
+      screen.getByRole('button', { name: /start with salesbot/i }),
+    ).toBeInTheDocument();
   });
 
-  test('renders all Yellow team members', () => {
-    render(<App />);
-    const yellowNames = [
-      'Wu, Andy',
-      'Wu, Jefferson',
-      'Hir, Stanley',
-      'Huang, Yimin',
-      'Hsieh, Gabriel P.',
-    ];
-    yellowNames.forEach((name) => {
-      expect(screen.getByText(name)).toBeInTheDocument();
-    });
+  test('renders all four feature cards', () => {
+    render(
+      <MemoryRouter>
+        <LandingPage />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(/salesbot/i, { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByText(/teaser review/i)).toBeInTheDocument();
+    expect(screen.getByText(/x\.402 payment/i)).toBeInTheDocument();
+    expect(screen.getByText(/vault receipt/i)).toBeInTheDocument();
+  });
+});
+
+describe('SalesbotChat', () => {
+  test('renders greeting from Salesbot on load', () => {
+    render(
+      <MemoryRouter>
+        <SalesbotChat />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(/salesbot/i, { selector: 'h1' })).toBeInTheDocument();
+    expect(screen.getByText(/compass\.tne\.ai/i)).toBeInTheDocument();
   });
 
-  test('renders clickable email links for all members', () => {
-    render(<App />);
-    const emails = [
-      'abbymiggiani2026@u.northwestern.edu',
-      'fayma2029@u.northwestern.edu',
-      'jackpress2027@u.northwestern.edu',
-      'souvenirturinumugisha2028@u.northwestern.edu',
-      'daminiiyer2026@u.northwestern.edu',
-      'andywu2025@u.northwestern.edu',
-      'jeffersonwu2027@u.northwestern.edu',
-      'stanleyhir2027@u.northwestern.edu',
-      'yiminhuang2028@u.northwestern.edu',
-      'gabrielhsieh2026@u.northwestern.edu',
-    ];
-    emails.forEach((email) => {
-      const link = screen.getByRole('link', { name: email });
-      expect(link).toHaveAttribute('href', `mailto:${email}`);
-    });
+  test('renders the message input and send button', () => {
+    render(
+      <MemoryRouter>
+        <SalesbotChat />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('textbox', { name: /message input/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send message/i })).toBeInTheDocument();
   });
 });

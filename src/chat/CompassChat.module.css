@@ -1,0 +1,555 @@
+/* ── Layout ── */
+.shell {
+  display: flex;
+  height: 100vh;
+  background: var(--primary);
+  color: var(--contrast);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.sidebar {
+  width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--surface-border);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 8px;
+  flex-shrink: 0;
+}
+
+.sidebarLogo {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--contrast);
+  padding: 10px 12px;
+  letter-spacing: -0.03em;
+}
+
+.sidebarSub {
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 12px 16px;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.newChatBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  color: var(--contrast);
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-top: 12px;
+  width: 100%;
+  text-align: left;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.newChatBtn:hover {
+  background: var(--surface-bright);
+  border-color: var(--accent);
+}
+
+/* ── Main ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--primary);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--surface-border);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--contrast);
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
+.topbarModel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--contrast);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.topbarModel svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+  color: var(--accent);
+}
+
+/* ── Messages ── */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
+.messages::-webkit-scrollbar {
+  width: 6px;
+}
+.messages::-webkit-scrollbar-thumb {
+  background: var(--surface-border);
+  border-radius: 3px;
+}
+
+.messageRow {
+  padding: 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.messageRow.assistantRow {
+  background: transparent;
+}
+
+.messageInner {
+  width: 100%;
+  max-width: 720px;
+  padding: 0 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
+  border: 1px solid var(--surface-border);
+}
+
+.avatarUser {
+  background: var(--surface-bright);
+  color: var(--contrast);
+}
+
+.avatarBot {
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--accent);
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+.messageBubble {
+  flex: 1;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--contrast);
+  padding-top: 4px;
+}
+
+/* ── Code block in message ── */
+.codeBlock {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  padding: 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+  overflow-x: auto;
+  white-space: pre;
+  margin-top: 8px;
+}
+
+/* ── Review card ── */
+.reviewCard {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  padding: 20px;
+  margin-top: 8px;
+}
+
+.reviewCardTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.reviewCardBody {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.reviewCardActions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Payment card ── */
+.paymentCard {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  padding: 20px;
+  margin-top: 8px;
+  max-width: 440px;
+}
+
+.paymentCardTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--status-warning);
+  margin-bottom: 12px;
+}
+
+.paymentRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--surface-border);
+  font-size: 0.8rem;
+  gap: 12px;
+}
+
+.paymentRow:last-of-type {
+  border-bottom: none;
+}
+
+.paymentLabel {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.paymentValue {
+  color: var(--contrast);
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+  text-align: right;
+}
+
+/* ── Receipt card ── */
+.receiptCard {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: 3px solid var(--status-success);
+  padding: 20px;
+  margin-top: 8px;
+  max-width: 440px;
+}
+
+.receiptCardTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--status-success);
+  margin-bottom: 12px;
+}
+
+.receiptRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--surface-border);
+  font-size: 0.8rem;
+  gap: 12px;
+}
+
+.receiptRow:last-of-type {
+  border-bottom: none;
+}
+
+.receiptLabel {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.receiptValue {
+  color: var(--contrast);
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+  text-align: right;
+}
+
+/* ── Typing indicator ── */
+.typing {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.typingDot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  opacity: 0.5;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite;
+}
+
+.typingDot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typingDot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-6px);
+  }
+}
+
+/* ── Code input card ── */
+.codeInputCard {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.codeInputLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.codeInputArea {
+  width: 100%;
+  min-height: 180px;
+  background: var(--primary);
+  border: 1px solid var(--surface-border);
+  color: var(--accent);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+
+.codeInputArea:focus {
+  border-color: var(--accent);
+}
+
+.codeInputCounter {
+  margin-top: 8px;
+  text-align: right;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.codeInputCounterWarn {
+  color: var(--status-warning);
+}
+
+.codeInputCounterAtLimit {
+  font-weight: 700;
+}
+
+.codeInputActions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Buttons ── */
+.btnPrimary {
+  background: var(--accent);
+  color: var(--primary);
+  border: none;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--contrast);
+}
+.btnPrimary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnGold {
+  background: var(--status-warning);
+  color: var(--primary);
+  border: none;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnGold:hover:not(:disabled) {
+  background: #fcd34d;
+}
+.btnGold:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--contrast);
+  border: 1px solid var(--surface-border);
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.btnGhost:hover {
+  background: var(--surface-bright);
+  border-color: var(--contrast);
+}
+
+/* ── Bottom input bar ── */
+.inputBar {
+  padding: 16px 24px 20px;
+  display: flex;
+  justify-content: center;
+  background: var(--primary);
+  border-top: 1px solid var(--surface-border);
+}
+
+.inputWrap {
+  width: 100%;
+  max-width: 720px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  display: flex;
+  align-items: flex-end;
+  padding: 10px 14px;
+  gap: 10px;
+  transition: border-color 0.15s;
+}
+
+.inputWrap:focus-within {
+  border-color: var(--accent);
+}
+
+.textInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--contrast);
+  font-size: 0.9375rem;
+  outline: none;
+  resize: none;
+  max-height: 160px;
+  line-height: 1.5;
+  padding: 2px 0;
+  font-family: inherit;
+}
+
+.textInput::placeholder {
+  color: var(--text-muted);
+}
+
+.sendBtn {
+  background: var(--accent);
+  color: var(--primary);
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.sendBtn:disabled {
+  background: var(--surface-border);
+  cursor: not-allowed;
+}
+
+.sendBtn:hover:not(:disabled) {
+  background: var(--contrast);
+}
+
+.inputDisclaimer {
+  text-align: center;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  padding: 6px 24px 0;
+  letter-spacing: 0.03em;
+}
+
+/* ── Welcome screen ── */
+.welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-bottom: 80px;
+}
+
+.welcomeTitle {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--contrast);
+  letter-spacing: -0.03em;
+}
+
+.welcomeSub {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
