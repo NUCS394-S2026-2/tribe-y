@@ -1,12 +1,42 @@
+:root {
+  /* Brand Palette from design.md */
+  --primary: #0f172a; /* Deep Slate */
+  --accent: #22d3ee; /* Electric Cyan */
+  --contrast: #f8fafc; /* Crisp White */
+  --status-warning: #f59e0b; /* Amber */
+  --status-success: #10b981; /* Emerald */
+
+  /* UI Base Colors */
+  --surface: #0f172a;
+  --surface-bright: #1e293b;
+  --surface-border: #334155;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
 body {
   margin: 0;
+  background-color: var(--surface);
+  color: var(--text-main);
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    'Inter',
+    'Public Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-family:
+    'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

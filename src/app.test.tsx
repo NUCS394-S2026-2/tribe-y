@@ -1,59 +1,37 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import React from 'react';
+import { describe, expect, it } from 'vitest';
 
 import App from './App';
 
 describe('App component', () => {
-  test('renders the TRIBE Y Teams banner', () => {
+  it('renders the Compass AI logos (nav and footer)', () => {
     render(<App />);
-    expect(screen.getByText('TRIBE Y Teams')).toBeInTheDocument();
+    // Use getAllByText because it appears in both TopNavBar and Footer
+    const logos = screen.getAllByText('Compass AI');
+    expect(logos).toHaveLength(2);
+    expect(logos[0]).toBeInTheDocument();
   });
 
-  test('renders all Orange team members', () => {
+  it('renders the main hero headline', () => {
     render(<App />);
-    const orangeNames = [
-      'Miggiani, Abigail',
-      'Ma, Fay',
-      'Press, Jack',
-      'Turinumugisha, Souvenir',
-      'Iyer, Damini',
-    ];
-    orangeNames.forEach((name) => {
-      expect(screen.getByText(name)).toBeInTheDocument();
-    });
+    expect(
+      screen.getByText('High-Precision Code Audits for Strategic M&A'),
+    ).toBeInTheDocument();
   });
 
-  test('renders all Yellow team members', () => {
+  it('renders the correct navigation links', () => {
     render(<App />);
-    const yellowNames = [
-      'Wu, Andy',
-      'Wu, Jefferson',
-      'Hir, Stanley',
-      'Huang, Yimin',
-      'Hsieh, Gabriel P.',
-    ];
-    yellowNames.forEach((name) => {
-      expect(screen.getByText(name)).toBeInTheDocument();
-    });
+    expect(screen.getByRole('link', { name: 'Analysis' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'X.402 Protocol' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Compliance' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Enterprise' })).toBeInTheDocument();
   });
 
-  test('renders clickable email links for all members', () => {
+  it('renders the primary call to action button', () => {
     render(<App />);
-    const emails = [
-      'abbymiggiani2026@u.northwestern.edu',
-      'fayma2029@u.northwestern.edu',
-      'jackpress2027@u.northwestern.edu',
-      'souvenirturinumugisha2028@u.northwestern.edu',
-      'daminiiyer2026@u.northwestern.edu',
-      'andywu2025@u.northwestern.edu',
-      'jeffersonwu2027@u.northwestern.edu',
-      'stanleyhir2027@u.northwestern.edu',
-      'yiminhuang2028@u.northwestern.edu',
-      'gabrielhsieh2026@u.northwestern.edu',
-    ];
-    emails.forEach((email) => {
-      const link = screen.getByRole('link', { name: email });
-      expect(link).toHaveAttribute('href', `mailto:${email}`);
-    });
+    expect(
+      screen.getByRole('button', { name: 'Start Session with Sales Agent' }),
+    ).toBeInTheDocument();
   });
 });
