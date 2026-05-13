@@ -1,9 +1,5 @@
 import { getFirebaseIdToken } from './firebase';
 
-/**
- * Calls Claude through the Cloud Functions API proxy — never uses an API key in the browser.
- * Sends a Firebase ID token for authentication.
- */
 export async function createClaudeMessage(params: {
   model: string;
   max_tokens: number;

@@ -12,10 +12,8 @@ interface CodeReviewState {
   isUnlocked: boolean;
   isLoading: boolean;
   submitSnippet: (snippet: string) => Promise<void>;
-  /** Loads the paid full review from the server after `paymentStatus` is `paid`. */
   fetchFullReview: () => Promise<void>;
 }
-
 export function useCodeReview(): CodeReviewState {
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [teaserReview, setTeaserReview] = useState<string | null>(null);

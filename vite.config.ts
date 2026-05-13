@@ -2,14 +2,10 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Proxy to Firebase Hosting Emulator (port 5000), which applies
-      // firebase.json rewrites and routes /api/* to Cloud Functions.
-      // Run: firebase emulators:start --only hosting,functions
       '/api': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
