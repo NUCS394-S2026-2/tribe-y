@@ -1,0 +1,109 @@
+.page {
+  min-height: 100vh;
+  background: #0d0d0d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.card {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 560px;
+  width: 100%;
+  color: #f5f5f5;
+}
+
+.vaultLogo {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-align: center;
+  margin: 0 0 4px;
+}
+
+.confirmedBadge {
+  display: block;
+  text-align: center;
+  color: #81c784;
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin-bottom: 28px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #2a2a2a;
+  font-size: 0.875rem;
+}
+
+.rowLabel {
+  color: #888;
+}
+
+.rowValue {
+  font-weight: 600;
+  font-family: monospace;
+  word-break: break-all;
+  text-align: right;
+  max-width: 60%;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.printBtn {
+  flex: 1;
+  background: #222;
+  color: #f5f5f5;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reviewBtn {
+  flex: 1;
+  background: #1565c0;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reviewBtn:hover,
+.reviewBtn:focus-visible {
+  background: #1976d2;
+  outline: 3px solid #f9a825;
+  outline-offset: 2px;
+}
+
+.printBtn:hover,
+.printBtn:focus-visible {
+  background: #2a2a2a;
+  outline: 3px solid #f9a825;
+  outline-offset: 2px;
+}
+
+.loading {
+  color: #888;
+  text-align: center;
+  padding: 40px;
+}

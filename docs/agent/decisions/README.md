@@ -9,4 +9,4 @@ Use `docs/agent/decisions/_template.md` for new ADRs.
 | #                                          | Title                         | Status   | Date       |
 | ------------------------------------------ | ----------------------------- | -------- | ---------- |
 | [0001](0001-use-this-harness-structure.md) | Use this harness structure    | Accepted | 2026-04-23 |
-| 0002                                       | Adopt CSS Modules for Styling | Proposed | 2026-05-02 |
+| [0002](0002-css-modules-for-styling.md)    | Adopt CSS Modules for Styling | Accepted | 2026-05-07 |

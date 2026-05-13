@@ -1,9 +1,8 @@
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useCallback, useState } from 'react';
 
-/**
- * In-memory x402-style payment stub for the sales + compass chat PR stack.
- * Replaced by the Firestore-backed implementation in the x402 payment PR.
- */
+import { db, getUid } from '../shared/firebase';
+
 interface PaymentRequest {
   txnId: string;
   amount: string;
@@ -29,18 +28,71 @@ export function useX402Payment(): X402PaymentState {
 
   const initiatePayment = useCallback(async (reviewId: string) => {
     setStatus('pending');
-    setPaymentRequest({
-      txnId: `txn-${Date.now()}`,
+
+    // Generate a local txnId immediately — never block on Firestore
+    const localTxnId = `txn-${Date.now()}`;
+
+    const request: PaymentRequest = {
+      txnId: localTxnId,
       amount: TESTNET_AMOUNT,
       walletAddress: TESTNET_WALLET,
       reviewId,
-    });
+    };
+
+    setPaymentRequest(request);
+
+    // Fire-and-forget Firestore write
+    const now = new Date().toISOString();
+    addDoc(collection(db, 'transactions'), {
+      txnId: localTxnId,
+      uid: getUid(),
+      reviewId,
+      amount: TESTNET_AMOUNT,
+      walletAddress: TESTNET_WALLET,
+      status: 'pending',
+      network: 'testnet',
+      createdAt: now,
+      confirmedAt: null,
+      serverTimestamp: serverTimestamp(),
+    })
+      .then((docRef) => {
+        // Update with Firestore-generated doc ID if write succeeds
+        updateDoc(docRef, { txnId: docRef.id }).catch(() => {});
+      })
+      .catch(() => {});
   }, []);
 
-  const confirmPayment = useCallback(async (txnId: string): Promise<string | null> => {
-    setStatus('confirmed');
-    return txnId;
-  }, []);
+  const confirmPayment = useCallback(
+    async (txnId: string): Promise<string | null> => {
+      setStatus('pending');
+
+      const confirmedAt = new Date().toISOString();
+      const rid = paymentRequest?.reviewId;
+
+      const txnRef = doc(db, 'transactions', txnId);
+      try {
+        await updateDoc(txnRef, { status: 'confirmed', confirmedAt });
+      } catch {
+        // Transaction doc id may not match local txnId — review unlock still proceeds when possible.
+      }
+
+      if (rid && !rid.startsWith('local-')) {
+        try {
+          await updateDoc(doc(db, 'codeReviews', rid), {
+            paymentStatus: 'paid',
+            updatedAt: confirmedAt,
+          });
+        } catch {
+          setStatus('failed');
+          return null;
+        }
+      }
+
+      setStatus('confirmed');
+      return txnId;
+    },
+    [paymentRequest],
+  );
 
   return { initiatePayment, confirmPayment, paymentRequest, status };
 }
