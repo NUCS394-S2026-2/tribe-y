@@ -1,0 +1,25 @@
+.button {
+  width: 100%;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: var(--primary);
+  background-color: var(--accent);
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    outline 0.2s;
+}
+
+.button:hover:not(:disabled),
+.button:focus-visible:not(:disabled) {
+  background-color: var(--contrast);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
