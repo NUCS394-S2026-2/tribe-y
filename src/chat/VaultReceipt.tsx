@@ -67,7 +67,7 @@ export function VaultReceipt() {
           </button>
           <button
             className={styles.reviewBtn}
-            onClick={() => navigate(`/review?reviewId=${reviewId}&unlocked=true`)}
+            onClick={() => navigate('/chat')}
             aria-label="View full review"
           >
             View Full Review

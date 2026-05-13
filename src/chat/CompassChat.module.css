@@ -375,6 +375,23 @@
   border-color: var(--accent);
 }
 
+.codeInputCounter {
+  margin-top: 8px;
+  text-align: right;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.codeInputCounterWarn {
+  color: var(--status-warning);
+}
+
+.codeInputCounterAtLimit {
+  font-weight: 700;
+}
+
 .codeInputActions {
   margin-top: 10px;
   display: flex;

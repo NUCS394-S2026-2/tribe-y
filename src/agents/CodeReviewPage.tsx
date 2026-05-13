@@ -1,24 +1,30 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
+import { CODE_SNIPPET_MAX_CHARS } from '../shared/codeSnippetLimits';
 import styles from './CodeReviewPage.module.css';
 import { useCodeReview } from './useCodeReview';
 
+const SNIPPET_COUNTER_NEAR_RATIO = 0.9;
+
 export function CodeReviewPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const isUnlockedParam = searchParams.get('unlocked') === 'true';
 
   const { reviewId, teaserReview, fullReview, isUnlocked, isLoading, submitSnippet } =
     useCodeReview();
 
   const [snippet, setSnippet] = useState('');
   const hasAnalyzed = !!teaserReview;
-  const showFull = isUnlocked || isUnlockedParam;
+  const showFull = isUnlocked;
+
+  const snippetLen = snippet.length;
+  const snippetNearLimit =
+    snippetLen >= CODE_SNIPPET_MAX_CHARS * SNIPPET_COUNTER_NEAR_RATIO;
+  const snippetAtLimit = snippetLen >= CODE_SNIPPET_MAX_CHARS;
 
   const handleAnalyze = async () => {
     if (!snippet.trim()) return;
-    await submitSnippet(snippet);
+    await submitSnippet(snippet.slice(0, CODE_SNIPPET_MAX_CHARS));
   };
 
   const handleUnlock = () => {
@@ -37,13 +43,26 @@ export function CodeReviewPage() {
       <textarea
         className={styles.snippetArea}
         value={snippet}
-        onChange={(e) => setSnippet(e.target.value)}
+        onChange={(e) => setSnippet(e.target.value.slice(0, CODE_SNIPPET_MAX_CHARS))}
+        maxLength={CODE_SNIPPET_MAX_CHARS}
         placeholder={
           '// Paste your C++ code here...\nint main() {\n  int* p = new int(42);\n  return 0; // memory leak!\n}'
         }
         aria-label="C++ code snippet"
+        aria-describedby={hasAnalyzed ? undefined : 'code-review-snippet-counter'}
         disabled={hasAnalyzed}
       />
+
+      {!hasAnalyzed && (
+        <div
+          id="code-review-snippet-counter"
+          className={`${styles.snippetCounter} ${snippetNearLimit ? styles.snippetCounterWarn : ''} ${snippetAtLimit ? styles.snippetCounterAtLimit : ''}`}
+          aria-live="polite"
+        >
+          {snippetLen.toLocaleString()} / {CODE_SNIPPET_MAX_CHARS.toLocaleString()}{' '}
+          characters
+        </div>
+      )}
 
       {!hasAnalyzed && (
         <button

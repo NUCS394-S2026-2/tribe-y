@@ -2,12 +2,18 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+import { apiProxyPlugin } from './vite-plugins/api-proxy';
+
 // https://vitejs.dev/config/
 export default defineConfig({
+  plugins: [react(), apiProxyPlugin()],
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    env: {
+      VITE_FIREBASE_API_KEY: 'vitest-placeholder-firebase-key',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
@@ -26,5 +32,4 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react()],
 });

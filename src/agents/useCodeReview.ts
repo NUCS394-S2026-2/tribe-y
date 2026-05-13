@@ -1,8 +1,9 @@
 import { addDoc, collection, updateDoc } from 'firebase/firestore';
 import { useCallback, useState } from 'react';
 
-import { claude } from '../shared/claude';
-import { db, getUid } from '../shared/firebase';
+import { createClaudeMessage } from '../shared/claudeClient';
+import { TEASER_SYSTEM } from '../shared/codeReviewPrompts';
+import { auth, db, getUid } from '../shared/firebase';
 
 interface CodeReviewState {
   reviewId: string | null;
@@ -11,95 +12,96 @@ interface CodeReviewState {
   isUnlocked: boolean;
   isLoading: boolean;
   submitSnippet: (snippet: string) => Promise<void>;
+  /** Loads the paid full review from the server after `paymentStatus` is `paid`. */
+  fetchFullReview: () => Promise<void>;
 }
 
-const TEASER_SYSTEM = `You are a C++ Expert Agent for compass.tne.ai.
-
-Analyze the provided C++ code and produce a TEASER review — enough to demonstrate your expertise without giving away the full fix.
-
-Your teaser must:
-- Identify and name the specific issues (memory leaks, undefined behavior, missing RAII, raw pointers, etc.)
-- Reference the exact functions or lines where issues occur
-- State the risk/severity of each issue
-- NOT provide the actual fix or refactored code — that's in the full review
-
-Format your response in clear sections. Be direct and technical. Max 300 words.`;
-
-const FULL_SYSTEM = `You are a C++ Expert Agent for compass.tne.ai.
-
-Produce a FULL expert code review of the provided C++ code. This is the premium paid review — be comprehensive.
-
-Your full review must include:
-1. **Executive Summary** — overall code quality rating (1-10) and top concerns
-2. **Issue Breakdown** — every bug, memory leak, undefined behavior, bad practice, with line references
-3. **Refactored Code** — provide a corrected version of the full code using modern C++17/20 best practices (smart pointers, RAII, std::vector, etc.)
-4. **Best Practices** — what patterns to adopt going forward
-
-Be thorough, technical, and actionable. This is a paid expert review.`;
+async function getFirebaseIdToken(): Promise<string> {
+  await auth.authStateReady();
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Sign-in is required to retrieve the full review.');
+  }
+  return user.getIdToken();
+}
 
 export function useCodeReview(): CodeReviewState {
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [teaserReview, setTeaserReview] = useState<string | null>(null);
   const [fullReview, setFullReview] = useState<string | null>(null);
-  const [isUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const fetchFullReview = useCallback(async () => {
+    const id = reviewId;
+    if (!id) {
+      throw new Error('No review is loaded yet.');
+    }
+    const idToken = await getFirebaseIdToken();
+    const res = await fetch('/api/code-review/full', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ reviewId: id }),
+    });
+    if (res.status === 402) {
+      throw new Error('Payment is required before the full review can be loaded.');
+    }
+    if (!res.ok) {
+      throw new Error((await res.text()) || `Full review request failed (${res.status})`);
+    }
+    const data = (await res.json()) as { fullReview?: string };
+    const text = typeof data.fullReview === 'string' ? data.fullReview : '';
+    setFullReview(text);
+    setIsUnlocked(true);
+  }, [reviewId]);
 
   const submitSnippet = useCallback(async (snippet: string) => {
     const uid = getUid();
     setIsLoading(true);
+    setIsUnlocked(false);
+    setFullReview(null);
 
     try {
-      // Run teaser and full review in parallel
-      const [teaserRes, fullRes] = await Promise.all([
-        claude.messages.create({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 600,
-          system: TEASER_SYSTEM,
-          messages: [{ role: 'user', content: `Review this C++ code:\n\n${snippet}` }],
-        }),
-        claude.messages.create({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 2000,
-          system: FULL_SYSTEM,
-          messages: [{ role: 'user', content: `Review this C++ code:\n\n${snippet}` }],
-        }),
-      ]);
-
-      const teaser =
-        teaserRes.content[0].type === 'text' ? teaserRes.content[0].text : '';
-      const full = fullRes.content[0].type === 'text' ? fullRes.content[0].text : '';
+      const teaser = await createClaudeMessage({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        system: TEASER_SYSTEM,
+        messages: [{ role: 'user', content: `Review this C++ code:\n\n${snippet}` }],
+      });
 
       setTeaserReview(teaser);
-      setFullReview(full);
 
-      // Set a local ID immediately so the Unlock button works right away
-      const localId = `review-${Date.now()}`;
-      setReviewId(localId);
-
-      // Fire-and-forget Firestore write — never blocks the UI
       const now = new Date().toISOString();
-      addDoc(collection(db, 'codeReviews'), {
+      const docRef = await addDoc(collection(db, 'codeReviews'), {
         uid,
         snippet,
         language: 'C++',
         teaserReview: teaser,
-        fullReview: full,
+        fullReview: null,
         paymentStatus: 'unpaid',
         createdAt: now,
         updatedAt: now,
-      })
-        .then((docRef) => {
-          setReviewId(docRef.id);
-          updateDoc(docRef, { reviewId: docRef.id }).catch(() => {});
-        })
-        .catch(() => {});
+      });
+      await updateDoc(docRef, { reviewId: docRef.id });
+      setReviewId(docRef.id);
     } catch (err) {
       console.error('Code review error:', err);
-      setTeaserReview('Error running analysis. Please check your API key and try again.');
+      setTeaserReview('Error running analysis. Please try again.');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  return { reviewId, teaserReview, fullReview, isUnlocked, isLoading, submitSnippet };
+  return {
+    reviewId,
+    teaserReview,
+    fullReview,
+    isUnlocked,
+    isLoading,
+    submitSnippet,
+    fetchFullReview,
+  };
 }

@@ -2,9 +2,15 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInAnonymously, User } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
+const firebaseApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+if (typeof firebaseApiKey !== 'string' || !firebaseApiKey.trim()) {
+  throw new Error(
+    'Missing VITE_FIREBASE_API_KEY. Copy .env.example to .env.local and set your Firebase web API key.',
+  );
+}
+
 const firebaseConfig = {
-  apiKey:
-    import.meta.env.VITE_FIREBASE_API_KEY ?? 'AIzaSyA9N79rGKFxFRxNcpLZi1-y4woTXyB0Um4',
+  apiKey: firebaseApiKey,
   authDomain: 'tribe-y.firebaseapp.com',
   projectId: 'tribe-y',
   storageBucket: 'tribe-y.firebasestorage.app',

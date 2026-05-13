@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { claude } from '../shared/claude';
+import { createClaudeMessage } from '../shared/claudeClient';
 
 export interface ChatMessage {
   role: 'user' | 'bot';
@@ -44,7 +44,7 @@ export function useSalesbot(): SalesbotState {
       setIsLoading(true);
 
       try {
-        const response = await claude.messages.create({
+        const raw = await createClaudeMessage({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 400,
           system: SYSTEM_PROMPT,
@@ -54,7 +54,6 @@ export function useSalesbot(): SalesbotState {
           })),
         });
 
-        const raw = response.content[0].type === 'text' ? response.content[0].text : '';
         const verified = raw.includes('[INTENT_VERIFIED]');
         const clean = raw.replace('[INTENT_VERIFIED]', '').trim();
 

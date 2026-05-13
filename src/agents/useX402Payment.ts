@@ -67,24 +67,26 @@ export function useX402Payment(): X402PaymentState {
       setStatus('pending');
 
       const confirmedAt = new Date().toISOString();
+      const rid = paymentRequest?.reviewId;
 
-      // Update Firestore if available — but don't block on it
       const txnRef = doc(db, 'transactions', txnId);
-      updateDoc(txnRef, { status: 'confirmed', confirmedAt })
-        .then(() => {
-          // Also mark the review as paid
-          if (
-            paymentRequest?.reviewId &&
-            !paymentRequest.reviewId.startsWith('local-') &&
-            !paymentRequest.reviewId.startsWith('review-')
-          ) {
-            const reviewRef = doc(db, 'codeReviews', paymentRequest.reviewId);
-            updateDoc(reviewRef, { paymentStatus: 'paid', updatedAt: confirmedAt }).catch(
-              () => {},
-            );
-          }
-        })
-        .catch(() => {});
+      try {
+        await updateDoc(txnRef, { status: 'confirmed', confirmedAt });
+      } catch {
+        // Transaction doc id may not match local txnId — review unlock still proceeds when possible.
+      }
+
+      if (rid && !rid.startsWith('local-')) {
+        try {
+          await updateDoc(doc(db, 'codeReviews', rid), {
+            paymentStatus: 'paid',
+            updatedAt: confirmedAt,
+          });
+        } catch {
+          setStatus('failed');
+          return null;
+        }
+      }
 
       setStatus('confirmed');
       return txnId;
