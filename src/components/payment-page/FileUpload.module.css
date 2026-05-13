@@ -1,0 +1,82 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pickButton {
+  width: 100%;
+  padding: 1.5rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9375rem;
+  text-align: left;
+  color: var(--contrast);
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--surface-border);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.pickButton:hover:not(:disabled),
+.pickButton:focus-visible:not(:disabled) {
+  border-color: var(--accent);
+  background-color: rgba(34, 211, 238, 0.05);
+  outline: none;
+}
+
+.pickButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.placeholder {
+  color: var(--text-muted);
+}
+
+.fileMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fileName {
+  color: var(--accent);
+  word-break: break-all;
+}
+
+.fileSize {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: #f87171;
+  line-height: 1.4;
+}
