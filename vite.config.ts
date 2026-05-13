@@ -8,6 +8,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    env: {
+      VITE_FIREBASE_API_KEY: 'vitest-placeholder-firebase-key',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],

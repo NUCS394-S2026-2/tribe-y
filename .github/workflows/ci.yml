@@ -10,6 +10,8 @@ jobs:
   build-and-test:
     name: Lint, Test, Build
     runs-on: ubuntu-latest
+    env:
+      VITE_FIREBASE_API_KEY: ci-build-placeholder-not-for-production
 
     steps:
       - name: Checkout
