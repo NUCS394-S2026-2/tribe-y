@@ -7,14 +7,29 @@ const FIRESTORE_PROJECT_ID = 'tribe-y';
 
 type FirestoreFields = Record<string, { stringValue?: string }>;
 
-function readEnv(): {
-  anthropicKey: string | undefined;
-  firebaseWebApiKey: string | undefined;
-} {
-  return {
-    anthropicKey: process.env.ANTHROPIC_API_KEY,
-    firebaseWebApiKey: process.env.VITE_FIREBASE_API_KEY,
-  };
+/** Env injected from vite.config via loadEnv — process.env alone often misses .env in middleware. */
+export type ApiProxyLoadedEnv = {
+  ANTHROPIC_API_KEY?: string;
+  VITE_FIREBASE_API_KEY?: string;
+};
+
+function envOrUndefined(value: string | undefined): string | undefined {
+  const t = value?.trim();
+  return t ? t : undefined;
+}
+
+function createReadEnv(loaded: ApiProxyLoadedEnv) {
+  return (): {
+    anthropicKey: string | undefined;
+    firebaseWebApiKey: string | undefined;
+  } => ({
+    anthropicKey:
+      envOrUndefined(loaded.ANTHROPIC_API_KEY) ??
+      envOrUndefined(process.env.ANTHROPIC_API_KEY),
+    firebaseWebApiKey:
+      envOrUndefined(loaded.VITE_FIREBASE_API_KEY) ??
+      envOrUndefined(process.env.VITE_FIREBASE_API_KEY),
+  });
 }
 
 function firestoreString(
@@ -195,45 +210,58 @@ async function handleFullCodeReview(
   }
 }
 
-function installApiProxy(server: { use: (...args: unknown[]) => void }): void {
-  server.use(async (req, res, next) => {
-    const url = req.url ?? '';
-    if (req.method === 'POST' && url.startsWith('/api/anthropic/v1/messages')) {
-      const { anthropicKey } = readEnv();
-      if (!anthropicKey) {
-        res.statusCode = 503;
-        res.end('ANTHROPIC_API_KEY is not configured on the server');
+function installApiProxy(
+  server: { use: (...args: unknown[]) => void },
+  readEnv: () => {
+    anthropicKey: string | undefined;
+    firebaseWebApiKey: string | undefined;
+  },
+): void {
+  server.use(
+    async (
+      req: IncomingMessage,
+      res: ServerResponse,
+      next: () => void,
+    ): Promise<void> => {
+      const url = req.url ?? '';
+      if (req.method === 'POST' && url.startsWith('/api/anthropic/v1/messages')) {
+        const { anthropicKey } = readEnv();
+        if (!anthropicKey) {
+          res.statusCode = 503;
+          res.end('ANTHROPIC_API_KEY is not configured on the server');
+          return;
+        }
+        await handleAnthropicMessages(req, res, anthropicKey);
         return;
       }
-      await handleAnthropicMessages(req, res, anthropicKey);
-      return;
-    }
 
-    if (req.method === 'POST' && url.startsWith('/api/code-review/full')) {
-      const { anthropicKey, firebaseWebApiKey } = readEnv();
-      if (!anthropicKey || !firebaseWebApiKey) {
-        res.statusCode = 503;
-        res.end('Server API keys are not configured');
+      if (req.method === 'POST' && url.startsWith('/api/code-review/full')) {
+        const { anthropicKey, firebaseWebApiKey } = readEnv();
+        if (!anthropicKey || !firebaseWebApiKey) {
+          res.statusCode = 503;
+          res.end('Server API keys are not configured');
+          return;
+        }
+        await handleFullCodeReview(req, res, anthropicKey, firebaseWebApiKey);
         return;
       }
-      await handleFullCodeReview(req, res, anthropicKey, firebaseWebApiKey);
-      return;
-    }
 
-    next();
-  });
+      next();
+    },
+  );
 }
 
-export function apiProxyPlugin() {
+export function apiProxyPlugin(loadedEnv: ApiProxyLoadedEnv = {}) {
+  const readEnv = createReadEnv(loadedEnv);
   return {
     name: 'api-proxy',
     configureServer(server: { middlewares: { use: (...args: unknown[]) => void } }) {
-      installApiProxy(server.middlewares);
+      installApiProxy(server.middlewares, readEnv);
     },
     configurePreviewServer(server: {
       middlewares: { use: (...args: unknown[]) => void };
     }) {
-      installApiProxy(server.middlewares);
+      installApiProxy(server.middlewares, readEnv);
     },
   };
 }
