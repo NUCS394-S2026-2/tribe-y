@@ -1,0 +1,60 @@
+.panel {
+  margin-top: 2rem;
+  padding: 2rem;
+  background-color: rgba(248, 113, 113, 0.05);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding: 0.25rem 0.75rem;
+  background-color: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.statusText {
+  color: #f87171;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.heading {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--contrast);
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+}
+
+.body {
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.retryButton {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--contrast);
+  background-color: transparent;
+  border: 1px solid var(--surface-border);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    outline 0.2s;
+}
+
+.retryButton:hover,
+.retryButton:focus-visible {
+  background-color: rgba(255, 255, 255, 0.05);
+  outline: 2px solid var(--contrast);
+  outline-offset: 2px;
+}

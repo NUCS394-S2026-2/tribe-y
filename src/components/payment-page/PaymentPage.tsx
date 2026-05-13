@@ -8,6 +8,8 @@ import {
 import FileUpload from './FileUpload';
 import styles from './PaymentPage.module.css';
 import PaySubmitButton from './PaySubmitButton';
+import ErrorState from './states/ErrorState';
+import SuccessState from './states/SuccessState';
 import WalletInput from './WalletInput';
 
 type ViewState =
@@ -21,6 +23,8 @@ export default function PaymentPage() {
   const [file, setFile] = useState<File | null>(null);
   const [view, setView] = useState<ViewState>({ kind: 'form' });
 
+  const isLoading = view.kind === 'loading';
+  const isSuccess = view.kind === 'success';
   const canSubmit = isValidWalletAddress(wallet) && file !== null && view.kind === 'form';
 
   async function handleSubmit() {
@@ -37,6 +41,10 @@ export default function PaymentPage() {
     }
   }
 
+  function handleRetry() {
+    setView({ kind: 'form' });
+  }
+
   return (
     <main className={styles.page}>
       <div className={styles.container}>
@@ -46,18 +54,29 @@ export default function PaymentPage() {
           review.
         </p>
 
-        <WalletInput
-          value={wallet}
-          onChange={setWallet}
-          disabled={view.kind === 'loading'}
-        />
-        <FileUpload file={file} onChange={setFile} disabled={view.kind === 'loading'} />
-        <PaySubmitButton disabled={!canSubmit} onClick={handleSubmit} />
+        {!isSuccess && (
+          <>
+            <WalletInput value={wallet} onChange={setWallet} disabled={isLoading} />
+            <FileUpload file={file} onChange={setFile} disabled={isLoading} />
+            <PaySubmitButton disabled={!canSubmit} onClick={handleSubmit} />
+          </>
+        )}
 
         {view.kind === 'loading' && (
           <p className={styles.loadingText} role="status">
             Processing your purchase…
           </p>
+        )}
+
+        {view.kind === 'success' && (
+          <SuccessState
+            vaultUrl={view.response.vaultUrl}
+            transactionId={view.response.transactionId}
+          />
+        )}
+
+        {view.kind === 'error' && (
+          <ErrorState message={view.response.message} onRetry={handleRetry} />
         )}
       </div>
     </main>
