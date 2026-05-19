@@ -30,23 +30,25 @@ All three agents read and write to Firestore as their shared state layer. Firest
 
 ## User Flow
 
-| Step | What happens | Agent responsible |
-|---|---|---|
-| 1. Landing | User arrives at marketing page; CTA enters chatbot | — |
-| 2. Qualification | Sales Agent converses, determines if C++ repo is in scope | Sales Agent |
-| 3. Preview | User pastes a C++ snippet; Sales Agent delegates to Code Review Agent; report returned in chat | Sales Agent → Code Review Agent |
-| 4. Upsell | Sales Agent prompts user to purchase a full repository review | Sales Agent |
-| 5. Payment | Purchasing Agent runs Stripe checkout + x402 authorization | Purchasing Agent |
-| 6. A2A handoff | Purchasing Agent sends signed authorization to Code Review Agent; review blocked until payment verified | Purchasing Agent → Code Review Agent |
-| 7. Full review | User uploads repo (GitHub URL or archive); Code Review Agent performs complete analysis | Code Review Agent |
-| 8. Report delivery | Report written to Firestore, rendered in Report Viewer, made downloadable | — |
+| Step               | What happens                                                                                            | Agent responsible                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| 1. Landing         | User arrives at marketing page; CTA enters chatbot                                                      | —                                    |
+| 2. Qualification   | Sales Agent converses, determines if C++ repo is in scope                                               | Sales Agent                          |
+| 3. Preview         | User pastes a C++ snippet; Sales Agent delegates to Code Review Agent; report returned in chat          | Sales Agent → Code Review Agent      |
+| 4. Upsell          | Sales Agent prompts user to purchase a full repository review                                           | Sales Agent                          |
+| 5. Payment         | Purchasing Agent runs Stripe checkout + x402 authorization                                              | Purchasing Agent                     |
+| 6. A2A handoff     | Purchasing Agent sends signed authorization to Code Review Agent; review blocked until payment verified | Purchasing Agent → Code Review Agent |
+| 7. Full review     | User uploads repo (GitHub URL or archive); Code Review Agent performs complete analysis                 | Code Review Agent                    |
+| 8. Report delivery | Report written to Firestore, rendered in Report Viewer, made downloadable                               | —                                    |
 
 ---
 
 ## Core Agents
 
 ### Sales Agent
+
 Drives the entire chatbot experience. Responsibilities:
+
 - Conversational qualification (is the target codebase C++? is the scope compatible?)
 - Informs user if platform is not a fit
 - Detects C++ code in chat and delegates snippet analysis to the Code Review Agent
@@ -54,14 +56,18 @@ Drives the entire chatbot experience. Responsibilities:
 - Prompts the user to purchase a full review and hands off to the Purchasing Agent
 
 ### Code Review Agent
+
 The analysis engine. Responsibilities:
+
 - Analyzes C++ snippets submitted during preview
 - Performs full-repository analysis after payment authorization
 - Generates structured reports (memory safety, architectural concerns, maintainability, risk score, acquisition recommendations)
 - Does **not** begin full analysis until it receives a valid A2A payment authorization from the Purchasing Agent
 
 ### Purchasing Agent
+
 Owns the payment lifecycle. Responsibilities:
+
 - Runs Stripe checkout flow
 - Issues x402 payment authorization
 - Sends an A2A authorization message to the Code Review Agent
@@ -71,10 +77,10 @@ Owns the payment lifecycle. Responsibilities:
 
 ## Team Ownership
 
-| Team | Owns | Responsibilities |
-|---|---|---|
-| Yellow | `src/chat/` | Landing page, Chatbot UI, Report Viewer, File Upload UI, Sales Agent |
-| Orange | `src/agents/` | Code Review Agent, Purchasing Agent, Stripe integration, x402/A2A logic |
+| Team   | Owns          | Responsibilities                                                                |
+| ------ | ------------- | ------------------------------------------------------------------------------- |
+| Yellow | `src/chat/`   | Landing page, Chatbot UI, Report Viewer, File Upload UI, Sales Agent            |
+| Orange | `src/agents/` | Code Review Agent, Purchasing Agent, Stripe integration, x402/A2A logic         |
 | Shared | `src/shared/` | Types, Firestore hooks, billing utilities — **both teams must approve changes** |
 
 Do not modify another team's owned directory without their explicit approval in the PR. If you are unsure which team owns a file, check this table before editing.
@@ -98,6 +104,6 @@ The Purchasing Agent and Code Review Agent communicate via an x402-signed A2A me
 
 ## ADRs
 
-| # | Title | Status |
-|---|---|---|
+| #                                                    | Title                      | Status   |
+| ---------------------------------------------------- | -------------------------- | -------- |
 | [0001](decisions/0001-use-this-harness-structure.md) | Use this harness structure | Accepted |
