@@ -4,11 +4,11 @@ Owned by **Architecture/Design Guild**. Read before writing any code that touche
 
 ## Firestore Collections
 
-| Collection | Path | Document ID |
-|---|---|---|
-| Users | `/users/{uid}` | Firebase Auth UID |
+| Collection   | Path                      | Document ID       |
+| ------------ | ------------------------- | ----------------- |
+| Users        | `/users/{uid}`            | Firebase Auth UID |
 | Code Reviews | `/codeReviews/{reviewId}` | Firestore auto-ID |
-| Transactions | `/transactions/{txnId}` | Firestore auto-ID |
+| Transactions | `/transactions/{txnId}`   | Firestore auto-ID |
 
 TypeScript types for each collection live in `src/shared/types/`. Read those before writing any Firestore read or write.
 
