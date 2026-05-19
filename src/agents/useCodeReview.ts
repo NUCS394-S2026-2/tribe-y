@@ -1,9 +1,9 @@
-import { addDoc, collection, updateDoc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useCallback, useState } from 'react';
 
 import { createClaudeMessage } from '../shared/claudeClient';
 import { TEASER_SYSTEM } from '../shared/codeReviewPrompts';
-import { auth, db, getUid } from '../shared/firebase';
+import { auth, db } from '../shared/firebase';
 
 interface CodeReviewState {
   reviewId: string | null;
@@ -59,37 +59,52 @@ export function useCodeReview(): CodeReviewState {
   }, [reviewId]);
 
   const submitSnippet = useCallback(async (snippet: string) => {
-    const uid = getUid();
     setIsLoading(true);
     setIsUnlocked(false);
     setFullReview(null);
 
+    await auth.authStateReady();
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      setIsLoading(false);
+      setTeaserReview(
+        'Sign-in unavailable. Enable Anonymous Auth in Firebase and reload.',
+      );
+      return;
+    }
+
+    let teaser: string;
     try {
-      const teaser = await createClaudeMessage({
+      teaser = await createClaudeMessage({
         model: 'claude-sonnet-4-6',
         max_tokens: 600,
         system: TEASER_SYSTEM,
         messages: [{ role: 'user', content: `Review this C++ code:\n\n${snippet}` }],
       });
-
       setTeaserReview(teaser);
+    } catch (err) {
+      console.error('Code review error:', err);
+      setTeaserReview('Error running analysis. Please try again.');
+      setIsLoading(false);
+      return;
+    }
 
-      const now = new Date().toISOString();
-      const docRef = await addDoc(collection(db, 'codeReviews'), {
+    try {
+      const docRef = doc(collection(db, 'codeReviews'));
+      await setDoc(docRef, {
+        reviewId: docRef.id,
         uid,
         snippet,
         language: 'C++',
         teaserReview: teaser,
         fullReview: null,
         paymentStatus: 'unpaid',
-        createdAt: now,
-        updatedAt: now,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
-      await updateDoc(docRef, { reviewId: docRef.id });
       setReviewId(docRef.id);
     } catch (err) {
-      console.error('Code review error:', err);
-      setTeaserReview('Error running analysis. Please try again.');
+      console.error('Code review persist error:', err);
     } finally {
       setIsLoading(false);
     }

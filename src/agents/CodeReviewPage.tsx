@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { CODE_SNIPPET_MAX_CHARS } from '../shared/codeSnippetLimits';
 import styles from './CodeReviewPage.module.css';
@@ -8,10 +7,9 @@ import { useCodeReview } from './useCodeReview';
 const SNIPPET_COUNTER_NEAR_RATIO = 0.9;
 
 export function CodeReviewPage() {
-  const navigate = useNavigate();
-
   const { reviewId, teaserReview, fullReview, isUnlocked, isLoading, submitSnippet } =
     useCodeReview();
+  const [unlockMessage, setUnlockMessage] = useState<string | null>(null);
 
   const [snippet, setSnippet] = useState('');
   const hasAnalyzed = !!teaserReview;
@@ -28,9 +26,8 @@ export function CodeReviewPage() {
   };
 
   const handleUnlock = () => {
-    if (reviewId) {
-      navigate(`/payment?reviewId=${reviewId}`);
-    }
+    if (!reviewId) return;
+    setUnlockMessage('Payment flow coming soon. Your review is saved.');
   };
 
   return (
@@ -96,6 +93,12 @@ export function CodeReviewPage() {
         >
           🔒 Unlock Full Review — Pay with Testnet
         </button>
+      )}
+
+      {unlockMessage && (
+        <p className={styles.loading} role="status">
+          {unlockMessage}
+        </p>
       )}
     </div>
   );

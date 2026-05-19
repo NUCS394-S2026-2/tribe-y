@@ -1,3 +1,6 @@
+import { extractAssistantText } from './claudeResponse';
+import { auth } from './firebase';
+
 /**
  * Calls Claude through the dev/preview API proxy — never uses an API key in the browser.
  */
@@ -7,9 +10,19 @@ export async function createClaudeMessage(params: {
   system: string;
   messages: Array<{ role: 'user' | 'assistant'; content: string }>;
 }): Promise<string> {
+  await auth.authStateReady();
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Sign-in is required to run analysis.');
+  }
+  const idToken = await user.getIdToken();
+
   const res = await fetch('/api/anthropic/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
+    },
     body: JSON.stringify({
       model: params.model,
       max_tokens: params.max_tokens,
@@ -23,9 +36,5 @@ export async function createClaudeMessage(params: {
     throw new Error(detail || `Claude API error: ${res.status}`);
   }
 
-  const data = (await res.json()) as {
-    content?: Array<{ type: string; text?: string }>;
-  };
-  const first = data.content?.[0];
-  return first?.type === 'text' ? (first.text ?? '') : '';
+  return extractAssistantText(await res.json());
 }

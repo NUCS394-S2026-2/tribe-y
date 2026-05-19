@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const env = import.meta.env;
@@ -25,3 +25,16 @@ for (const [key, value] of Object.entries(requiredEnv)) {
 const app = initializeApp(requiredEnv);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+
+// Automatically sign in anonymously so every Firestore write has an auth context.
+// If Anonymous Auth is not enabled in the console this fails — callers must check auth.currentUser.
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    signInAnonymously(auth).catch(() => {
+      console.warn(
+        '[Firebase] Anonymous sign-in failed. ' +
+          'Enable Anonymous Auth in the Firebase console → Authentication → Sign-in method.',
+      );
+    });
+  }
+});
