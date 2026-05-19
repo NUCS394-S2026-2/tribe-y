@@ -2,9 +2,27 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can read/write their own profile
+    // Privileged fields (paymentStatus, credibilityScore, uid, createdAt)
+    // are server-write only — never writable from the client.
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Clients may set uid (must match auth uid), email, displayName, and createdAt on first write.
+      // createdAt should be set via serverTimestamp() — this is a convention, not enforced by the rule.
+      // paymentStatus and credibilityScore are server-only — blocked unconditionally.
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.uid == request.auth.uid
+        && !request.resource.data.keys().hasAny(['paymentStatus', 'credibilityScore']);
+
+      // On update, also lock uid and createdAt so they can never be changed.
+      allow update: if request.auth != null
+        && request.auth.uid == uid
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['paymentStatus', 'credibilityScore', 'uid', 'createdAt']);
+
+      // allow delete: intentionally absent — self-deletion is not supported from the client.
+      // Use a Cloud Function with Admin SDK for account deletion.
     }
 
     // Code reviews: owner can create and read their own
