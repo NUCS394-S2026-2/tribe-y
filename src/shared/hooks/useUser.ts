@@ -20,7 +20,7 @@ export function useUser(): UserState {
   );
 
   useEffect(() => {
-    if (!firebaseUser || user) return;
+    if (!firebaseUser || loading || user) return;
     const ref = doc(db, 'users', firebaseUser.uid);
     setDoc(
       ref,
@@ -33,7 +33,7 @@ export function useUser(): UserState {
       },
       { merge: true },
     );
-  }, [firebaseUser, user]);
+  }, [firebaseUser, user, loading]);
 
   const updateUser = async (updates: Partial<User>) => {
     if (!firebaseUser) return;

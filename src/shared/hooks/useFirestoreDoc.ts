@@ -18,10 +18,13 @@ export function useFirestoreDoc<T>(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setData(null);
+    setError(null);
     if (!docId) {
       setLoading(false);
       return;
     }
+    setLoading(true);
 
     const ref = doc(db, collectionPath, docId);
     const unsubscribe = onSnapshot(

@@ -2,29 +2,30 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInAnonymously, User } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-const firebaseApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-if (typeof firebaseApiKey !== 'string' || !firebaseApiKey.trim()) {
-  throw new Error(
-    'Missing VITE_FIREBASE_API_KEY. Copy .env.example to .env.local and set your Firebase web API key.',
-  );
-}
+const env = import.meta.env;
 
-const firebaseConfig = {
-  apiKey: firebaseApiKey,
-  authDomain: 'tribe-y.firebaseapp.com',
-  projectId: 'tribe-y',
-  storageBucket: 'tribe-y.firebasestorage.app',
-  messagingSenderId: '115401645025',
-  appId: '1:115401645025:web:90d42594070fa4fe3bd0a0',
+const requiredEnv = {
+  apiKey: env.VITE_FIREBASE_API_KEY,
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+for (const [key, value] of Object.entries(requiredEnv)) {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new Error(
+      `Missing VITE_FIREBASE_${key.replace(/([A-Z])/g, '_$1').toUpperCase()}. ` +
+        'Copy .env.example to .env.local and set your Firebase web config values.',
+    );
+  }
+}
+
+const app = initializeApp(requiredEnv);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-// Automatically sign in anonymously so every Firestore write has an auth context.
-// If Anonymous Auth is not enabled in the console this will fail silently —
-// the app still works, writes just get rejected by Firestore rules.
 let currentUser: User | null = null;
 
 onAuthStateChanged(auth, (user) => {
@@ -39,20 +40,13 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-/** Returns the current Firebase Auth UID, or a fallback for offline/unauthenticated sessions. */
 export function getUid(): string {
   return currentUser?.uid ?? `anon-${Date.now()}`;
 }
 
-/**
- * Returns a Firebase ID token for the current user.
- * Waits for auth to be ready before attempting to get the token.
- */
 export async function getFirebaseIdToken(): Promise<string> {
   await auth.authStateReady();
   const user = auth.currentUser;
-  if (!user) {
-    throw new Error('Sign-in is required.');
-  }
+  if (!user) throw new Error('Sign-in is required.');
   return user.getIdToken();
 }
