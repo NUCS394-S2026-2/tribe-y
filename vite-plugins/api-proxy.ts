@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+import { extractAssistantText } from '../src/shared/claudeResponse';
 import { FULL_SYSTEM } from '../src/shared/codeReviewPrompts';
 
 const ANTHROPIC_VERSION = '2023-06-01';
@@ -88,17 +89,29 @@ async function callAnthropic(
   return res.json();
 }
 
-function extractAssistantText(data: unknown): string {
-  const d = data as { content?: Array<{ type: string; text?: string }> };
-  const first = d.content?.[0];
-  return first?.type === 'text' ? (first.text ?? '') : '';
-}
-
 async function handleAnthropicMessages(
   req: IncomingMessage,
   res: ServerResponse,
   anthropicKey: string,
+  firebaseWebApiKey: string,
 ): Promise<void> {
+  const authHeader = req.headers.authorization;
+  const idToken =
+    typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+      ? authHeader.slice(7)
+      : null;
+  if (!idToken) {
+    res.statusCode = 401;
+    res.end('Authorization required');
+    return;
+  }
+  const verified = await verifyFirebaseIdToken(idToken, firebaseWebApiKey);
+  if (!verified) {
+    res.statusCode = 401;
+    res.end('Invalid or expired token');
+    return;
+  }
+
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
     chunks.push(chunk as Buffer);
@@ -225,13 +238,13 @@ function installApiProxy(
     ): Promise<void> => {
       const url = req.url ?? '';
       if (req.method === 'POST' && url.startsWith('/api/anthropic/v1/messages')) {
-        const { anthropicKey } = readEnv();
-        if (!anthropicKey) {
+        const { anthropicKey, firebaseWebApiKey } = readEnv();
+        if (!anthropicKey || !firebaseWebApiKey) {
           res.statusCode = 503;
-          res.end('ANTHROPIC_API_KEY is not configured on the server');
+          res.end('Server API keys are not configured');
           return;
         }
-        await handleAnthropicMessages(req, res, anthropicKey);
+        await handleAnthropicMessages(req, res, anthropicKey, firebaseWebApiKey);
         return;
       }
 

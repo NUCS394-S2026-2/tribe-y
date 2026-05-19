@@ -1,3 +1,4 @@
+import { extractAssistantText } from './claudeResponse';
 import { getFirebaseIdToken } from './firebase';
 
 export async function createClaudeMessage(params: {
@@ -27,9 +28,5 @@ export async function createClaudeMessage(params: {
     throw new Error(detail || `Claude API error: ${res.status}`);
   }
 
-  const data = (await res.json()) as {
-    content?: Array<{ type: string; text?: string }>;
-  };
-  const first = data.content?.[0];
-  return first?.type === 'text' ? (first.text ?? '') : '';
+  return extractAssistantText(await res.json());
 }
