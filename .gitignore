@@ -7,3 +7,4 @@ dist-ssr
 .env
 node_modules/*
 coverage.env
+lib/
