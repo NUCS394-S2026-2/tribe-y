@@ -6,10 +6,16 @@ import { User } from '../types/User';
 import { useAuth } from './useAuth';
 import { useFirestoreDoc } from './useFirestoreDoc';
 
+// paymentStatus, credibilityScore, uid, and createdAt are server-write only.
+type SafeUserUpdate = Omit<
+  Partial<User>,
+  'paymentStatus' | 'credibilityScore' | 'uid' | 'createdAt'
+>;
+
 interface UserState {
   user: User | null;
   loading: boolean;
-  updateUser: (updates: Partial<User>) => Promise<void>;
+  updateUser: (updates: SafeUserUpdate) => Promise<void>;
 }
 
 export function useUser(): UserState {
@@ -28,14 +34,13 @@ export function useUser(): UserState {
         uid: firebaseUser.uid,
         email: firebaseUser.email ?? '',
         displayName: firebaseUser.displayName ?? 'Anonymous',
-        paymentStatus: 'unpaid',
         createdAt: serverTimestamp(),
       },
       { merge: true },
     );
   }, [firebaseUser, user, loading]);
 
-  const updateUser = async (updates: Partial<User>) => {
+  const updateUser = async (updates: SafeUserUpdate): Promise<void> => {
     if (!firebaseUser) return;
     const ref = doc(db, 'users', firebaseUser.uid);
     await setDoc(ref, updates, { merge: true });
