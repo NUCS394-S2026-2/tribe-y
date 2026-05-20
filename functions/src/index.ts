@@ -1,2 +1,5 @@
-// Cloud Function exports will be added in subsequent tasks.
-export {};
+import { initializeApp } from 'firebase-admin/app';
+
+initializeApp();
+
+export { anthropicMessages } from './anthropicMessages.js';
