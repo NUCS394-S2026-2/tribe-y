@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 
 import { createClaudeMessage } from '../shared/claudeClient';
 import { TEASER_SYSTEM } from '../shared/codeReviewPrompts';
-import { auth, db, getUid } from '../shared/firebase';
+import { db, getFirebaseIdToken, getUid } from '../shared/firebase';
 
 interface CodeReviewState {
   reviewId: string | null;
@@ -14,15 +14,6 @@ interface CodeReviewState {
   submitSnippet: (snippet: string) => Promise<void>;
   /** Loads the paid full review from the server after `paymentStatus` is `paid`. */
   fetchFullReview: () => Promise<void>;
-}
-
-async function getFirebaseIdToken(): Promise<string> {
-  await auth.authStateReady();
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('Sign-in is required to retrieve the full review.');
-  }
-  return user.getIdToken();
 }
 
 export function useCodeReview(): CodeReviewState {

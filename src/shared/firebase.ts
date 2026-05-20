@@ -43,3 +43,16 @@ onAuthStateChanged(auth, (user) => {
 export function getUid(): string {
   return currentUser?.uid ?? `anon-${Date.now()}`;
 }
+
+/**
+ * Returns a Firebase ID token for the current user.
+ * Waits for auth to be ready before attempting to get the token.
+ */
+export async function getFirebaseIdToken(): Promise<string> {
+  await auth.authStateReady();
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Sign-in is required.');
+  }
+  return user.getIdToken();
+}
