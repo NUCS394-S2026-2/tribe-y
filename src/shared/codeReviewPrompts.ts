@@ -12,6 +12,7 @@ Your teaser must:
 
 Format your response in clear sections. Be direct and technical. Max 300 words.`;
 
+// KEEP IN SYNC WITH functions/src/fullCodeReview.ts — FULL_SYSTEM
 export const FULL_SYSTEM = `You are a C++ Expert Agent for compass.tne.ai.
 
 Produce a FULL expert code review of the provided C++ code. This is the premium paid review — be comprehensive.

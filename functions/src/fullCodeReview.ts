@@ -8,6 +8,7 @@ const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY');
 
 const ANTHROPIC_VERSION = '2023-06-01';
 
+// KEEP IN SYNC WITH src/shared/codeReviewPrompts.ts — FULL_SYSTEM
 const FULL_SYSTEM = `You are a C++ Expert Agent for compass.tne.ai.
 
 Produce a FULL expert code review of the provided C++ code. This is the premium paid review — be comprehensive.
