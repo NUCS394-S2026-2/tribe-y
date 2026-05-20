@@ -112,6 +112,8 @@ export function CompassChat() {
       setTxnId(id);
       setConfirmedAt(new Date().toLocaleString());
       setStage('receipt');
+    } else {
+      setStage('payment');
     }
     setIsPaying(false);
   };
