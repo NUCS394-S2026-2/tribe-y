@@ -3,11 +3,15 @@
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "/api/anthropic/**", "function": "anthropicMessages" },
+      { "source": "/api/payment/**", "function": "confirmPayment" },
+      { "source": "/api/code-review/**", "function": "fullCodeReview" },
+      { "source": "**", "destination": "/index.html" }
     ]
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
   },
   "firestore": {
     "rules": "firestore.rules",
