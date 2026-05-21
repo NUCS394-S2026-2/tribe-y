@@ -5,12 +5,23 @@ import { CodeReviewPage } from './agents/CodeReviewPage';
 import { CompassChat } from './chat/CompassChat';
 import LandingPage from './components/landing-page/LandingPage';
 
-function App() {
+function TribeHome() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/chat" element={<CompassChat />} />
+        <Route path="/code-review" element={<CodeReviewPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<TribeHome />} />
         <Route path="/code-review" element={<CodeReviewPage />} />
       </Routes>
     </BrowserRouter>

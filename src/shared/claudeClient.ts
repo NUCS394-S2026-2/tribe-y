@@ -1,6 +1,7 @@
 import { extractAssistantText } from './claudeResponse';
 import { getFirebaseIdToken } from './firebase';
 
+/** Calls Claude through the dev/preview API proxy — never uses an API key in the browser. */
 export async function createClaudeMessage(params: {
   model: string;
   max_tokens: number;
