@@ -58,6 +58,7 @@ export function CompassChatMessageFeed({
     (stage === 'teaser' ||
       stage === 'payment' ||
       stage === 'paying' ||
+      stage === 'payment-failed' ||
       stage === 'receipt' ||
       stage === 'full-review') &&
     !!teaserReview;
@@ -100,6 +101,16 @@ export function CompassChatMessageFeed({
       )}
 
       {stage === 'paying' && <PaymentProcessingIndicator />}
+
+      {stage === 'payment-failed' && (
+        <p
+          role="alert"
+          style={{ color: 'var(--color-error, #e53e3e)', margin: '1rem 0' }}
+        >
+          Payment was received but the full review could not be loaded. Please contact
+          support with your transaction ID.
+        </p>
+      )}
 
       {showReceipt && txnId && (
         <VaultReceiptCard

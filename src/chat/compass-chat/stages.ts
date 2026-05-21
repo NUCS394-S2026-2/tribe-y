@@ -5,6 +5,7 @@ export type CompassChatStage =
   | 'teaser'
   | 'payment'
   | 'paying'
+  | 'payment-failed'
   | 'receipt'
   | 'full-review';
 

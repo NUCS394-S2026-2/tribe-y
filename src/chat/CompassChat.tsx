@@ -106,14 +106,13 @@ export function CompassChat() {
     if (id) {
       try {
         await fetchFullReview();
+        setTxnId(id);
+        setConfirmedAt(new Date().toLocaleString());
+        setStage('receipt');
       } catch (e) {
         console.error('Full review fetch failed:', e);
+        setStage('payment-failed');
       }
-      setTxnId(id);
-      setConfirmedAt(new Date().toLocaleString());
-      setStage('receipt');
-    } else {
-      setStage('payment');
     }
     setIsPaying(false);
   };
