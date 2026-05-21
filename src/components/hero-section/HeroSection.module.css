@@ -27,7 +27,7 @@
   position: relative;
   z-index: 10;
   text-align: center;
-  max-w: 56rem;
+  max-width: 56rem;
   margin: 0 auto;
 }
 

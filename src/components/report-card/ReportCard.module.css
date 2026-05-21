@@ -91,7 +91,6 @@
   color: var(--accent);
 }
 
-/* UI Window Styles */
 .reportWindow {
   background-color: var(--surface);
   border: 1px solid var(--surface-border);
@@ -183,7 +182,7 @@
 .scoreValue {
   font-size: 3.75rem;
   font-weight: bold;
-  color: #ef4444; /* Warning red */
+  color: #ef4444;
 }
 
 .scoreTotal {

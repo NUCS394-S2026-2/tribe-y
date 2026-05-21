@@ -16,6 +16,14 @@ export default defineConfig(({ mode }) => {
         VITE_FIREBASE_API_KEY: loaded.VITE_FIREBASE_API_KEY,
       }),
     ],
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://127.0.0.1:5000',
+          changeOrigin: true,
+        },
+      },
+    },
     test: {
       globals: true,
       environment: 'jsdom',

@@ -2,7 +2,11 @@ import React from 'react';
 
 import styles from './TopNavBar.module.css';
 
-export default function TopNavBar() {
+interface Props {
+  onCtaClick?: () => void;
+}
+
+export default function TopNavBar({ onCtaClick }: Props) {
   return (
     <header className={styles.header}>
       <div className={styles.navGroup}>
@@ -22,7 +26,9 @@ export default function TopNavBar() {
           </a>
         </nav>
       </div>
-      <button className={styles.ctaButton}>Connect Sales Agent</button>
+      <button className={styles.ctaButton} onClick={onCtaClick}>
+        Connect Sales Agent
+      </button>
     </header>
   );
 }

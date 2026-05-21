@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import CtaSection from '../cta-section/CtaSection';
 import Footer from '../footer/Footer';
@@ -8,14 +9,18 @@ import TopNavBar from '../top-nav-bar/TopNavBar';
 import ValuePillars from '../value-pillars/ValuePillars';
 
 export default function LandingPage() {
+  const navigate = useNavigate();
+
+  const goToChat = () => navigate('/chat');
+
   return (
     <div>
-      <TopNavBar />
+      <TopNavBar onCtaClick={goToChat} />
       <main style={{ paddingTop: '4rem' }}>
-        <HeroSection />
+        <HeroSection onPrimaryClick={goToChat} />
         <ValuePillars />
         <ReportCard />
-        <CtaSection />
+        <CtaSection onCtaClick={goToChat} />
       </main>
       <Footer />
     </div>

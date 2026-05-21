@@ -2,7 +2,11 @@ import React from 'react';
 
 import styles from './CtaSection.module.css';
 
-export default function CtaSection() {
+interface Props {
+  onCtaClick?: () => void;
+}
+
+export default function CtaSection({ onCtaClick }: Props) {
   return (
     <section className={styles.section} id="enterprise">
       <div className={styles.container}>
@@ -14,7 +18,7 @@ export default function CtaSection() {
             Compass AI provides the technical clarity needed for confident
             decision-making. Schedule a briefing with our strategic code auditors.
           </p>
-          <button className={styles.button}>
+          <button className={styles.button} onClick={onCtaClick}>
             Connect with Sales Agent
             <span className="material-symbols-outlined">handshake</span>
           </button>

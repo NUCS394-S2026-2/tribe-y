@@ -1,37 +1,62 @@
 import { render, screen } from '@testing-library/react';
-import React from 'react';
-import { describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, test } from 'vitest';
 
-import App from './App';
+import { LandingPage } from './chat/LandingPage';
+import { SalesbotChat } from './chat/SalesbotChat';
 
-describe('App component', () => {
-  it('renders the Compass AI logos (nav and footer)', () => {
-    render(<App />);
-    // Use getAllByText because it appears in both TopNavBar and Footer
-    const logos = screen.getAllByText('Compass AI');
-    expect(logos).toHaveLength(2);
-    expect(logos[0]).toBeInTheDocument();
+describe('LandingPage', () => {
+  test('renders the headline', () => {
+    render(
+      <MemoryRouter>
+        <LandingPage />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
-  it('renders the main hero headline', () => {
-    render(<App />);
+  test('renders the Start with Salesbot CTA button', () => {
+    render(
+      <MemoryRouter>
+        <LandingPage />
+      </MemoryRouter>,
+    );
     expect(
-      screen.getByText('High-Precision Code Audits for Strategic M&A'),
+      screen.getByRole('button', { name: /start with salesbot/i }),
     ).toBeInTheDocument();
   });
 
-  it('renders the correct navigation links', () => {
-    render(<App />);
-    expect(screen.getByRole('link', { name: 'Analysis' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'X.402 Protocol' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Compliance' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Enterprise' })).toBeInTheDocument();
+  test('renders all four feature cards', () => {
+    render(
+      <MemoryRouter>
+        <LandingPage />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(/salesbot/i, { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByText(/teaser review/i)).toBeInTheDocument();
+    expect(screen.getByText(/x\.402 payment/i)).toBeInTheDocument();
+    expect(screen.getByText(/vault receipt/i)).toBeInTheDocument();
+  });
+});
+
+describe('SalesbotChat', () => {
+  test('renders greeting from Salesbot on load', () => {
+    render(
+      <MemoryRouter>
+        <SalesbotChat />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(/salesbot/i, { selector: 'h1' })).toBeInTheDocument();
+    expect(screen.getByText(/compass\.tne\.ai/i)).toBeInTheDocument();
   });
 
-  it('renders the primary call to action button', () => {
-    render(<App />);
-    expect(
-      screen.getByRole('button', { name: 'Start Session with Sales Agent' }),
-    ).toBeInTheDocument();
+  test('renders the message input and send button', () => {
+    render(
+      <MemoryRouter>
+        <SalesbotChat />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('textbox', { name: /message input/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send message/i })).toBeInTheDocument();
   });
 });

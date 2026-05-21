@@ -1,21 +1,14 @@
 import { extractAssistantText } from './claudeResponse';
-import { auth } from './firebase';
+import { getFirebaseIdToken } from './firebase';
 
-/**
- * Calls Claude through the dev/preview API proxy — never uses an API key in the browser.
- */
+/** Calls Claude through the dev/preview API proxy — never uses an API key in the browser. */
 export async function createClaudeMessage(params: {
   model: string;
   max_tokens: number;
   system: string;
   messages: Array<{ role: 'user' | 'assistant'; content: string }>;
 }): Promise<string> {
-  await auth.authStateReady();
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('Sign-in is required to run analysis.');
-  }
-  const idToken = await user.getIdToken();
+  const idToken = await getFirebaseIdToken();
 
   const res = await fetch('/api/anthropic/v1/messages', {
     method: 'POST',

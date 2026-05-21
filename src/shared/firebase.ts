@@ -38,3 +38,10 @@ onAuthStateChanged(auth, (user) => {
     });
   }
 });
+
+export async function getFirebaseIdToken(): Promise<string> {
+  await auth.authStateReady();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Sign-in is required.');
+  return user.getIdToken();
+}

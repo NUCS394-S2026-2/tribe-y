@@ -1,23 +1,24 @@
 :root {
-  /* Brand Palette from design.md */
-  --primary: #0f172a; /* Deep Slate */
-  --accent: #22d3ee; /* Electric Cyan */
-  --contrast: #f8fafc; /* Crisp White */
-  --status-warning: #f59e0b; /* Amber */
-  --status-success: #10b981; /* Emerald */
+  --primary: #0a0a0f;
+  --surface: #111118;
+  --surface-bright: #1a1a24;
+  --surface-border: #2a2a3a;
+  --accent: #22d3ee;
+  --contrast: #ffffff;
+  --text-main: #ffffff;
+  --text-muted: #8892a4;
+  --status-warning: #f59e0b;
+  --status-success: #22c55e;
+}
 
-  /* UI Base Colors */
-  --surface: #0f172a;
-  --surface-bright: #1e293b;
-  --surface-border: #334155;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  background-color: var(--surface);
-  color: var(--text-main);
+  background-color: var(--primary);
+  color: var(--contrast);
   font-family:
     'Inter',
     'Public Sans',

@@ -2,7 +2,11 @@ import React from 'react';
 
 import styles from './HeroSection.module.css';
 
-export default function HeroSection() {
+interface Props {
+  onPrimaryClick?: () => void;
+}
+
+export default function HeroSection({ onPrimaryClick }: Props) {
   return (
     <section className={styles.hero}>
       <div className={styles.backgroundCode} aria-hidden="true">
@@ -30,7 +34,9 @@ COMPLIANCE_STATUS: ALERT
         </p>
 
         <div className={styles.buttonGroup}>
-          <button className={styles.primaryButton}>Start Session with Sales Agent</button>
+          <button className={styles.primaryButton} onClick={onPrimaryClick}>
+            Start Session with Sales Agent
+          </button>
           <button className={styles.secondaryButton}>View Sample Audit</button>
         </div>
       </div>
