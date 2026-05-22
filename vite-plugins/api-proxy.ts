@@ -1,16 +1,15 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import { extractAssistantText } from '../src/shared/claudeResponse';
 import { FULL_SYSTEM } from '../src/shared/codeReviewPrompts';
+import { extractAssistantText } from '../src/shared/geminiResponse';
 
-const ANTHROPIC_VERSION = '2023-06-01';
 const FIRESTORE_PROJECT_ID = 'tribe-y';
 
 type FirestoreFields = Record<string, { stringValue?: string }>;
 
 /** Env injected from vite.config via loadEnv — process.env alone often misses .env in middleware. */
 export type ApiProxyLoadedEnv = {
-  ANTHROPIC_API_KEY?: string;
+  GOOGLE_AI_API_KEY?: string;
   VITE_FIREBASE_API_KEY?: string;
 };
 
@@ -21,12 +20,13 @@ function envOrUndefined(value: string | undefined): string | undefined {
 
 function createReadEnv(loaded: ApiProxyLoadedEnv) {
   return (): {
-    anthropicKey: string | undefined;
+    googleApiKey: string | undefined;
     firebaseWebApiKey: string | undefined;
   } => ({
-    anthropicKey:
-      envOrUndefined(loaded.ANTHROPIC_API_KEY) ??
-      envOrUndefined(process.env.ANTHROPIC_API_KEY),
+    googleApiKey:
+      envOrUndefined(loaded.GOOGLE_AI_API_KEY) ??
+      envOrUndefined(process.env.GOOGLE_AI_API_KEY) ??
+      envOrUndefined(process.env.VITE_GOOGLE_AI_API_KEY),
     firebaseWebApiKey:
       envOrUndefined(loaded.VITE_FIREBASE_API_KEY) ??
       envOrUndefined(process.env.VITE_FIREBASE_API_KEY),
@@ -70,18 +70,18 @@ async function fetchCodeReviewDoc(
   return (await res.json()) as { fields: FirestoreFields };
 }
 
-async function callAnthropic(
+async function callGemini(
   apiKey: string,
   body: Record<string, unknown>,
 ): Promise<unknown> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const model = typeof body.model === 'string' ? body.model : 'gemini-2.5-flash';
+  const { model: _omit, ...rest } = body;
+  void _omit;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': ANTHROPIC_VERSION,
-    },
-    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(rest),
   });
   if (!res.ok) {
     throw new Error(await res.text());
@@ -89,10 +89,10 @@ async function callAnthropic(
   return res.json();
 }
 
-async function handleAnthropicMessages(
+async function handleGeminiMessages(
   req: IncomingMessage,
   res: ServerResponse,
-  anthropicKey: string,
+  googleApiKey: string,
   firebaseWebApiKey: string,
 ): Promise<void> {
   const authHeader = req.headers.authorization;
@@ -127,20 +127,20 @@ async function handleAnthropicMessages(
   }
 
   try {
-    const data = await callAnthropic(anthropicKey, body);
+    const data = await callGemini(googleApiKey, body);
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(data));
   } catch (e) {
     res.statusCode = 502;
-    res.end(e instanceof Error ? e.message : 'Anthropic request failed');
+    res.end(e instanceof Error ? e.message : 'Gemini request failed');
   }
 }
 
 async function handleFullCodeReview(
   req: IncomingMessage,
   res: ServerResponse,
-  anthropicKey: string,
+  googleApiKey: string,
   firebaseWebApiKey: string,
 ): Promise<void> {
   const authHeader = req.headers.authorization;
@@ -207,11 +207,13 @@ async function handleFullCodeReview(
   }
 
   try {
-    const data = await callAnthropic(anthropicKey, {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
-      system: FULL_SYSTEM,
-      messages: [{ role: 'user', content: `Review this C++ code:\n\n${snippet}` }],
+    const data = await callGemini(googleApiKey, {
+      model: 'gemini-2.5-flash',
+      systemInstruction: { parts: [{ text: FULL_SYSTEM }] },
+      contents: [
+        { role: 'user', parts: [{ text: `Review this C++ code:\n\n${snippet}` }] },
+      ],
+      generationConfig: { maxOutputTokens: 2000 },
     });
     const fullReview = extractAssistantText(data);
     res.statusCode = 200;
@@ -219,14 +221,14 @@ async function handleFullCodeReview(
     res.end(JSON.stringify({ fullReview }));
   } catch (e) {
     res.statusCode = 502;
-    res.end(e instanceof Error ? e.message : 'Anthropic request failed');
+    res.end(e instanceof Error ? e.message : 'Gemini request failed');
   }
 }
 
 function installApiProxy(
   server: { use: (...args: unknown[]) => void },
   readEnv: () => {
-    anthropicKey: string | undefined;
+    googleApiKey: string | undefined;
     firebaseWebApiKey: string | undefined;
   },
 ): void {
@@ -237,25 +239,25 @@ function installApiProxy(
       next: () => void,
     ): Promise<void> => {
       const url = req.url ?? '';
-      if (req.method === 'POST' && url.startsWith('/api/anthropic/v1/messages')) {
-        const { anthropicKey, firebaseWebApiKey } = readEnv();
-        if (!anthropicKey || !firebaseWebApiKey) {
+      if (req.method === 'POST' && url.startsWith('/api/gemini/v1/messages')) {
+        const { googleApiKey, firebaseWebApiKey } = readEnv();
+        if (!googleApiKey || !firebaseWebApiKey) {
           res.statusCode = 503;
           res.end('Server API keys are not configured');
           return;
         }
-        await handleAnthropicMessages(req, res, anthropicKey, firebaseWebApiKey);
+        await handleGeminiMessages(req, res, googleApiKey, firebaseWebApiKey);
         return;
       }
 
       if (req.method === 'POST' && url.startsWith('/api/code-review/full')) {
-        const { anthropicKey, firebaseWebApiKey } = readEnv();
-        if (!anthropicKey || !firebaseWebApiKey) {
+        const { googleApiKey, firebaseWebApiKey } = readEnv();
+        if (!googleApiKey || !firebaseWebApiKey) {
           res.statusCode = 503;
           res.end('Server API keys are not configured');
           return;
         }
-        await handleFullCodeReview(req, res, anthropicKey, firebaseWebApiKey);
+        await handleFullCodeReview(req, res, googleApiKey, firebaseWebApiKey);
         return;
       }
 

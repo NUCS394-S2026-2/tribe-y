@@ -3,7 +3,7 @@
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
-      { "source": "/api/anthropic/**", "function": "anthropicMessages" },
+      { "source": "/api/gemini/**", "function": "geminiMessages" },
       { "source": "/api/payment/**", "function": "confirmPayment" },
       { "source": "/api/code-review/**", "function": "fullCodeReview" },
       { "source": "**", "destination": "/index.html" }

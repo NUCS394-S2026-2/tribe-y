@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { createClaudeMessage } from '../shared/claudeClient';
+import { createGeminiMessage } from '../shared/geminiClient';
 
 export interface ChatMessage {
   role: 'user' | 'bot';
@@ -44,8 +44,8 @@ export function useSalesbot(): SalesbotState {
       setIsLoading(true);
 
       try {
-        const raw = await createClaudeMessage({
-          model: 'claude-haiku-4-5-20251001',
+        const raw = await createGeminiMessage({
+          model: 'gemini-2.5-flash',
           max_tokens: 400,
           system: SYSTEM_PROMPT,
           messages: updatedMessages.map((m) => ({

@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       apiProxyPlugin({
-        ANTHROPIC_API_KEY: loaded.ANTHROPIC_API_KEY,
+        GOOGLE_AI_API_KEY: loaded.GOOGLE_AI_API_KEY ?? loaded.VITE_GOOGLE_AI_API_KEY,
         VITE_FIREBASE_API_KEY: loaded.VITE_FIREBASE_API_KEY,
       }),
     ],

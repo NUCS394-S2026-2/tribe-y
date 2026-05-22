@@ -4,9 +4,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 
 import { verifyAuth } from './middleware/verifyAuth.js';
 
-const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY');
-
-const ANTHROPIC_VERSION = '2023-06-01';
+const googleAiApiKey = defineSecret('GOOGLE_AI_API_KEY');
 
 // KEEP IN SYNC WITH src/shared/codeReviewPrompts.ts — FULL_SYSTEM
 const FULL_SYSTEM = `You are a C++ Expert Agent for compass.tne.ai.
@@ -22,7 +20,7 @@ Your full review must include:
 Be thorough, technical, and actionable. This is a paid expert review.`;
 
 export const fullCodeReview = onRequest(
-  { cors: true, secrets: [anthropicApiKey] },
+  { cors: true, secrets: [googleAiApiKey] },
   async (req, res) => {
     if (req.method !== 'POST') {
       res.status(405).send('Method not allowed');
@@ -67,39 +65,44 @@ export const fullCodeReview = onRequest(
       return;
     }
 
-    const apiKey = anthropicApiKey.value();
+    const apiKey = googleAiApiKey.value();
     if (!apiKey) {
-      res.status(503).send('ANTHROPIC_API_KEY is not configured');
+      res.status(503).send('GOOGLE_AI_API_KEY is not configured');
       return;
     }
 
     try {
-      const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      const model = 'gemini-2.5-flash';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const geminiRes = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': ANTHROPIC_VERSION,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 2000,
-          system: FULL_SYSTEM,
-          messages: [{ role: 'user', content: `Review this C++ code:\n\n${snippet}` }],
+          systemInstruction: { parts: [{ text: FULL_SYSTEM }] },
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: `Review this C++ code:\n\n${snippet}` }],
+            },
+          ],
+          generationConfig: { maxOutputTokens: 2000 },
         }),
       });
 
-      if (!anthropicRes.ok) {
-        const errText = await anthropicRes.text();
-        res.status(502).send(errText || 'Anthropic request failed');
+      if (!geminiRes.ok) {
+        const errText = await geminiRes.text();
+        res.status(502).send(errText || 'Gemini request failed');
         return;
       }
 
-      const anthropicData = (await anthropicRes.json()) as {
-        content?: Array<{ type: string; text?: string }>;
+      const geminiData = (await geminiRes.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
       };
-      const first = anthropicData.content?.[0];
-      const fullReview = first?.type === 'text' ? (first.text ?? '') : '';
+      const parts = geminiData.candidates?.[0]?.content?.parts ?? [];
+      const fullReview = parts
+        .map((p) => p.text ?? '')
+        .join('')
+        .trim();
 
       // Persist the review to Firestore so it's recoverable
       await docRef.update({
@@ -109,7 +112,7 @@ export const fullCodeReview = onRequest(
 
       res.status(200).json({ fullReview });
     } catch (e) {
-      res.status(502).send(e instanceof Error ? e.message : 'Anthropic request failed');
+      res.status(502).send(e instanceof Error ? e.message : 'Gemini request failed');
     }
   },
 );
