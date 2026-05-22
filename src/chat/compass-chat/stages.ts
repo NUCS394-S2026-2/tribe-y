@@ -1,6 +1,7 @@
 export type CompassChatStage =
   | 'chat'
   | 'code-input'
+  | 'report-type'
   | 'analyzing'
   | 'teaser'
   | 'payment'

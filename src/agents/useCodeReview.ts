@@ -11,7 +11,7 @@ interface CodeReviewState {
   fullReview: string | null;
   isUnlocked: boolean;
   isLoading: boolean;
-  submitSnippet: (snippet: string) => Promise<void>;
+  submitSnippet: (snippet: string, reportType?: string) => Promise<void>;
   /** Loads the paid full review from the server after `paymentStatus` is `paid`. */
   fetchFullReview: () => Promise<void>;
 }
@@ -49,7 +49,7 @@ export function useCodeReview(): CodeReviewState {
     setIsUnlocked(true);
   }, [reviewId]);
 
-  const submitSnippet = useCallback(async (snippet: string) => {
+  const submitSnippet = useCallback(async (snippet: string, reportType = 'security') => {
     setIsLoading(true);
     setIsUnlocked(false);
     setFullReview(null);
@@ -70,7 +70,12 @@ export function useCodeReview(): CodeReviewState {
         model: 'gemini-2.5-flash',
         max_tokens: 600,
         system: TEASER_SYSTEM,
-        messages: [{ role: 'user', content: `Review this C++ code:\n\n${snippet}` }],
+        messages: [
+          {
+            role: 'user',
+            content: `Review type: ${reportType}\n\nReview this C++ code:\n\n${snippet}`,
+          },
+        ],
       });
       setTeaserReview(teaser);
     } catch (err) {
@@ -87,6 +92,7 @@ export function useCodeReview(): CodeReviewState {
         uid,
         snippet,
         language: 'C++',
+        reportType,
         teaserReview: teaser,
         fullReview: null,
         paymentStatus: 'unpaid',

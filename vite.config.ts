@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 
@@ -10,6 +11,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
+      tailwindcss(),
       react(),
       apiProxyPlugin({
         GOOGLE_AI_API_KEY: loaded.GOOGLE_AI_API_KEY ?? loaded.VITE_GOOGLE_AI_API_KEY,
