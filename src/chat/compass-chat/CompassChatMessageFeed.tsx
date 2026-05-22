@@ -1,7 +1,9 @@
-import React, { RefObject } from 'react';
+import { RefObject } from 'react';
 
+import ReportTypeSelector from '../../components/ReportTypeSelector';
 import styles from '../CompassChat.module.css';
 import { AnalyzingIndicator } from './AnalyzingIndicator';
+import { AssistantMessageRow } from './AssistantMessageRow';
 import { ChatTranscript } from './ChatTranscript';
 import { CodeInputCard } from './CodeInputCard';
 import { ExpertReviewCard } from './ExpertReviewCard';
@@ -20,6 +22,8 @@ interface CompassChatMessageFeedProps {
   snippet: string;
   onSnippetChange: (value: string) => void;
   onAnalyze: () => void;
+  onReportTypeConfirm: (reportTypeId: string) => void;
+  onReportTypeNotSure: () => void;
   onClearSnippet: () => void;
   teaserReview: string | null;
   fullReview: string | null;
@@ -42,6 +46,8 @@ export function CompassChatMessageFeed({
   snippet,
   onSnippetChange,
   onAnalyze,
+  onReportTypeConfirm,
+  onReportTypeNotSure,
   onClearSnippet,
   teaserReview,
   fullReview,
@@ -83,6 +89,15 @@ export function CompassChatMessageFeed({
           onAnalyze={onAnalyze}
           onClear={onClearSnippet}
         />
+      )}
+
+      {stage === 'report-type' && (
+        <AssistantMessageRow>
+          <ReportTypeSelector
+            onSelect={onReportTypeConfirm}
+            onSelectNotSure={onReportTypeNotSure}
+          />
+        </AssistantMessageRow>
       )}
 
       {stage === 'analyzing' && <AnalyzingIndicator />}

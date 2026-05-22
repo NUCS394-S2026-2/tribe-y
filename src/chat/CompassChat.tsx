@@ -36,6 +36,7 @@ export function CompassChat() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevBotLenRef = useRef(0);
+  const hasSeenCodeInputRef = useRef(false);
 
   useEffect(() => {
     if (botMessages.length <= prevBotLenRef.current) return;
@@ -51,7 +52,8 @@ export function CompassChat() {
   }, [botMessages]);
 
   useEffect(() => {
-    if (intentVerified && stage === 'chat') {
+    if (intentVerified && stage === 'chat' && !hasSeenCodeInputRef.current) {
+      hasSeenCodeInputRef.current = true;
       setStage('code-input');
     }
   }, [intentVerified, stage]);
@@ -81,14 +83,36 @@ export function CompassChat() {
     }
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = () => {
     if (!snippet.trim()) return;
-    setStage('analyzing');
+    const now = Date.now();
     setDisplayMessages((prev) => [
       ...prev,
-      { id: `user-code-${Date.now()}`, role: 'user', text: snippet },
+      { id: `user-code-${now}`, role: 'user', text: snippet },
+      {
+        id: `bot-report-intro-${now}`,
+        role: 'assistant',
+        text: "Here's what we can look at. Choose the type of report you'd like — or pick 'Not sure' and tell me about your project and I'll recommend one.",
+      },
     ]);
-    await submitSnippet(snippet.slice(0, CODE_SNIPPET_MAX_CHARS));
+    setStage('report-type');
+  };
+
+  const handleReportTypeNotSure = () => {
+    setDisplayMessages((prev) => [
+      ...prev,
+      {
+        id: `bot-not-sure-${Date.now()}`,
+        role: 'assistant',
+        text: "No problem — describe your project: what it does, what industry it's in, and what's worrying you. I'll suggest the best report type.",
+      },
+    ]);
+    setStage('chat');
+  };
+
+  const handleReportTypeConfirm = async (selectedType: string) => {
+    setStage('analyzing');
+    await submitSnippet(snippet.slice(0, CODE_SNIPPET_MAX_CHARS), selectedType);
     setStage('teaser');
   };
 
@@ -149,6 +173,8 @@ export function CompassChat() {
           snippet={snippet}
           onSnippetChange={setSnippet}
           onAnalyze={handleAnalyze}
+          onReportTypeConfirm={handleReportTypeConfirm}
+          onReportTypeNotSure={handleReportTypeNotSure}
           onClearSnippet={() => setSnippet('')}
           teaserReview={teaserReview}
           fullReview={fullReview}
