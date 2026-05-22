@@ -2,6 +2,6 @@ import { initializeApp } from 'firebase-admin/app';
 
 initializeApp();
 
-export { anthropicMessages } from './anthropicMessages.js';
 export { confirmPayment } from './confirmPayment.js';
 export { fullCodeReview } from './fullCodeReview.js';
+export { geminiMessages } from './geminiMessages.js';

@@ -2,7 +2,6 @@ import type { Request, Response } from 'express';
 
 import { FULL_SYSTEM } from './codeReviewPrompts';
 
-const ANTHROPIC_VERSION = '2023-06-01';
 const FIRESTORE_PROJECT_ID = 'tribe-y';
 
 function bearerToken(req: Request): string | null {
@@ -27,17 +26,15 @@ async function verifyFirebaseIdToken(
   return (data.users?.length ?? 0) > 0;
 }
 
-async function callAnthropic(
+async function callGemini(
   apiKey: string,
+  model: string,
   body: Record<string, unknown>,
 ): Promise<unknown> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': ANTHROPIC_VERSION,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(await res.text());
@@ -45,15 +42,20 @@ async function callAnthropic(
 }
 
 function extractAssistantText(data: unknown): string {
-  const d = data as { content?: Array<{ type: string; text?: string }> };
-  const first = d.content?.[0];
-  return first?.type === 'text' ? (first.text ?? '') : '';
+  const d = data as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  const parts = d.candidates?.[0]?.content?.parts ?? [];
+  return parts
+    .map((p) => p.text ?? '')
+    .join('')
+    .trim();
 }
 
-export async function handleAnthropicMessages(
+export async function handleGeminiMessages(
   req: Request,
   res: Response,
-  anthropicKey: string,
+  googleApiKey: string,
   firebaseWebApiKey: string,
 ): Promise<void> {
   const idToken = bearerToken(req);
@@ -66,18 +68,20 @@ export async function handleAnthropicMessages(
     return;
   }
   try {
-    res
-      .status(200)
-      .json(await callAnthropic(anthropicKey, req.body as Record<string, unknown>));
+    const body = req.body as Record<string, unknown>;
+    const model = typeof body.model === 'string' ? body.model : 'gemini-2.5-flash';
+    const { model: _omit, ...rest } = body;
+    void _omit;
+    res.status(200).json(await callGemini(googleApiKey, model, rest));
   } catch (e) {
-    res.status(502).send(e instanceof Error ? e.message : 'Anthropic request failed');
+    res.status(502).send(e instanceof Error ? e.message : 'Gemini request failed');
   }
 }
 
 export async function handleFullCodeReview(
   req: Request,
   res: Response,
-  anthropicKey: string,
+  googleApiKey: string,
   firebaseWebApiKey: string,
 ): Promise<void> {
   const idToken = bearerToken(req);
@@ -116,14 +120,15 @@ export async function handleFullCodeReview(
   }
 
   try {
-    const data = await callAnthropic(anthropicKey, {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2000,
-      system: FULL_SYSTEM,
-      messages: [{ role: 'user', content: `Review this C++ code:\n\n${snippet}` }],
+    const data = await callGemini(googleApiKey, 'gemini-2.5-flash', {
+      systemInstruction: { parts: [{ text: FULL_SYSTEM }] },
+      contents: [
+        { role: 'user', parts: [{ text: `Review this C++ code:\n\n${snippet}` }] },
+      ],
+      generationConfig: { maxOutputTokens: 2000 },
     });
     res.status(200).json({ fullReview: extractAssistantText(data) });
   } catch (e) {
-    res.status(502).send(e instanceof Error ? e.message : 'Anthropic request failed');
+    res.status(502).send(e instanceof Error ? e.message : 'Gemini request failed');
   }
 }

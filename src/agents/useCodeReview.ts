@@ -1,9 +1,9 @@
 import { collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useCallback, useState } from 'react';
 
-import { createClaudeMessage } from '../shared/claudeClient';
 import { TEASER_SYSTEM } from '../shared/codeReviewPrompts';
 import { auth, db, getFirebaseIdToken } from '../shared/firebase';
+import { createGeminiMessage } from '../shared/geminiClient';
 
 interface CodeReviewState {
   reviewId: string | null;
@@ -66,8 +66,8 @@ export function useCodeReview(): CodeReviewState {
 
     let teaser: string;
     try {
-      teaser = await createClaudeMessage({
-        model: 'claude-sonnet-4-6',
+      teaser = await createGeminiMessage({
+        model: 'gemini-2.5-flash',
         max_tokens: 600,
         system: TEASER_SYSTEM,
         messages: [{ role: 'user', content: `Review this C++ code:\n\n${snippet}` }],
