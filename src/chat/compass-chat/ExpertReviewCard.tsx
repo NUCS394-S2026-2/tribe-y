@@ -5,11 +5,13 @@ import { AssistantMessageRow } from './AssistantMessageRow';
 
 interface ExpertReviewCardProps {
   teaserReview: string;
+  showPayButton?: boolean;
   onPayForFullReview: () => void;
 }
 
 export function ExpertReviewCard({
   teaserReview,
+  showPayButton = true,
   onPayForFullReview,
 }: ExpertReviewCardProps) {
   return (
@@ -17,11 +19,13 @@ export function ExpertReviewCard({
       <div className={styles.reviewCard}>
         <div className={styles.reviewCardTitle}>⚠ Teaser Review — Issues Found</div>
         <pre className={styles.reviewCardBody}>{teaserReview}</pre>
-        <div className={styles.reviewCardActions}>
-          <button type="button" className={styles.btnGold} onClick={onPayForFullReview}>
-            Pay for Full Code Review
-          </button>
-        </div>
+        {showPayButton && (
+          <div className={styles.reviewCardActions}>
+            <button type="button" className={styles.btnGold} onClick={onPayForFullReview}>
+              Pay for Full Code Review
+            </button>
+          </div>
+        )}
       </div>
     </AssistantMessageRow>
   );

@@ -1,46 +1,33 @@
 import { RefObject } from 'react';
 
+import type { ChatSession } from '../../shared/types/ChatSession';
 import styles from '../CompassChat.module.css';
 import { AnalyzingIndicator } from './AnalyzingIndicator';
 import { ChatTranscript } from './ChatTranscript';
-import { ExpertReviewCard } from './ExpertReviewCard';
-import type { CompassChatDisplayMessage, CompassChatStage } from './stages';
 
 interface CompassChatMessageFeedProps {
-  stage: CompassChatStage;
-  showWelcome: boolean;
-  displayMessages: CompassChatDisplayMessage[];
-  botLoading: boolean;
+  session: ChatSession;
   bottomRef: RefObject<HTMLDivElement | null>;
-  teaserReview: string | null;
   onPayForFullReview: () => void;
 }
 
 export function CompassChatMessageFeed({
-  stage,
-  showWelcome,
-  displayMessages,
-  botLoading,
+  session,
   bottomRef,
-  teaserReview,
   onPayForFullReview,
 }: CompassChatMessageFeedProps) {
+  const showPayCta = session.mode === 'teaser' && session.activeReviewId !== null;
+
   return (
     <div className={styles.messages} role="log" aria-live="polite">
       <ChatTranscript
-        showWelcome={showWelcome}
-        messages={displayMessages}
-        botLoading={botLoading}
+        messages={session.messages}
+        botLoading={session.isLoading}
+        showPayCta={showPayCta}
+        onPayForFullReview={onPayForFullReview}
       />
 
-      {stage === 'analyzing' && <AnalyzingIndicator />}
-
-      {stage === 'teaser' && teaserReview && (
-        <ExpertReviewCard
-          teaserReview={teaserReview}
-          onPayForFullReview={onPayForFullReview}
-        />
-      )}
+      {session.mode === 'analyzing' && <AnalyzingIndicator />}
 
       <div ref={bottomRef} />
     </div>
