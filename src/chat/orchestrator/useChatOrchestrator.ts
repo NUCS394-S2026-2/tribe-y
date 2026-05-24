@@ -140,9 +140,9 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
   }, []);
 
   const goToPayment = useCallback(() => {
-    if (!session.activeReviewId || session.mode !== 'teaser') return;
+    if (!session.activeReviewId) return;
     navigate(`/payment?reviewId=${encodeURIComponent(session.activeReviewId)}`);
-  }, [navigate, session.activeReviewId, session.mode]);
+  }, [navigate, session.activeReviewId]);
 
   return { session, sendMessage, goToPayment };
 }

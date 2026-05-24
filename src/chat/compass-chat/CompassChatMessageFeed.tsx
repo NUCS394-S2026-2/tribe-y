@@ -16,7 +16,7 @@ export function CompassChatMessageFeed({
   bottomRef,
   onPayForFullReview,
 }: CompassChatMessageFeedProps) {
-  const showPayCta = session.mode === 'teaser' && session.activeReviewId !== null;
+  const showPayCta = session.activeReviewId !== null;
 
   return (
     <div className={styles.messages} role="log" aria-live="polite">
