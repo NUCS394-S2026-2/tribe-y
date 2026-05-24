@@ -20,16 +20,18 @@ The application is a single-page app running in the browser. State is persisted 
 
 **Routes:**
 
-| Route                | Surface        | Responsibility                                           |
-| -------------------- | -------------- | -------------------------------------------------------- |
-| `/`                  | Landing page   | Marketing; CTA → `/chat`                                 |
-| `/chat`              | Chat UI        | Unified input, input classifier, teaser preview, pay CTA |
-| `/payment?reviewId=` | Payment portal | Wallet connect, codebase upload, X.402 payment           |
-| `/vault/:reviewId`   | Vault          | Owner-scoped full report + receipt                       |
+| Route                | Surface        | Responsibility                                       |
+| -------------------- | -------------- | ---------------------------------------------------- |
+| `/`                  | Landing page   | Marketing; CTA → `/chat`                             |
+| `/chat`              | Chat UI        | Orchestrator, unified input, teaser preview, pay CTA |
+| `/payment?reviewId=` | Payment portal | Wallet connect, codebase upload, X.402 payment       |
+| `/vault/:reviewId`   | Vault          | Owner-scoped full report + receipt                   |
 
-**Input routing** lives in `src/shared/routing/` — a lightweight heuristic classifier (not an LLM agent) sends English input to the Sales Agent and C++ input to the Code Review Agent.
+**Input routing** lives in `src/shared/routing/` — a lightweight heuristic classifier (not an LLM agent) routes each message to the Sales Agent or Code Review Agent.
 
-Three agents run client-side:
+The **Chat Orchestrator** (`src/chat/orchestrator/`) owns in-memory conversation state (messages, mode, active review ID), invokes stateless agent services, and coordinates navigation to payment. Agents do not hold session memory.
+
+Three agent services run client-side:
 
 1. **Sales Agent** — handles English qualification and off-topic requests in chat.
 2. **Code Review Agent** — analyzes C++ snippets (teaser) and full reviews after payment.
@@ -41,36 +43,51 @@ Firestore is the shared state layer between agents and the UI. Cloud Functions g
 
 ## User Flow
 
-| Step            | What happens                                                  | Agent / surface          |
-| --------------- | ------------------------------------------------------------- | ------------------------ |
-| 1. Landing      | User arrives at `/`; CTA enters chat                          | —                        |
-| 2. Chat input   | User pastes C++ or asks in English; classifier routes input   | `shared/routing`         |
-| 3. English path | Sales Agent responds in chat transcript                       | Sales Agent              |
-| 4. C++ path     | Code Review Agent returns teaser in chat                      | Code Review Agent        |
-| 5. Upsell       | "Pay for Full Code Review" navigates to `/payment`            | Chat UI                  |
-| 6. Payment      | User connects wallet, uploads codebase, pays via X.402        | Purchasing Agent         |
-| 7. A2A handoff  | Payment confirmed in Firestore; full review gated by HTTP 402 | Purchasing → Code Review |
-| 8. Vault        | Full report + receipt at `/vault/:reviewId` (owner-only)      | Vault UI                 |
+| Step            | What happens                                                           | Agent / surface          |
+| --------------- | ---------------------------------------------------------------------- | ------------------------ |
+| 1. Landing      | User arrives at `/`; CTA enters chat                                   | —                        |
+| 2. Chat input   | User pastes C++ or asks in English; orchestrator routes via classifier | Chat Orchestrator        |
+| 3. English path | Sales Agent responds in chat transcript                                | Sales Agent              |
+| 4. C++ path     | Code Review Agent returns teaser in chat                               | Code Review Agent        |
+| 5. Upsell       | "Pay for Full Code Review" navigates to `/payment`                     | Chat UI                  |
+| 6. Payment      | User connects wallet, uploads codebase, pays via X.402                 | Purchasing Agent         |
+| 7. A2A handoff  | Payment confirmed in Firestore; full review gated by HTTP 402          | Purchasing → Code Review |
+| 8. Vault        | Full report + receipt at `/vault/:reviewId` (owner-only)               | Vault UI                 |
+
+---
+
+## Chat Orchestrator
+
+Lives in `src/chat/orchestrator/` (Yellow team). Owns:
+
+- In-memory `ChatSession` (messages, mode, `activeReviewId`, loading)
+- Per-message routing via `routeMessage` + `classifyInput`
+- Invoking stateless agent services with `AgentContext`
+- Navigation to `/payment` when user pays for full review
+
+Agents are **stateless services** in `src/agents/` (`runSalesAgent`, `runCodeReviewTeaser`). They receive read-only context and return a single turn result. The orchestrator appends results to the transcript and updates mode.
+
+Future: optional `SessionStore` interface for Firestore-backed chat sessions (`sessionStore.ts`).
 
 ---
 
 ## Core Agents
 
-### Sales Agent
+### Sales Agent (`salesAgent.ts`)
 
-Handles non-C++ chat in `/chat`. Responsibilities:
+Stateless service for non-C++ chat in `/chat`. Responsibilities:
 
 - Conversational qualification and product questions
 - Politely redirects non-C++ requests
-- Does not own payment or full review delivery
+- Does not own payment, full review delivery, or session state
 
-### Code Review Agent
+### Code Review Agent (`codeReviewAgent.ts`)
 
-The analysis engine. Responsibilities:
+Stateless service for C++ analysis. Responsibilities:
 
 - Analyzes C++ snippets submitted during preview (teaser)
-- Performs full review after payment authorization
-- Persists results to Firestore `codeReviews`
+- Creates Firestore `codeReviews` documents
+- Full review after payment is fetched via `codeReviewApi` + Cloud Function (not in chat orchestrator)
 
 ### Purchasing Agent
 
@@ -86,7 +103,7 @@ Owns the payment lifecycle on `/payment`. Responsibilities:
 
 | Team   | Owns                                                         | Responsibilities                                                                 |
 | ------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Yellow | `src/chat/`, `src/payment/`, `src/vault/`, `src/components/` | Landing, chat, payment portal, vault UI                                          |
+| Yellow | `src/chat/`, `src/payment/`, `src/vault/`, `src/components/` | Landing, chat orchestrator, payment portal, vault UI                             |
 | Orange | `src/agents/`, `functions/`                                  | Code Review Agent, Purchasing Agent, x402/A2A logic                              |
 | Shared | `src/shared/`                                                | Types, routing classifier, Firestore hooks — **both teams must approve changes** |
 
@@ -94,8 +111,8 @@ Owns the payment lifecycle on `/payment`. Responsibilities:
 
 ## Cross-Team Boundaries
 
-**Yellow → Orange (trigger a snippet review)**
-Chat invokes `useCodeReview` / `codeReviewApi` public exports. Yellow must not reach into Orange implementation details.
+**Yellow → Orange (invoke agent services)**
+Orchestrator calls `runSalesAgent` / `runCodeReviewTeaser` public exports. Yellow must not reach into Orange implementation details beyond those service functions.
 
 **Orange → Yellow (signal payment completion)**
 Purchasing Agent writes `paymentStatus: 'paid'` via Cloud Function. Vault page listens to Firestore and gates on paid status.
