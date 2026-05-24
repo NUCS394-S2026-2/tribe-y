@@ -26,7 +26,9 @@ describe('classifyInput', () => {
     expect(classifyInput(snippet)).toBe('cpp');
   });
 
-  test('returns english for single weak signal without braces', () => {
-    expect(classifyInput('I use std::cout sometimes in my notes')).toBe('english');
+  test('returns english for prose without code signals', () => {
+    expect(classifyInput('Can you help me understand memory management?')).toBe(
+      'english',
+    );
   });
 });
