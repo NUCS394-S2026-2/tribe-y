@@ -1,42 +1,31 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useCodeReview } from '../agents/useCodeReview';
 import { useSalesbot } from '../agents/useSalesbot';
-import { useX402Payment } from '../agents/useX402Payment';
 import { CODE_SNIPPET_MAX_CHARS } from '../shared/codeSnippetLimits';
+import { classifyInput } from '../shared/routing/inputClassifier';
 import { CompassChatComposer } from './compass-chat/CompassChatComposer';
 import { CompassChatMessageFeed } from './compass-chat/CompassChatMessageFeed';
 import type { CompassChatDisplayMessage, CompassChatStage } from './compass-chat/stages';
 import styles from './CompassChat.module.css';
 
 export function CompassChat() {
-  const {
-    messages: botMessages,
-    sendMessage,
-    intentVerified,
-    isLoading: botLoading,
-  } = useSalesbot();
+  const navigate = useNavigate();
+  const { messages: botMessages, sendMessage, isLoading: botLoading } = useSalesbot();
   const {
     reviewId,
     teaserReview,
-    fullReview,
     isLoading: reviewLoading,
     submitSnippet,
-    fetchFullReview,
   } = useCodeReview();
-  const { initiatePayment, confirmPayment, paymentRequest } = useX402Payment();
 
   const [input, setInput] = useState('');
   const [stage, setStage] = useState<CompassChatStage>('chat');
-  const [snippet, setSnippet] = useState('');
   const [displayMessages, setDisplayMessages] = useState<CompassChatDisplayMessage[]>([]);
-  const [isPaying, setIsPaying] = useState(false);
-  const [txnId, setTxnId] = useState<string | null>(null);
-  const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevBotLenRef = useRef(0);
-  const hasSeenCodeInputRef = useRef(false);
 
   useEffect(() => {
     if (botMessages.length <= prevBotLenRef.current) return;
@@ -52,15 +41,8 @@ export function CompassChat() {
   }, [botMessages]);
 
   useEffect(() => {
-    if (intentVerified && stage === 'chat' && !hasSeenCodeInputRef.current) {
-      hasSeenCodeInputRef.current = true;
-      setStage('code-input');
-    }
-  }, [intentVerified, stage]);
-
-  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [displayMessages, stage, reviewLoading, isPaying]);
+  }, [displayMessages, stage, reviewLoading]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
@@ -70,11 +52,24 @@ export function CompassChat() {
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
-    if (!text || botLoading || stage !== 'chat') return;
+    if (!text || botLoading || stage === 'analyzing') return;
+
     setInput('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
+
+    const now = Date.now();
+    setDisplayMessages((prev) => [...prev, { id: `user-${now}`, role: 'user', text }]);
+
+    const kind = classifyInput(text);
+    if (kind === 'cpp') {
+      setStage('analyzing');
+      await submitSnippet(text.slice(0, CODE_SNIPPET_MAX_CHARS));
+      setStage('teaser');
+      return;
+    }
+
     await sendMessage(text);
-  }, [input, botLoading, stage, sendMessage]);
+  }, [input, botLoading, stage, sendMessage, submitSnippet]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -83,69 +78,13 @@ export function CompassChat() {
     }
   };
 
-  const handleAnalyze = () => {
-    if (!snippet.trim()) return;
-    const now = Date.now();
-    setDisplayMessages((prev) => [
-      ...prev,
-      { id: `user-code-${now}`, role: 'user', text: snippet },
-      {
-        id: `bot-report-intro-${now}`,
-        role: 'assistant',
-        text: "Here's what we can look at. Choose the type of report you'd like — or pick 'Not sure' and tell me about your project and I'll recommend one.",
-      },
-    ]);
-    setStage('report-type');
-  };
-
-  const handleReportTypeNotSure = () => {
-    setDisplayMessages((prev) => [
-      ...prev,
-      {
-        id: `bot-not-sure-${Date.now()}`,
-        role: 'assistant',
-        text: "No problem — describe your project: what it does, what industry it's in, and what's worrying you. I'll suggest the best report type.",
-      },
-    ]);
-    setStage('chat');
-  };
-
-  const handleReportTypeConfirm = async (selectedType: string) => {
-    setStage('analyzing');
-    await submitSnippet(snippet.slice(0, CODE_SNIPPET_MAX_CHARS), selectedType);
-    setStage('teaser');
-  };
-
-  const handleUnlock = async () => {
-    const id = reviewId ?? `local-${Date.now()}`;
-    setStage('payment');
-    await initiatePayment(id);
-  };
-
-  const handlePay = async () => {
-    if (!paymentRequest) return;
-    setIsPaying(true);
-    setStage('paying');
-    const id = await confirmPayment(paymentRequest.txnId);
-    if (id) {
-      try {
-        await fetchFullReview();
-        setTxnId(id);
-        setConfirmedAt(new Date().toLocaleString());
-        setStage('receipt');
-      } catch (e) {
-        console.error('Full review fetch failed:', e);
-        setStage('payment-failed');
-      }
-    }
-    setIsPaying(false);
-  };
-
-  const handleViewFull = () => {
-    setStage('full-review');
+  const handlePayForFullReview = () => {
+    if (!reviewId) return;
+    navigate(`/payment?reviewId=${encodeURIComponent(reviewId)}`);
   };
 
   const showWelcome = displayMessages.length === 0 && stage === 'chat';
+  const composerBusy = botLoading || stage === 'analyzing';
 
   return (
     <div className={styles.shell}>
@@ -170,26 +109,12 @@ export function CompassChat() {
           displayMessages={displayMessages}
           botLoading={botLoading}
           bottomRef={bottomRef}
-          snippet={snippet}
-          onSnippetChange={setSnippet}
-          onAnalyze={handleAnalyze}
-          onReportTypeConfirm={handleReportTypeConfirm}
-          onReportTypeNotSure={handleReportTypeNotSure}
-          onClearSnippet={() => setSnippet('')}
           teaserReview={teaserReview}
-          fullReview={fullReview}
-          onUnlockFullReview={handleUnlock}
-          paymentRequest={paymentRequest}
-          isPaying={isPaying}
-          onPay={handlePay}
-          txnId={txnId}
-          paymentAmount={paymentRequest?.amount}
-          confirmedAt={confirmedAt}
-          onViewFullReview={handleViewFull}
+          onPayForFullReview={handlePayForFullReview}
         />
 
         <CompassChatComposer
-          stage={stage}
+          disabled={composerBusy}
           botLoading={botLoading}
           input={input}
           textareaRef={textareaRef}

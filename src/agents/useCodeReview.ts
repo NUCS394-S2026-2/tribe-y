@@ -2,8 +2,9 @@ import { collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useCallback, useState } from 'react';
 
 import { TEASER_SYSTEM } from '../shared/codeReviewPrompts';
-import { auth, db, getFirebaseIdToken } from '../shared/firebase';
+import { auth, db } from '../shared/firebase';
 import { createGeminiMessage } from '../shared/geminiClient';
+import { fetchFullReviewById } from './codeReviewApi';
 
 interface CodeReviewState {
   reviewId: string | null;
@@ -28,23 +29,7 @@ export function useCodeReview(): CodeReviewState {
     if (!id) {
       throw new Error('No review is loaded yet.');
     }
-    const idToken = await getFirebaseIdToken();
-    const res = await fetch('/api/code-review/full', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify({ reviewId: id }),
-    });
-    if (res.status === 402) {
-      throw new Error('Payment is required before the full review can be loaded.');
-    }
-    if (!res.ok) {
-      throw new Error((await res.text()) || `Full review request failed (${res.status})`);
-    }
-    const data = (await res.json()) as { fullReview?: string };
-    const text = typeof data.fullReview === 'string' ? data.fullReview : '';
+    const text = await fetchFullReviewById(id);
     setFullReview(text);
     setIsUnlocked(true);
   }, [reviewId]);
@@ -96,6 +81,7 @@ export function useCodeReview(): CodeReviewState {
         teaserReview: teaser,
         fullReview: null,
         paymentStatus: 'unpaid',
+        uploadStatus: 'none',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });

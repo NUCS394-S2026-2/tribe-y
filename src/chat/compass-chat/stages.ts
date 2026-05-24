@@ -1,14 +1,4 @@
-export type CompassChatStage =
-  | 'chat'
-  | 'code-input'
-  | 'report-type'
-  | 'analyzing'
-  | 'teaser'
-  | 'payment'
-  | 'paying'
-  | 'payment-failed'
-  | 'receipt'
-  | 'full-review';
+export type CompassChatStage = 'chat' | 'analyzing' | 'teaser';
 
 export interface CompassChatDisplayMessage {
   id: string;
