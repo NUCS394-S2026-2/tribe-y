@@ -17,12 +17,13 @@ export function CompassChatMessageFeed({
   onPayForFullReview,
 }: CompassChatMessageFeedProps) {
   const showPayCta = session.activeReviewId !== null;
+  const showGenericTyping = session.isLoading && session.mode !== 'analyzing';
 
   return (
     <div className={styles.messages} role="log" aria-live="polite">
       <ChatTranscript
         messages={session.messages}
-        botLoading={session.isLoading}
+        botLoading={showGenericTyping}
         showPayCta={showPayCta}
         onPayForFullReview={onPayForFullReview}
       />

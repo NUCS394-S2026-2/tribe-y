@@ -38,6 +38,23 @@ describe('CompassChatMessageFeed', () => {
     ).toBeInTheDocument();
   });
 
+  test('shows only analyzing indicator during code review, not generic typing', () => {
+    render(
+      <CompassChatMessageFeed
+        session={makeSession({
+          messages: [],
+          mode: 'analyzing',
+          isLoading: true,
+        })}
+        bottomRef={createRef()}
+        onPayForFullReview={() => undefined}
+      />,
+    );
+
+    expect(screen.getByText(/running c\+\+ expert analysis/i)).toBeInTheDocument();
+    expect(screen.getAllByText('AI')).toHaveLength(1);
+  });
+
   test('hides pay CTA when no activeReviewId', () => {
     render(
       <CompassChatMessageFeed
