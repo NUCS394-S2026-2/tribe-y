@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { CodeReviewAuthError, runCodeReviewTeaser } from '../../agents/codeReviewAgent';
@@ -47,30 +47,31 @@ interface UseChatOrchestratorReturn {
 export function useChatOrchestrator(): UseChatOrchestratorReturn {
   const navigate = useNavigate();
   const [session, setSession] = useState<ChatSession>(createInitialSession);
+  const sessionRef = useRef(session);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
-    let messagesWithUser: ChatMessage[] = [];
-    let blocked = true;
+    const current = sessionRef.current;
+    if (current.isLoading || current.mode === 'analyzing') {
+      return;
+    }
 
-    setSession((prev) => {
-      if (prev.isLoading || prev.mode === 'analyzing') {
-        blocked = true;
-        return prev;
-      }
+    const messagesWithUser: ChatMessage[] = [
+      ...current.messages,
+      createMessage('user', trimmed, 'sales'),
+    ];
 
-      blocked = false;
-      messagesWithUser = [...prev.messages, createMessage('user', trimmed, 'sales')];
-      return {
-        ...prev,
-        messages: messagesWithUser,
-        isLoading: true,
-      };
+    setSession({
+      ...current,
+      messages: messagesWithUser,
+      isLoading: true,
     });
-
-    if (blocked) return;
 
     const route = routeMessage(
       {
