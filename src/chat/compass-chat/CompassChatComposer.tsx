@@ -49,7 +49,7 @@ export function CompassChatComposer({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".cpp,.h,.hpp,.cc,.cxx,.zip,.txt"
+            accept=".cpp,.h,.hpp,.cc,.cxx,.zip"
             className={styles.hiddenInput}
             onChange={onFileChange}
             aria-label="Upload file"

@@ -44,12 +44,12 @@ export function CodebaseUpload({ onFileSelected, preselectedFile }: CodebaseUplo
     <div className={cardStyles.paymentCard}>
       <div className={cardStyles.paymentCardTitle}>Upload Codebase</div>
       <p className={styles.uploadHint}>
-        Upload your full C++ codebase (.cpp, .h, .zip as text) for a comprehensive review.
+        Upload your full C++ codebase (.cpp, .h, .zip) for a comprehensive review.
       </p>
       <input
         ref={inputRef}
         type="file"
-        accept=".cpp,.h,.hpp,.cc,.cxx,.txt,.zip"
+        accept=".cpp,.h,.hpp,.cc,.cxx,.zip"
         className={styles.fileInput}
         onChange={handleFileChange}
         aria-label="Upload codebase file"
