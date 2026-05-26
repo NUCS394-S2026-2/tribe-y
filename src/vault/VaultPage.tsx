@@ -31,8 +31,12 @@ export function VaultPage() {
   const [receipt, setReceipt] = useState<VaultReceipt | null>(null);
 
   useEffect(() => {
+    setReceipt(null);
+  }, [reviewId]);
+
+  useEffect(() => {
     if (!review || review.paymentStatus !== 'paid' || !review.fullReview) return;
-    if (receipt) return;
+    if (receipt && receipt.reviewId === review.reviewId) return;
 
     let cancelled = false;
     computeContentHash(review.fullReview).then((contentHash) => {
