@@ -1,5 +1,6 @@
 import React from 'react';
 
+import ReportCard from '../../components/report-card/ReportCard';
 import styles from '../CompassChat.module.css';
 import { AssistantMessageRow } from './AssistantMessageRow';
 
@@ -11,7 +12,7 @@ interface ExpertReviewCardProps {
 
 export function ExpertReviewCard({
   teaserReview,
-  showPayButton = true,
+  showPayButton = true, // set to true
   onPayForFullReview,
 }: ExpertReviewCardProps) {
   return (
@@ -19,6 +20,7 @@ export function ExpertReviewCard({
       <div className={styles.reviewCard}>
         <div className={styles.reviewCardTitle}>⚠ Teaser Review — Issues Found</div>
         <pre className={styles.reviewCardBody}>{teaserReview}</pre>
+        <ReportCard />
         {showPayButton && (
           <div className={styles.reviewCardActions}>
             <button type="button" className={styles.btnGold} onClick={onPayForFullReview}>
