@@ -21,9 +21,8 @@ export function CodebaseUpload({ onFileSelected, preselectedFile }: CodebaseUplo
     // Pre-populate if a file was passed from chat
     if (preselectedFile) {
       setFileName(preselectedFile.name);
-      onFileSelected(preselectedFile.name, preselectedFile.content);
     }
-  }, [preselectedFile, onFileSelected]);
+  }, [preselectedFile]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

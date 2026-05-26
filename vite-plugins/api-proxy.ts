@@ -11,7 +11,15 @@ type FirestoreFields = Record<string, { stringValue?: string }>;
 export type ApiProxyLoadedEnv = {
   GOOGLE_AI_API_KEY?: string;
   VITE_FIREBASE_API_KEY?: string;
+  PAYMENT_AMOUNT_LAMPORTS?: string;
+  PAYMENT_VERIFIER?: string;
+  SOLANA_NETWORK?: string;
+  SOLANA_SERVICE_WALLET?: string;
+  VITE_PAYMENT_MODE?: string;
+  VITE_PAYMENT_VERIFIER?: string;
 };
+
+const mockPaidReviewIds = new Set<string>();
 
 function envOrUndefined(value: string | undefined): string | undefined {
   const t = value?.trim();
@@ -22,6 +30,10 @@ function createReadEnv(loaded: ApiProxyLoadedEnv) {
   return (): {
     googleApiKey: string | undefined;
     firebaseWebApiKey: string | undefined;
+    mockPaymentMode: boolean;
+    paymentAmountLamports: number;
+    solanaNetwork: string;
+    solanaServiceWallet: string;
   } => ({
     googleApiKey:
       envOrUndefined(loaded.GOOGLE_AI_API_KEY) ??
@@ -30,6 +42,26 @@ function createReadEnv(loaded: ApiProxyLoadedEnv) {
     firebaseWebApiKey:
       envOrUndefined(loaded.VITE_FIREBASE_API_KEY) ??
       envOrUndefined(process.env.VITE_FIREBASE_API_KEY),
+    mockPaymentMode:
+      envOrUndefined(loaded.VITE_PAYMENT_MODE)?.toLowerCase() === 'mock' ||
+      envOrUndefined(loaded.VITE_PAYMENT_VERIFIER)?.toLowerCase() === 'mock' ||
+      envOrUndefined(loaded.PAYMENT_VERIFIER)?.toLowerCase() === 'mock' ||
+      envOrUndefined(process.env.VITE_PAYMENT_MODE)?.toLowerCase() === 'mock' ||
+      envOrUndefined(process.env.VITE_PAYMENT_VERIFIER)?.toLowerCase() === 'mock' ||
+      envOrUndefined(process.env.PAYMENT_VERIFIER)?.toLowerCase() === 'mock',
+    paymentAmountLamports:
+      Number(
+        envOrUndefined(loaded.PAYMENT_AMOUNT_LAMPORTS) ??
+          envOrUndefined(process.env.PAYMENT_AMOUNT_LAMPORTS),
+      ) || 10_000,
+    solanaNetwork:
+      envOrUndefined(loaded.SOLANA_NETWORK) ??
+      envOrUndefined(process.env.SOLANA_NETWORK) ??
+      'devnet',
+    solanaServiceWallet:
+      envOrUndefined(loaded.SOLANA_SERVICE_WALLET) ??
+      envOrUndefined(process.env.SOLANA_SERVICE_WALLET) ??
+      '11111111111111111111111111111111',
   });
 }
 
@@ -193,7 +225,7 @@ async function handleFullCodeReview(
   }
 
   const paymentStatus = firestoreString(doc.fields, 'paymentStatus');
-  if (paymentStatus !== 'paid') {
+  if (paymentStatus !== 'paid' && !mockPaidReviewIds.has(reviewId)) {
     res.statusCode = 402;
     res.end('Payment required');
     return;
@@ -225,11 +257,125 @@ async function handleFullCodeReview(
   }
 }
 
+async function readJsonBody(
+  req: IncomingMessage,
+): Promise<Record<string, unknown> | null> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(chunk as Buffer);
+  }
+
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8')) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function amountSol(amountLamports: number): string {
+  return (amountLamports / 1_000_000_000)
+    .toFixed(9)
+    .replace(/0+$/, '')
+    .replace(/\.$/, '');
+}
+
+async function handleMockPayment(
+  req: IncomingMessage,
+  res: ServerResponse,
+  firebaseWebApiKey: string,
+  paymentConfig: {
+    paymentAmountLamports: number;
+    solanaNetwork: string;
+    solanaServiceWallet: string;
+  },
+): Promise<void> {
+  const authHeader = req.headers.authorization;
+  const idToken =
+    typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+      ? authHeader.slice(7)
+      : null;
+  const body = await readJsonBody(req);
+  const reviewId = typeof body?.reviewId === 'string' ? body.reviewId : '';
+
+  if (!idToken || !reviewId) {
+    res.statusCode = 401;
+    res.end('Authorization and reviewId required');
+    return;
+  }
+
+  const verified = await verifyFirebaseIdToken(idToken, firebaseWebApiKey);
+  if (!verified) {
+    res.statusCode = 401;
+    res.end('Invalid or expired token');
+    return;
+  }
+
+  const doc = await fetchCodeReviewDoc(idToken, reviewId);
+  if (!doc?.fields) {
+    res.statusCode = 404;
+    res.end('Review not found');
+    return;
+  }
+
+  const ownerUid = firestoreString(doc.fields, 'uid');
+  if (ownerUid !== verified.uid) {
+    res.statusCode = 403;
+    res.end('Forbidden');
+    return;
+  }
+
+  if ((req.url ?? '').startsWith('/api/payment/initiate')) {
+    const intentId = `mock-${reviewId}-${Date.now()}`;
+    const memo = `x402:compass:${reviewId}:${intentId}`;
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(
+      JSON.stringify({
+        reviewId,
+        intentId,
+        txnId: intentId,
+        memo,
+        amount: amountSol(paymentConfig.paymentAmountLamports),
+        amountLamports: paymentConfig.paymentAmountLamports,
+        currency: 'SOL',
+        network: paymentConfig.solanaNetwork,
+        receiverAddress: paymentConfig.solanaServiceWallet,
+        walletAddress: paymentConfig.solanaServiceWallet,
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      }),
+    );
+    return;
+  }
+
+  const txSignature = typeof body?.txSignature === 'string' ? body.txSignature : '';
+  const payerPublicKey =
+    typeof body?.payerPublicKey === 'string' ? body.payerPublicKey : '';
+  if (!txSignature || !payerPublicKey) {
+    res.statusCode = 400;
+    res.end('txSignature and payerPublicKey are required');
+    return;
+  }
+  if (!txSignature.startsWith('mock-') && !txSignature.startsWith('mock_')) {
+    res.statusCode = 402;
+    res.end('Mock verifier only accepts mock signatures');
+    return;
+  }
+
+  mockPaidReviewIds.add(reviewId);
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ success: true, txSignature }));
+}
+
 function installApiProxy(
   server: { use: (...args: unknown[]) => void },
   readEnv: () => {
     googleApiKey: string | undefined;
     firebaseWebApiKey: string | undefined;
+    mockPaymentMode: boolean;
+    paymentAmountLamports: number;
+    solanaNetwork: string;
+    solanaServiceWallet: string;
   },
 ): void {
   server.use(
@@ -239,6 +385,31 @@ function installApiProxy(
       next: () => void,
     ): Promise<void> => {
       const url = req.url ?? '';
+      if (req.method === 'POST' && url.startsWith('/api/payment/')) {
+        const {
+          firebaseWebApiKey,
+          mockPaymentMode,
+          paymentAmountLamports,
+          solanaNetwork,
+          solanaServiceWallet,
+        } = readEnv();
+        if (!mockPaymentMode) {
+          next();
+          return;
+        }
+        if (!firebaseWebApiKey) {
+          res.statusCode = 503;
+          res.end('Firebase API key is not configured');
+          return;
+        }
+        await handleMockPayment(req, res, firebaseWebApiKey, {
+          paymentAmountLamports,
+          solanaNetwork,
+          solanaServiceWallet,
+        });
+        return;
+      }
+
       if (req.method === 'POST' && url.startsWith('/api/gemini/v1/messages')) {
         const { googleApiKey, firebaseWebApiKey } = readEnv();
         if (!googleApiKey || !firebaseWebApiKey) {

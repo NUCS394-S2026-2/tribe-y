@@ -11,12 +11,19 @@ import { VaultReceiptCard } from './VaultReceiptCard';
 interface VaultLocationState {
   txnId?: string;
   confirmedAt?: string;
+  mockPaid?: boolean;
+}
+
+function isMockPaymentMode(): boolean {
+  const mode = import.meta.env.VITE_PAYMENT_MODE ?? import.meta.env.VITE_PAYMENT_VERIFIER;
+  return typeof mode === 'string' && mode.toLowerCase() === 'mock';
 }
 
 export function VaultPage() {
   const { reviewId } = useParams<{ reviewId: string }>();
   const location = useLocation();
   const navState = (location.state as VaultLocationState | null) ?? {};
+  const mockPaymentMode = isMockPaymentMode();
   const { user, loading: authLoading } = useAuth();
   const {
     data: review,
@@ -61,7 +68,7 @@ export function VaultPage() {
     );
   }
 
-  if (review.paymentStatus !== 'paid') {
+  if (review.paymentStatus !== 'paid' && !(mockPaymentMode && navState.mockPaid)) {
     return (
       <div className={styles.denied}>
         <p>Payment is required to access this vault report.</p>

@@ -5,7 +5,6 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Buffer } from 'buffer';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -24,6 +23,12 @@ interface LocationState {
 }
 
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+const MOCK_PAYER_PUBLIC_KEY = '11111111111111111111111111111111';
+
+function isMockPaymentMode(): boolean {
+  const mode = import.meta.env.VITE_PAYMENT_MODE ?? import.meta.env.VITE_PAYMENT_VERIFIER;
+  return typeof mode === 'string' && mode.toLowerCase() === 'mock';
+}
 
 export function PaymentPage() {
   const [searchParams] = useSearchParams();
@@ -34,6 +39,7 @@ export function PaymentPage() {
 
   const { connection } = useConnection();
   const { connected, publicKey, sendTransaction } = useWallet();
+  const mockPaymentMode = isMockPaymentMode();
   const {
     initiatePayment,
     confirmPayment,
@@ -68,11 +74,11 @@ export function PaymentPage() {
 
   const handlePay = async () => {
     if (!reviewId || !paymentRequest) return;
-    if (!connected || !publicKey) {
+    if (!mockPaymentMode && (!connected || !publicKey)) {
       setError('Connect your wallet before paying.');
       return;
     }
-    if (paymentRequest.amountLamports === null) {
+    if (!mockPaymentMode && paymentRequest.amountLamports === null) {
       setError('Payment amount is missing. Refresh the page and try again.');
       return;
     }
@@ -85,6 +91,33 @@ export function PaymentPage() {
 
       if (codebaseFile) {
         await attachCodebaseToReview(reviewId, codebaseFile.name, codebaseFile.content);
+      }
+
+      if (mockPaymentMode) {
+        const mockSignature = `mock-${reviewId}-${Date.now()}`;
+        const confirmedSignature = await confirmPayment(
+          mockSignature,
+          reviewId,
+          MOCK_PAYER_PUBLIC_KEY,
+        );
+        if (!confirmedSignature) {
+          setError('Mock payment could not be confirmed. Please try again.');
+          return;
+        }
+
+        navigate(`/vault/${encodeURIComponent(reviewId)}`, {
+          state: {
+            txnId: confirmedSignature,
+            confirmedAt: new Date().toLocaleString(),
+            mockPaid: true,
+          },
+        });
+        return;
+      }
+
+      if (!publicKey || paymentRequest.amountLamports === null) {
+        setError('Connect your wallet before paying.');
+        return;
       }
 
       const { blockhash, lastValidBlockHeight } =
@@ -102,7 +135,7 @@ export function PaymentPage() {
         new TransactionInstruction({
           keys: [],
           programId: MEMO_PROGRAM_ID,
-          data: Buffer.from(paymentRequest.memo, 'utf8'),
+          data: new TextEncoder().encode(paymentRequest.memo) as unknown as Buffer,
         }),
       );
 
@@ -164,7 +197,17 @@ export function PaymentPage() {
       </header>
 
       <main className={styles.content}>
-        <WalletConnect onConnecting={setWalletConnecting} />
+        {mockPaymentMode ? (
+          <div className={styles.mockPaymentNotice}>
+            <div className={styles.connectedBadge}>Mock mode</div>
+            <p>
+              Wallet signing is bypassed for local development. The backend still needs
+              `PAYMENT_VERIFIER=mock` to accept the mock signature.
+            </p>
+          </div>
+        ) : (
+          <WalletConnect onConnecting={setWalletConnecting} />
+        )}
 
         <CodebaseUpload
           onFileSelected={handleFileSelected}
@@ -175,7 +218,10 @@ export function PaymentPage() {
           <X402PaymentCard
             payment={paymentRequest}
             isPaying={isPaying}
-            canPay={connected && paymentRequest.amountLamports !== null}
+            canPay={
+              mockPaymentMode || (connected && paymentRequest.amountLamports !== null)
+            }
+            paymentMode={mockPaymentMode ? 'mock' : 'solana'}
             onPay={handlePay}
           />
         )}
@@ -185,7 +231,11 @@ export function PaymentPage() {
         )}
 
         {(isPaying || status === 'signing' || status === 'verifying') && (
-          <p className={styles.processing}>Confirming payment on Solana Devnet...</p>
+          <p className={styles.processing}>
+            {mockPaymentMode
+              ? 'Confirming mock payment...'
+              : 'Confirming payment on Solana Devnet...'}
+          </p>
         )}
 
         {(error || paymentError) && (

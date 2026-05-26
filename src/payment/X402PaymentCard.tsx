@@ -7,6 +7,7 @@ interface X402PaymentCardProps {
   payment: PaymentRequest;
   isPaying: boolean;
   canPay: boolean;
+  paymentMode: 'mock' | 'solana';
   onPay: () => void;
 }
 
@@ -14,11 +15,14 @@ export function X402PaymentCard({
   payment,
   isPaying,
   canPay,
+  paymentMode,
   onPay,
 }: X402PaymentCardProps) {
   return (
     <div className={cardStyles.paymentCard}>
-      <div className={cardStyles.paymentCardTitle}>X.402 Solana Payment</div>
+      <div className={cardStyles.paymentCardTitle}>
+        {paymentMode === 'mock' ? 'X.402 Mock Payment' : 'X.402 Solana Payment'}
+      </div>
       <div className={cardStyles.paymentRow}>
         <span className={cardStyles.paymentLabel}>Amount</span>
         <span className={cardStyles.paymentValue}>
@@ -54,7 +58,11 @@ export function X402PaymentCard({
           onClick={onPay}
           disabled={!canPay || isPaying}
         >
-          {isPaying ? 'Processing...' : 'Pay with SOL'}
+          {isPaying
+            ? 'Processing...'
+            : paymentMode === 'mock'
+              ? 'Confirm Mock Payment'
+              : 'Pay with SOL'}
         </button>
       </div>
     </div>

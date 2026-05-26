@@ -80,6 +80,21 @@
   color: var(--accent);
 }
 
+.mockPaymentNotice {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: 3px solid var(--status-warning);
+  padding: 16px 20px;
+  max-width: 440px;
+}
+
+.mockPaymentNotice p {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
 .uploadHint {
   font-size: 0.8rem;
   color: var(--text-muted);
