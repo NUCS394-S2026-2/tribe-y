@@ -36,6 +36,8 @@ describe('VaultReceiptCard', () => {
     expect(screen.getByText('solana-devnet')).toBeInTheDocument();
     expect(screen.getByText('security')).toBeInTheDocument();
     expect(screen.getByText('24h-single-download')).toBeInTheDocument();
+    expect(screen.getByText('2026-05-26T12:00:00.000Z')).toBeInTheDocument();
+    expect(screen.getByText('2026-05-27T12:00:00.000Z')).toBeInTheDocument();
     // Content hash is truncated in display
     expect(screen.getByText('aabbccdd…3344')).toBeInTheDocument();
   });
