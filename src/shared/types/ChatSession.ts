@@ -16,7 +16,11 @@ export interface SampleReportFinding {
   line?: number;
   title: string;
   detail: string;
+  impact?: string;
+  evidence?: string;
   recommendation?: string;
+  codeFix?: string;
+  references?: string[];
 }
 
 export interface SampleReportSlice {
@@ -26,6 +30,17 @@ export interface SampleReportSlice {
   code: string;
 }
 
+export interface SampleReportScoreDimension {
+  label: string;
+  score: number;
+  note?: string;
+}
+
+export interface SampleReportScores {
+  overall: number;
+  dimensions: SampleReportScoreDimension[];
+}
+
 export interface SampleReportData {
   reportType: ReportType;
   reportTitle: string;
@@ -33,6 +48,7 @@ export interface SampleReportData {
   summary: string;
   findings: SampleReportFinding[];
   conclusion: string;
+  scores: SampleReportScores;
   generatedAt: number;
 }
 

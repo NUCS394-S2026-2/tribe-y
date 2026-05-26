@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { downloadReportPdf, reportPdfBlobUrl } from '../../shared/reportPdf';
-import type { SampleReportData } from '../../shared/types/ChatSession';
+import type {
+  SampleReportData,
+  SampleReportFinding,
+} from '../../shared/types/ChatSession';
 import { AssistantMessageRow } from './AssistantMessageRow';
+import { PdfPreviewModal } from './PdfPreviewModal';
 import styles from './SampleReportMessage.module.css';
 
 interface SampleReportMessageProps {
@@ -10,11 +14,36 @@ interface SampleReportMessageProps {
   onPayForFullReview: () => void;
 }
 
+function tallyBySeverity(findings: SampleReportFinding[]) {
+  const t = { critical: 0, high: 0, medium: 0, low: 0 };
+  for (const f of findings) t[f.severity] = (t[f.severity] ?? 0) + 1;
+  return t;
+}
+
+function gradeFor(score: number): string {
+  if (score >= 9) return 'A';
+  if (score >= 8) return 'A−';
+  if (score >= 7) return 'B';
+  if (score >= 6) return 'B−';
+  if (score >= 5) return 'C';
+  if (score >= 4) return 'C−';
+  if (score >= 3) return 'D';
+  return 'F';
+}
+
+function scoreToneClass(score: number): string {
+  if (score >= 8) return styles.scoreGood;
+  if (score >= 5) return styles.scoreOk;
+  if (score >= 3) return styles.scoreWarn;
+  return styles.scoreBad;
+}
+
 export function SampleReportMessage({
   data,
   onPayForFullReview,
 }: SampleReportMessageProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const tally = useMemo(() => tallyBySeverity(data.findings), [data.findings]);
 
   useEffect(() => {
     return () => {
@@ -22,69 +51,77 @@ export function SampleReportMessage({
     };
   }, [previewUrl]);
 
-  const handlePreview = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-      return;
-    }
+  const openPreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(reportPdfBlobUrl(data));
   };
+
+  const closePreview = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+  };
+
+  const overall = data.scores.overall;
 
   return (
     <AssistantMessageRow>
       <div className={styles.card}>
-        <div className={styles.title}>📄 {data.reportTitle} — Sample</div>
-        <div className={styles.meta}>
-          Slice: lines {data.slice.startLine}–{data.slice.endLine} · {data.slice.reason}
+        <div className={styles.header}>
+          <div>
+            <div className={styles.title}>{data.reportTitle}</div>
+            <div className={styles.meta}>
+              Sample scorecard · lines {data.slice.startLine}–{data.slice.endLine}
+            </div>
+          </div>
+          <div className={`${styles.overall} ${scoreToneClass(overall)}`}>
+            <div className={styles.overallScore}>{overall}</div>
+            <div className={styles.overallOf}>/ 10</div>
+            <div className={styles.overallGrade}>{gradeFor(overall)}</div>
+          </div>
         </div>
 
-        <section className={styles.section}>
-          <div className={styles.sectionLabel}>Summary</div>
-          <p className={styles.body}>{data.summary || '(no summary)'}</p>
-        </section>
+        <ul className={styles.dimensions}>
+          {data.scores.dimensions.map((d, i) => (
+            <li key={i} className={styles.dimension}>
+              <div className={styles.dimensionRow}>
+                <span className={styles.dimensionLabel}>{d.label}</span>
+                <span className={`${styles.dimensionScore} ${scoreToneClass(d.score)}`}>
+                  {d.score}/10
+                </span>
+              </div>
+              <div className={styles.barTrack}>
+                <div
+                  className={`${styles.barFill} ${scoreToneClass(d.score)}`}
+                  style={{ width: `${(d.score / 10) * 100}%` }}
+                />
+              </div>
+              {d.note && <div className={styles.dimensionNote}>{d.note}</div>}
+            </li>
+          ))}
+        </ul>
 
-        <section className={styles.section}>
-          <div className={styles.sectionLabel}>Findings ({data.findings.length})</div>
-          {data.findings.length === 0 ? (
-            <p className={styles.body}>
-              No issues detected in this slice. The full report scans the entire codebase.
-            </p>
-          ) : (
-            <ul className={styles.findings}>
-              {data.findings.map((f, i) => (
-                <li key={i} className={styles.finding}>
-                  <div className={styles.findingHeader}>
-                    <span
-                      className={`${styles.sev} ${styles[`sev_${f.severity}`] ?? ''}`}
-                    >
-                      {f.severity}
-                    </span>
-                    {f.line !== undefined && (
-                      <span className={styles.line}>line {f.line}</span>
-                    )}
-                    <span className={styles.findingTitle}>{f.title}</span>
-                  </div>
-                  <p className={styles.body}>{f.detail}</p>
-                  {f.recommendation && (
-                    <p className={styles.fix}>
-                      <strong>Fix:</strong> {f.recommendation}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <div className={styles.tally}>
+          <span className={`${styles.tallyChip} ${styles.tallyCritical}`}>
+            {tally.critical} critical
+          </span>
+          <span className={`${styles.tallyChip} ${styles.tallyHigh}`}>
+            {tally.high} high
+          </span>
+          <span className={`${styles.tallyChip} ${styles.tallyMedium}`}>
+            {tally.medium} medium
+          </span>
+          <span className={`${styles.tallyChip} ${styles.tallyLow}`}>
+            {tally.low} low
+          </span>
+        </div>
 
-        <section className={styles.section}>
-          <div className={styles.sectionLabel}>Conclusion</div>
-          <p className={styles.body}>{data.conclusion}</p>
-        </section>
+        <p className={styles.footnote}>
+          Full breakdown, line-by-line findings, and recommended fixes are in the PDF.
+        </p>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.btnGhost} onClick={handlePreview}>
-            {previewUrl ? 'Hide preview' : 'Preview PDF'}
+          <button type="button" className={styles.btnGhost} onClick={openPreview}>
+            Preview PDF
           </button>
           <button
             type="button"
@@ -97,15 +134,16 @@ export function SampleReportMessage({
             Pay for full report
           </button>
         </div>
-
-        {previewUrl && (
-          <iframe
-            title="Sample report PDF preview"
-            src={previewUrl}
-            className={styles.previewFrame}
-          />
-        )}
       </div>
+
+      {previewUrl && (
+        <PdfPreviewModal
+          title={data.reportTitle}
+          url={previewUrl}
+          onClose={closePreview}
+          onDownload={() => downloadReportPdf(data)}
+        />
+      )}
     </AssistantMessageRow>
   );
 }

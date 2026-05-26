@@ -1,0 +1,89 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 32px;
+}
+
+.dismiss {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.modal {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  width: min(1100px, 96vw);
+  height: min(92vh, 1000px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--surface-border);
+  background: var(--primary);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+  color: var(--contrast);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: var(--primary);
+  border: none;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btnPrimary:hover {
+  background: var(--contrast);
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--contrast);
+  border: 1px solid var(--surface-border);
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btnGhost:hover {
+  background: var(--surface-bright);
+  border-color: var(--contrast);
+}
+
+.frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: var(--primary);
+}

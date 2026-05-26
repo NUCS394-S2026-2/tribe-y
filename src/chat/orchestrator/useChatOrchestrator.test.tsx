@@ -95,6 +95,7 @@ describe('useChatOrchestrator', () => {
       summary: 'sum',
       findings: [],
       conclusion: 'c',
+      scores: { overall: 8, dimensions: [{ label: 'Input validation', score: 8 }] },
       generatedAt: 0,
     });
     const { result } = renderOrchestrator();
