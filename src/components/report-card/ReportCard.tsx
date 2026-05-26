@@ -1,8 +1,49 @@
 import React from 'react';
 
 import styles from './ReportCard.module.css';
+import type { ReportCardData } from './reportCardData';
 
-export default function ReportCard() {
+const DEFAULT_REPORT_CARD: ReportCardData = {
+  subject: 'nexus-core-api',
+  auditId: 'AUDIT_LOG_ID: 9942-XJ',
+  environmentLabel: 'Live Execution Environment',
+  healthScore: 62,
+  alert:
+    '> DEBT_ALARM: High risk detected in critical path. Audit recommended before deal close.',
+  issues: [
+    {
+      title: 'Circular dependency',
+      detail: 'Package core/v1 imports auth/v2 and vice-versa.',
+    },
+    {
+      title: 'Insecure credentials',
+      detail: 'Hardcoded secret detected in config/production.yaml.',
+    },
+  ],
+};
+
+interface ReportCardProps {
+  data?: ReportCardData;
+}
+
+type ScoreTone = 'poor' | 'fair' | 'good';
+
+function getScoreTone(score: number): ScoreTone {
+  if (score >= 80) {
+    return 'good';
+  }
+
+  if (score >= 60) {
+    return 'fair';
+  }
+
+  return 'poor';
+}
+
+export default function ReportCard({ data = DEFAULT_REPORT_CARD }: ReportCardProps) {
+  const scoreTone = getScoreTone(data.healthScore);
+  const scoreToneClass = styles[`score${scoreTone}`];
+
   return (
     <section className={styles.section} id="metrics">
       <div className={styles.container}>
@@ -21,7 +62,7 @@ export default function ReportCard() {
                 <div className={styles.subjectIcon}>
                   <span className="material-symbols-outlined text-sm">deployed_code</span>
                 </div>
-                <span>nexus-core-api</span>
+                <span>{data.subject}</span>
               </div>
             </div>
           </div>
@@ -33,9 +74,9 @@ export default function ReportCard() {
                   <span className={styles.dotError}></span>
                   <span className={styles.dotWarning}></span>
                   <span className={styles.dotSuccess}></span>
-                  <span className={styles.logId}>AUDIT_LOG_ID: 9942-XJ</span>
+                  <span className={styles.logId}>{data.auditId}</span>
                 </div>
-                <div className={styles.envLabel}>Live Execution Environment</div>
+                <div className={styles.envLabel}>{data.environmentLabel}</div>
               </div>
 
               <div className={styles.windowBody}>
@@ -43,43 +84,36 @@ export default function ReportCard() {
                   <div className={styles.healthMetric}>
                     <h5 className={styles.metricLabel}>Overall Health Rating</h5>
                     <div className={styles.scoreRow}>
-                      <span className={styles.scoreValue}>62</span>
+                      <span className={`${styles.scoreValue} ${scoreToneClass}`}>
+                        {data.healthScore}
+                      </span>
                       <span className={styles.scoreTotal}>/ 100</span>
                     </div>
                     <div className={styles.progressBar}>
-                      <div className={styles.progressFill}></div>
+                      <div
+                        className={`${styles.progressFill} ${scoreToneClass}`}
+                        style={{ width: `${data.healthScore}%` }}
+                      ></div>
                     </div>
-                    <p className={styles.metricAlert}>
-                      &gt; DEBT_ALARM: High risk detected in critical path. Audit
-                      recommended before deal close.
-                    </p>
+                    <p className={styles.metricAlert}>{data.alert}</p>
                   </div>
 
                   <div className={styles.smellMetric}>
                     <h5 className={styles.metricLabel}>Critical Smells</h5>
                     <ul className={styles.smellList}>
-                      <li>
-                        <span className={`material-symbols-outlined ${styles.errorIcon}`}>
-                          warning
-                        </span>
-                        <div>
-                          <div className={styles.smellTitle}>Circular dependency</div>
-                          <div className={styles.smellDetail}>
-                            Package core/v1 imports auth/v2 and vice-versa.
+                      {data.issues.map((issue) => (
+                        <li key={`${issue.title}-${issue.detail}`}>
+                          <span
+                            className={`material-symbols-outlined ${styles.errorIcon}`}
+                          >
+                            warning
+                          </span>
+                          <div>
+                            <div className={styles.smellTitle}>{issue.title}</div>
+                            <div className={styles.smellDetail}>{issue.detail}</div>
                           </div>
-                        </div>
-                      </li>
-                      <li>
-                        <span className={`material-symbols-outlined ${styles.errorIcon}`}>
-                          lock_open
-                        </span>
-                        <div>
-                          <div className={styles.smellTitle}>Insecure credentials</div>
-                          <div className={styles.smellDetail}>
-                            Hardcoded secret detected in config/production.yaml.
-                          </div>
-                        </div>
-                      </li>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>
