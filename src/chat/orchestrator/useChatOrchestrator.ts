@@ -35,6 +35,7 @@ function createInitialSession(): ChatSession {
     mode: 'qualifying',
     activeReviewId: null,
     isLoading: false,
+    uploadedFile: null,
   };
 }
 
@@ -42,6 +43,7 @@ interface UseChatOrchestratorReturn {
   session: ChatSession;
   sendMessage: (text: string) => Promise<void>;
   goToPayment: () => void;
+  handleFileUpload: (fileName: string, content: string) => Promise<void>;
 }
 
 export function useChatOrchestrator(): UseChatOrchestratorReturn {
@@ -79,6 +81,7 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
         mode: 'qualifying',
         activeReviewId: null,
         isLoading: true,
+        uploadedFile: null,
       },
       trimmed,
     );
@@ -140,10 +143,85 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
     }
   }, []);
 
-  const goToPayment = useCallback(() => {
-    if (!session.activeReviewId) return;
-    navigate(`/payment?reviewId=${encodeURIComponent(session.activeReviewId)}`);
-  }, [navigate, session.activeReviewId]);
+  const handleFileUpload = useCallback(
+    async (fileName: string, content: string) => {
+      const current = sessionRef.current;
 
-  return { session, sendMessage, goToPayment };
+      try {
+        await auth.authStateReady();
+        const uid = auth.currentUser?.uid ?? null;
+
+        const isCppOrZip =
+          fileName.toLowerCase().endsWith('.cpp') ||
+          fileName.toLowerCase().endsWith('.zip');
+
+        // For .cpp and .zip files, create a teaser review first
+        if (isCppOrZip && uid) {
+          setSession((prev) => ({
+            ...prev,
+            mode: 'analyzing',
+            isLoading: true,
+          }));
+
+          const ctx = { messages: current.messages, uid };
+          const snippet = content.slice(0, CODE_SNIPPET_MAX_CHARS);
+          const result = await runCodeReviewTeaser(ctx, snippet);
+
+          setSession((prev) => ({
+            ...prev,
+            messages: [
+              ...current.messages,
+              createMessage(
+                'assistant',
+                `File uploaded: ${fileName}\n\n${result.teaserReview}`,
+                'teaser',
+              ),
+            ],
+            mode: 'teaser',
+            activeReviewId: result.reviewId,
+            uploadedFile: { name: fileName, content },
+            isLoading: false,
+          }));
+
+          // Navigate to payment with the file
+          navigate(`/payment?reviewId=${encodeURIComponent(result.reviewId)}`, {
+            state: { uploadedFile: { name: fileName, content } },
+          });
+        } else {
+          // For other files or pasted code, store in session
+          setSession((prev) => ({
+            ...prev,
+            uploadedFile: { name: fileName, content },
+          }));
+        }
+      } catch (err) {
+        console.error('File upload error:', err);
+        const errorText =
+          err instanceof Error ? err.message : 'Error processing file upload.';
+
+        setSession((prev) => ({
+          ...prev,
+          messages: [...current.messages, createMessage('assistant', errorText, 'error')],
+          mode: 'qualifying',
+          isLoading: false,
+        }));
+      }
+    },
+    [navigate],
+  );
+
+  const goToPayment = useCallback(() => {
+    const current = sessionRef.current;
+    if (!current.activeReviewId) return;
+
+    const state = current.uploadedFile
+      ? { uploadedFile: current.uploadedFile }
+      : undefined;
+
+    navigate(`/payment?reviewId=${encodeURIComponent(current.activeReviewId)}`, {
+      state,
+    });
+  }, [navigate]);
+
+  return { session, sendMessage, goToPayment, handleFileUpload };
 }

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import cardStyles from '../shared/styles/actionCards.module.css';
 import { CODEBASE_UPLOAD_MAX_CHARS } from '../shared/types/CodeReview';
@@ -6,12 +6,24 @@ import styles from './PaymentPage.module.css';
 
 interface CodebaseUploadProps {
   onFileSelected: (fileName: string, content: string) => void;
+  preselectedFile?: {
+    name: string;
+    content: string;
+  } | null;
 }
 
-export function CodebaseUpload({ onFileSelected }: CodebaseUploadProps) {
+export function CodebaseUpload({ onFileSelected, preselectedFile }: CodebaseUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Pre-populate if a file was passed from chat
+    if (preselectedFile) {
+      setFileName(preselectedFile.name);
+      onFileSelected(preselectedFile.name, preselectedFile.content);
+    }
+  }, [preselectedFile, onFileSelected]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,12 +44,12 @@ export function CodebaseUpload({ onFileSelected }: CodebaseUploadProps) {
     <div className={cardStyles.paymentCard}>
       <div className={cardStyles.paymentCardTitle}>Upload Codebase</div>
       <p className={styles.uploadHint}>
-        Upload your full C++ codebase (.cpp, .h, .zip as text) for a comprehensive review.
+        Upload your full C++ codebase (.cpp, .h, .zip) for a comprehensive review.
       </p>
       <input
         ref={inputRef}
         type="file"
-        accept=".cpp,.h,.hpp,.cc,.cxx,.txt,.zip"
+        accept=".cpp,.h,.hpp,.cc,.cxx,.zip"
         className={styles.fileInput}
         onChange={handleFileChange}
         aria-label="Upload codebase file"

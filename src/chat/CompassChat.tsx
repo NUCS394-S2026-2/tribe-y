@@ -6,10 +6,11 @@ import styles from './CompassChat.module.css';
 import { useChatOrchestrator } from './orchestrator/useChatOrchestrator';
 
 export function CompassChat() {
-  const { session, sendMessage, goToPayment } = useChatOrchestrator();
+  const { session, sendMessage, goToPayment, handleFileUpload } = useChatOrchestrator();
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,6 +37,26 @@ export function CompassChat() {
       void handleSend();
     }
   };
+
+  const handleFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        await handleFileUpload(file.name, text);
+      } catch (err) {
+        console.error('Error reading file:', err);
+      }
+
+      // Reset the input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    [handleFileUpload],
+  );
 
   const composerBusy = session.isLoading || session.mode === 'analyzing';
 
@@ -67,9 +88,11 @@ export function CompassChat() {
           botLoading={session.isLoading}
           input={input}
           textareaRef={textareaRef}
+          fileInputRef={fileInputRef}
           onInputChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onSend={() => void handleSend()}
+          onFileChange={handleFileChange}
         />
       </div>
     </div>

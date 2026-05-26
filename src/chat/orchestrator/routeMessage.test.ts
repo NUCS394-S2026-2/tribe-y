@@ -8,6 +8,7 @@ const emptySession: ChatSession = {
   mode: 'qualifying',
   activeReviewId: null,
   isLoading: false,
+  uploadedFile: null,
 };
 
 describe('routeMessage', () => {

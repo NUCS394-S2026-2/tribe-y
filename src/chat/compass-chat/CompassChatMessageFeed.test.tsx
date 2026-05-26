@@ -19,6 +19,7 @@ function makeSession(overrides: Partial<ChatSession> = {}): ChatSession {
     mode: 'qualifying',
     activeReviewId: 'review-123',
     isLoading: false,
+    uploadedFile: null,
     ...overrides,
   };
 }

@@ -35,9 +35,11 @@ describe('CompassChatComposer', () => {
         botLoading={false}
         input=""
         textareaRef={{ current: null }}
+        fileInputRef={{ current: null }}
         onInputChange={() => undefined}
         onKeyDown={() => undefined}
         onSend={() => undefined}
+        onFileChange={() => undefined}
       />,
     );
     expect(screen.getByRole('textbox', { name: /message input/i })).toBeInTheDocument();
