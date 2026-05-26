@@ -521,6 +521,34 @@
   background: var(--contrast);
 }
 
+.uploadBtn {
+  background: transparent;
+  color: var(--accent);
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s;
+  padding: 0;
+}
+
+.uploadBtn:disabled {
+  color: var(--surface-border);
+  cursor: not-allowed;
+}
+
+.uploadBtn:hover:not(:disabled) {
+  color: var(--contrast);
+}
+
+.hiddenInput {
+  display: none;
+}
+
 .inputDisclaimer {
   text-align: center;
   font-size: 0.72rem;

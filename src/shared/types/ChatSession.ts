@@ -12,9 +12,15 @@ export interface ChatMessage {
   createdAt: number;
 }
 
+export interface UploadedFile {
+  name: string;
+  content: string;
+}
+
 export interface ChatSession {
   messages: ChatMessage[];
   mode: ChatMode;
   activeReviewId: string | null;
   isLoading: boolean;
+  uploadedFile: UploadedFile | null;
 }

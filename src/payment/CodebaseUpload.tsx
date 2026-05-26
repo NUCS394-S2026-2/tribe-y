@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import cardStyles from '../shared/styles/actionCards.module.css';
 import { CODEBASE_UPLOAD_MAX_CHARS } from '../shared/types/CodeReview';
@@ -6,12 +6,24 @@ import styles from './PaymentPage.module.css';
 
 interface CodebaseUploadProps {
   onFileSelected: (fileName: string, content: string) => void;
+  preselectedFile?: {
+    name: string;
+    content: string;
+  } | null;
 }
 
-export function CodebaseUpload({ onFileSelected }: CodebaseUploadProps) {
+export function CodebaseUpload({ onFileSelected, preselectedFile }: CodebaseUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Pre-populate if a file was passed from chat
+    if (preselectedFile) {
+      setFileName(preselectedFile.name);
+      onFileSelected(preselectedFile.name, preselectedFile.content);
+    }
+  }, [preselectedFile, onFileSelected]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

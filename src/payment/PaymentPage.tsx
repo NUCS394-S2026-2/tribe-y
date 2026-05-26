@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { attachCodebaseToReview, fetchFullReviewById } from '../agents/codeReviewApi';
 import { useX402Payment } from '../agents/useX402Payment';
@@ -8,10 +8,19 @@ import styles from './PaymentPage.module.css';
 import { WalletConnect } from './WalletConnect';
 import { X402PaymentCard } from './X402PaymentCard';
 
+interface LocationState {
+  uploadedFile?: {
+    name: string;
+    content: string;
+  };
+}
+
 export function PaymentPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const reviewId = searchParams.get('reviewId');
+  const locationState = location.state as LocationState | null;
 
   const { initiatePayment, confirmPayment, paymentRequest } = useX402Payment();
   const [walletConnected, setWalletConnected] = useState(false);
@@ -21,6 +30,13 @@ export function PaymentPage() {
   } | null>(null);
   const [isPaying, setIsPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Pre-populate the codebase file if it was passed from chat
+    if (locationState?.uploadedFile) {
+      setCodebaseFile(locationState.uploadedFile);
+    }
+  }, [locationState]);
 
   useEffect(() => {
     if (reviewId) {
@@ -97,7 +113,10 @@ export function PaymentPage() {
           onConnect={() => setWalletConnected(true)}
         />
 
-        <CodebaseUpload onFileSelected={handleFileSelected} />
+        <CodebaseUpload
+          onFileSelected={handleFileSelected}
+          preselectedFile={codebaseFile}
+        />
 
         {paymentRequest && (
           <X402PaymentCard
