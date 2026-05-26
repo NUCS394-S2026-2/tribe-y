@@ -8,8 +8,6 @@ import type { CodeReview } from '../shared/types/CodeReview';
 import styles from './VaultPage.module.css';
 import { VaultReceiptCard } from './VaultReceiptCard';
 
-const TESTNET_AMOUNT = '0.001 ETH';
-
 interface VaultLocationState {
   txnId?: string;
   confirmedAt?: string;
@@ -38,7 +36,7 @@ export function VaultPage() {
   }
 
   if (authLoading || reviewLoading) {
-    return <p className={styles.loading}>Loading your vault…</p>;
+    return <p className={styles.loading}>Loading your vault...</p>;
   }
 
   if (error) {
@@ -77,8 +75,12 @@ export function VaultPage() {
     );
   }
 
-  const txnId = navState.txnId ?? review.paymentTxnId ?? '—';
-  const confirmedAt = navState.confirmedAt ?? review.updatedAt ?? null;
+  const txnId = navState.txnId ?? review.paymentTxSignature ?? review.paymentTxnId ?? '-';
+  const amount =
+    review.paymentAmount && review.paymentCurrency
+      ? `${review.paymentAmount} ${review.paymentCurrency}`
+      : undefined;
+  const confirmedAt = navState.confirmedAt ?? review.paidAt ?? review.updatedAt ?? null;
 
   return (
     <div className={styles.shell}>
@@ -94,7 +96,8 @@ export function VaultPage() {
       <main className={styles.content}>
         <VaultReceiptCard
           txnId={txnId}
-          amount={TESTNET_AMOUNT}
+          amount={amount}
+          network={review.paymentNetwork ?? undefined}
           confirmedAt={confirmedAt}
           onSavePdf={() => window.print()}
         />
@@ -109,7 +112,7 @@ export function VaultPage() {
         </section>
 
         <Link to="/chat" className={styles.backLink}>
-          ← Back to Chat
+          Back to Chat
         </Link>
       </main>
     </div>

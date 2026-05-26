@@ -7,6 +7,18 @@ export interface CodeReview {
   fullReview: string | null;
   paymentStatus: 'unpaid' | 'pending' | 'paid';
   paymentTxnId?: string | null;
+  paymentTxSignature?: string | null;
+  paymentIntentId?: string | null;
+  paymentPayerPublicKey?: string | null;
+  paymentRecipientPublicKey?: string | null;
+  paymentAmount?: string | null;
+  paymentAmountLamports?: number | null;
+  paymentCurrency?: string | null;
+  paymentNetwork?: string | null;
+  paymentMemo?: string | null;
+  paymentSlot?: number | null;
+  paymentIntentExpiresAt?: string | null;
+  paidAt?: string | null;
   codebaseFileName?: string | null;
   codebaseContent?: string | null;
   uploadStatus?: 'none' | 'pending' | 'ready';
