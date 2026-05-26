@@ -1,0 +1,165 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  padding: 20px;
+  margin-top: 8px;
+}
+
+.title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.meta {
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.section {
+  margin-top: 12px;
+}
+
+.sectionLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.body {
+  font-size: 0.875rem;
+  color: var(--contrast);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.findings {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.finding {
+  border-left: 2px solid var(--surface-border);
+  padding: 4px 0 4px 10px;
+}
+
+.findingHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.findingTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--contrast);
+}
+
+.sev {
+  font-size: 0.65rem;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border: 1px solid currentColor;
+}
+
+.sev_low {
+  color: #16a34a;
+}
+.sev_medium {
+  color: #ca8a04;
+}
+.sev_high {
+  color: #ea580c;
+}
+.sev_critical {
+  color: #dc2626;
+}
+
+.line {
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+}
+
+.fix {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: var(--primary);
+  border: none;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btnPrimary:hover {
+  background: var(--contrast);
+}
+
+.btnGold {
+  background: var(--status-warning);
+  color: var(--primary);
+  border: none;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btnGold:hover {
+  background: #fcd34d;
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--contrast);
+  border: 1px solid var(--surface-border);
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btnGhost:hover {
+  background: var(--surface-bright);
+  border-color: var(--contrast);
+}
+
+.previewFrame {
+  margin-top: 16px;
+  width: 100%;
+  height: 520px;
+  border: 1px solid var(--surface-border);
+  background: var(--primary);
+}

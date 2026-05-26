@@ -20,6 +20,8 @@ function makeSession(overrides: Partial<ChatSession> = {}): ChatSession {
     activeReviewId: 'review-123',
     isLoading: false,
     uploadedFile: null,
+    pendingCode: null,
+    selectedReportType: null,
     ...overrides,
   };
 }
@@ -31,6 +33,7 @@ describe('CompassChatMessageFeed', () => {
         session={makeSession()}
         bottomRef={createRef()}
         onPayForFullReview={() => undefined}
+        onSelectReportType={() => undefined}
       />,
     );
 
@@ -49,6 +52,7 @@ describe('CompassChatMessageFeed', () => {
         })}
         bottomRef={createRef()}
         onPayForFullReview={() => undefined}
+        onSelectReportType={() => undefined}
       />,
     );
 
@@ -62,6 +66,7 @@ describe('CompassChatMessageFeed', () => {
         session={makeSession({ activeReviewId: null })}
         bottomRef={createRef()}
         onPayForFullReview={() => undefined}
+        onSelectReportType={() => undefined}
       />,
     );
 
