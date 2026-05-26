@@ -1,10 +1,10 @@
 import React from 'react';
 
+import type { ChatMessage } from '../../shared/types/ChatSession';
 import styles from '../CompassChat.module.css';
-import type { CompassChatDisplayMessage } from './stages';
 
 interface UserMessageRowProps {
-  message: CompassChatDisplayMessage;
+  message: ChatMessage;
 }
 
 export function UserMessageRow({ message }: UserMessageRowProps) {

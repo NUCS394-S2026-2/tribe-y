@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, test } from 'vitest';
 
-import { LandingPage } from './chat/LandingPage';
-import { SalesbotChat } from './chat/SalesbotChat';
+import { CompassChatComposer } from './chat/compass-chat/CompassChatComposer';
+import LandingPage from './components/landing-page/LandingPage';
 
 describe('LandingPage', () => {
   test('renders the headline', () => {
@@ -15,48 +15,32 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
-  test('renders the Start with Salesbot CTA button', () => {
+  test('renders the Start Session CTA button', () => {
     render(
       <MemoryRouter>
         <LandingPage />
       </MemoryRouter>,
     );
     expect(
-      screen.getByRole('button', { name: /start with salesbot/i }),
+      screen.getByRole('button', { name: /start session with sales agent/i }),
     ).toBeInTheDocument();
-  });
-
-  test('renders all four feature cards', () => {
-    render(
-      <MemoryRouter>
-        <LandingPage />
-      </MemoryRouter>,
-    );
-    expect(screen.getByText(/salesbot/i, { selector: 'p' })).toBeInTheDocument();
-    expect(screen.getByText(/teaser review/i)).toBeInTheDocument();
-    expect(screen.getByText(/x\.402 payment/i)).toBeInTheDocument();
-    expect(screen.getByText(/vault receipt/i)).toBeInTheDocument();
   });
 });
 
-describe('SalesbotChat', () => {
-  test('renders greeting from Salesbot on load', () => {
-    render(
-      <MemoryRouter>
-        <SalesbotChat />
-      </MemoryRouter>,
-    );
-    expect(screen.getByText(/salesbot/i, { selector: 'h1' })).toBeInTheDocument();
-    expect(screen.getByText(/compass\.tne\.ai/i)).toBeInTheDocument();
-  });
-
+describe('CompassChatComposer', () => {
   test('renders the message input and send button', () => {
     render(
-      <MemoryRouter>
-        <SalesbotChat />
-      </MemoryRouter>,
+      <CompassChatComposer
+        disabled={false}
+        botLoading={false}
+        input=""
+        textareaRef={{ current: null }}
+        onInputChange={() => undefined}
+        onKeyDown={() => undefined}
+        onSend={() => undefined}
+      />,
     );
     expect(screen.getByRole('textbox', { name: /message input/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /send message/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send/i })).toBeInTheDocument();
   });
 });

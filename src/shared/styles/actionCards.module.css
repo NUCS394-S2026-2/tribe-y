@@ -1,0 +1,156 @@
+/* Shared card and button styles for payment and vault surfaces */
+
+.paymentCard {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  padding: 20px;
+  margin-top: 8px;
+  max-width: 440px;
+}
+
+.paymentCardTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--status-warning);
+  margin-bottom: 12px;
+}
+
+.paymentRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--surface-border);
+  font-size: 0.8rem;
+  gap: 12px;
+}
+
+.paymentRow:last-of-type {
+  border-bottom: none;
+}
+
+.paymentLabel {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.paymentValue {
+  color: var(--contrast);
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+  text-align: right;
+}
+
+.receiptCard {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: 3px solid var(--status-success);
+  padding: 20px;
+  margin-top: 8px;
+  max-width: 640px;
+}
+
+.receiptCardTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--status-success);
+  margin-bottom: 12px;
+}
+
+.receiptRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--surface-border);
+  font-size: 0.8rem;
+  gap: 12px;
+}
+
+.receiptRow:last-of-type {
+  border-bottom: none;
+}
+
+.receiptLabel {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.receiptValue {
+  color: var(--contrast);
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+  text-align: right;
+}
+
+.reviewCardBody {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.btnGold {
+  background: var(--status-warning);
+  color: var(--primary);
+  border: none;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnGold:hover:not(:disabled) {
+  background: #fcd34d;
+}
+
+.btnGold:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: var(--primary);
+  border: none;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--contrast);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--contrast);
+  border: 1px solid var(--surface-border);
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.btnGhost:hover {
+  background: var(--surface-bright);
+  border-color: var(--contrast);
+}

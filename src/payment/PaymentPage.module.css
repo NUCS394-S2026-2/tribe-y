@@ -1,0 +1,103 @@
+.shell {
+  min-height: 100vh;
+  background: var(--primary);
+  color: var(--contrast);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 24px;
+}
+
+.header {
+  max-width: 720px;
+  margin: 0 auto 32px;
+}
+
+.logo {
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 16px 0 8px;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.content {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.walletActions {
+  margin-top: 14px;
+}
+
+.connectedBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--status-success);
+  border: 1px solid var(--status-success);
+  padding: 6px 12px;
+}
+
+.uploadHint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.fileInput {
+  display: none;
+}
+
+.fileName {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+}
+
+.error {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--status-error, #e53e3e);
+}
+
+.processing {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  padding: 12px 0;
+}
+
+.backLink {
+  display: inline-block;
+  margin-top: 24px;
+  font-size: 0.8rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.missingReview {
+  max-width: 720px;
+  margin: 80px auto;
+  text-align: center;
+  color: var(--text-muted);
+}

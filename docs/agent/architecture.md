@@ -8,102 +8,123 @@ Owned by **Architecture/Design Guild**. Read before touching more than one file 
 
 compass.tne.ai is an AI-powered technical due diligence assistant for M&A managers evaluating software companies. The platform helps acquirers determine whether a target company's C++ codebase is maintainable and high-quality before committing to a deal.
 
-The system is a **React SPA with no custom backend**. All persistence goes through Firebase Auth + Firestore. Agent logic runs client-side. Stripe handles payment; x402 is the payment-authorization protocol between the Purchasing Agent and the Code Review Agent, communicated via A2A (Agent-to-Agent) protocol.
+The system is a **React SPA** with lightweight Firebase Cloud Functions for Gemini proxy, payment confirmation, and gated full reviews. All persistence goes through Firebase Auth + Firestore. Agent logic runs client-side. **X.402 crypto micropayments** (testnet) authorize full reviews; the Purchasing Agent and Code Review Agent communicate via Firestore state and HTTP 402 gating.
+
+See [ADR 0003](decisions/0003-route-based-ux-crypto-payment.md) for the route-based UX decision.
 
 ---
 
 ## System Overview
 
-The application is a single-page app running entirely in the browser. There is no custom backend server. All state is persisted in Firestore; identity is managed by Firebase Auth; payments are processed through Stripe.
+The application is a single-page app running in the browser. State is persisted in Firestore; identity is managed by Firebase Auth; payments use X.402 testnet stubs (real wallet integration planned).
 
-The entry point is a public landing page that routes the user into a chatbot UI. The chatbot is the primary surface for the entire product — qualification, preview analysis, payment, and post-purchase status all happen inside it. After a paid review completes, a separate report viewer renders the final output and provides a download link.
+**Routes:**
 
-Inside the chatbot, three agents run client-side and hand off to each other in sequence:
+| Route                | Surface        | Responsibility                                       |
+| -------------------- | -------------- | ---------------------------------------------------- |
+| `/`                  | Landing page   | Marketing; CTA → `/chat`                             |
+| `/chat`              | Chat UI        | Orchestrator, unified input, teaser preview, pay CTA |
+| `/payment?reviewId=` | Payment portal | Wallet connect, codebase upload, X.402 payment       |
+| `/vault/:reviewId`   | Vault          | Owner-scoped full report + receipt                   |
 
-1. The **Sales Agent** owns the conversation from start to finish. It qualifies the user, detects when they paste C++ code, delegates snippet analysis to the Code Review Agent, displays the preview report back in chat, and prompts the user to purchase a full review.
-2. The **Purchasing Agent** takes over when the user agrees to buy. It runs the Stripe checkout and issues an x402 payment authorization. Once payment is confirmed, it sends an A2A (Agent-to-Agent) authorization message to the Code Review Agent.
-3. The **Code Review Agent** performs all analysis — snippet preview and full repository review. It will not begin a full review until it receives a valid A2A authorization from the Purchasing Agent. After analysis, it writes the report to Firestore, which the Report Viewer reads and makes downloadable.
+**Input routing** lives in `src/shared/routing/` — a lightweight heuristic classifier (not an LLM agent) routes each message to the Sales Agent or Code Review Agent.
 
-All three agents read and write to Firestore as their shared state layer. Firestore is the only communication channel between agents and between agents and the UI — there are no direct RPC calls between them except the A2A authorization between Purchasing and Code Review.
+The **Chat Orchestrator** (`src/chat/orchestrator/`) owns in-memory conversation state (messages, mode, active review ID), invokes stateless agent services, and coordinates navigation to payment. Agents do not hold session memory.
+
+Three agent services run client-side:
+
+1. **Sales Agent** — handles English qualification and off-topic requests in chat.
+2. **Code Review Agent** — analyzes C++ snippets (teaser) and full reviews after payment.
+3. **Purchasing Agent** — runs X.402 payment flow and confirms payment server-side.
+
+Firestore is the shared state layer between agents and the UI. Cloud Functions gate full reviews on `paymentStatus === 'paid'` (HTTP 402 when unpaid).
 
 ---
 
 ## User Flow
 
-| Step               | What happens                                                                                            | Agent responsible                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| 1. Landing         | User arrives at marketing page; CTA enters chatbot                                                      | —                                    |
-| 2. Qualification   | Sales Agent converses, determines if C++ repo is in scope                                               | Sales Agent                          |
-| 3. Preview         | User pastes a C++ snippet; Sales Agent delegates to Code Review Agent; report returned in chat          | Sales Agent → Code Review Agent      |
-| 4. Upsell          | Sales Agent prompts user to purchase a full repository review                                           | Sales Agent                          |
-| 5. Payment         | Purchasing Agent runs Stripe checkout + x402 authorization                                              | Purchasing Agent                     |
-| 6. A2A handoff     | Purchasing Agent sends signed authorization to Code Review Agent; review blocked until payment verified | Purchasing Agent → Code Review Agent |
-| 7. Full review     | User uploads repo (GitHub URL or archive); Code Review Agent performs complete analysis                 | Code Review Agent                    |
-| 8. Report delivery | Report written to Firestore, rendered in Report Viewer, made downloadable                               | —                                    |
+| Step            | What happens                                                           | Agent / surface          |
+| --------------- | ---------------------------------------------------------------------- | ------------------------ |
+| 1. Landing      | User arrives at `/`; CTA enters chat                                   | —                        |
+| 2. Chat input   | User pastes C++ or asks in English; orchestrator routes via classifier | Chat Orchestrator        |
+| 3. English path | Sales Agent responds in chat transcript                                | Sales Agent              |
+| 4. C++ path     | Code Review Agent returns teaser in chat                               | Code Review Agent        |
+| 5. Upsell       | "Pay for Full Code Review" navigates to `/payment`                     | Chat UI                  |
+| 6. Payment      | User connects wallet, uploads codebase, pays via X.402                 | Purchasing Agent         |
+| 7. A2A handoff  | Payment confirmed in Firestore; full review gated by HTTP 402          | Purchasing → Code Review |
+| 8. Vault        | Full report + receipt at `/vault/:reviewId` (owner-only)               | Vault UI                 |
+
+---
+
+## Chat Orchestrator
+
+Lives in `src/chat/orchestrator/` (Yellow team). Owns:
+
+- In-memory `ChatSession` (messages, mode, `activeReviewId`, loading)
+- Per-message routing via `routeMessage` + `classifyInput`
+- Invoking stateless agent services with `AgentContext`
+- Navigation to `/payment` when user pays for full review
+
+Agents are **stateless services** in `src/agents/` (`runSalesAgent`, `runCodeReviewTeaser`). They receive read-only context and return a single turn result. The orchestrator appends results to the transcript and updates mode.
+
+Future: optional `SessionStore` interface for Firestore-backed chat sessions (`sessionStore.ts`).
 
 ---
 
 ## Core Agents
 
-### Sales Agent
+### Sales Agent (`salesAgent.ts`)
 
-Drives the entire chatbot experience. Responsibilities:
+Stateless service for non-C++ chat in `/chat`. Responsibilities:
 
-- Conversational qualification (is the target codebase C++? is the scope compatible?)
-- Informs user if platform is not a fit
-- Detects C++ code in chat and delegates snippet analysis to the Code Review Agent
-- Renders the preview report back inside the chatbot UI
-- Prompts the user to purchase a full review and hands off to the Purchasing Agent
+- Conversational qualification and product questions
+- Politely redirects non-C++ requests
+- Does not own payment, full review delivery, or session state
 
-### Code Review Agent
+### Code Review Agent (`codeReviewAgent.ts`)
 
-The analysis engine. Responsibilities:
+Stateless service for C++ analysis. Responsibilities:
 
-- Analyzes C++ snippets submitted during preview
-- Performs full-repository analysis after payment authorization
-- Generates structured reports (memory safety, architectural concerns, maintainability, risk score, acquisition recommendations)
-- Does **not** begin full analysis until it receives a valid A2A payment authorization from the Purchasing Agent
+- Analyzes C++ snippets submitted during preview (teaser)
+- Creates Firestore `codeReviews` documents
+- Full review after payment is fetched via `codeReviewApi` + Cloud Function (not in chat orchestrator)
 
 ### Purchasing Agent
 
-Owns the payment lifecycle. Responsibilities:
+Owns the payment lifecycle on `/payment`. Responsibilities:
 
-- Runs Stripe checkout flow
-- Issues x402 payment authorization
-- Sends an A2A authorization message to the Code Review Agent
-- Coordinates repository access after payment confirmation
+- Initiates X.402 testnet payment request
+- Confirms payment via Cloud Function (`paymentStatus: 'paid'`)
+- Triggers full review fetch after confirmation
 
 ---
 
 ## Team Ownership
 
-| Team   | Owns          | Responsibilities                                                                |
-| ------ | ------------- | ------------------------------------------------------------------------------- |
-| Yellow | `src/chat/`   | Landing page, Chatbot UI, Report Viewer, File Upload UI, Sales Agent            |
-| Orange | `src/agents/` | Code Review Agent, Purchasing Agent, Stripe integration, x402/A2A logic         |
-| Shared | `src/shared/` | Types, Firestore hooks, billing utilities — **both teams must approve changes** |
-
-Do not modify another team's owned directory without their explicit approval in the PR. If you are unsure which team owns a file, check this table before editing.
+| Team   | Owns                                                         | Responsibilities                                                                 |
+| ------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Yellow | `src/chat/`, `src/payment/`, `src/vault/`, `src/components/` | Landing, chat orchestrator, payment portal, vault UI                             |
+| Orange | `src/agents/`, `functions/`                                  | Code Review Agent, Purchasing Agent, x402/A2A logic                              |
+| Shared | `src/shared/`                                                | Types, routing classifier, Firestore hooks — **both teams must approve changes** |
 
 ---
 
 ## Cross-Team Boundaries
 
-There are two interaction points between Yellow and Orange. These are the only legal ways to cross the team boundary.
-
-**Yellow → Orange (trigger a snippet review)**
-Yellow's Sales Agent invokes the Code Review Agent's public interface to analyze a snippet and get a report back. The contract lives in `src/agents/` and is owned by Orange. Yellow must not reach into implementation files inside `src/agents/`; it only calls the exported public surface.
+**Yellow → Orange (invoke agent services)**
+Orchestrator calls `runSalesAgent` / `runCodeReviewTeaser` public exports. Yellow must not reach into Orange implementation details beyond those service functions.
 
 **Orange → Yellow (signal payment completion)**
-Orange's Purchasing Agent writes a transaction record to Firestore. Yellow listens to that record in real time and gates the file upload UI on a confirmed payment status. No direct function call crosses from Orange into Yellow's code.
+Purchasing Agent writes `paymentStatus: 'paid'` via Cloud Function. Vault page listens to Firestore and gates on paid status.
 
 **Orange ↔ Orange (A2A)**
-The Purchasing Agent and Code Review Agent communicate via an x402-signed A2A message. The Code Review Agent verifies the payment record in Firestore before starting a full review. This is an internal Orange concern — Yellow is not involved.
+Purchasing and Code Review agents coordinate via Firestore + HTTP 402. Internal Orange concern.
 
 ---
 
 ## ADRs
 
-| #                                                    | Title                      | Status   |
-| ---------------------------------------------------- | -------------------------- | -------- |
-| [0001](decisions/0001-use-this-harness-structure.md) | Use this harness structure | Accepted |
+| #                                                       | Title                                   | Status   |
+| ------------------------------------------------------- | --------------------------------------- | -------- |
+| [0001](decisions/0001-use-this-harness-structure.md)    | Use this harness structure              | Accepted |
+| [0003](decisions/0003-route-based-ux-crypto-payment.md) | Route-based UX and crypto-first payment | Accepted |

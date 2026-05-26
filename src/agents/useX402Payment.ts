@@ -4,7 +4,7 @@ import { getFirebaseIdToken } from '../shared/firebase';
 
 /**
  * In-memory x402-style payment stub for the sales + compass chat PR stack.
- * `confirmPayment` now calls the server-side Cloud Function to write
+ * `confirmPayment` calls the server-side Cloud Function to write
  * `paymentStatus: 'paid'` in Firestore via Admin SDK.
  */
 interface PaymentRequest {
@@ -18,7 +18,7 @@ type PaymentStatus = 'idle' | 'pending' | 'confirmed' | 'failed';
 
 interface X402PaymentState {
   initiatePayment: (reviewId: string) => Promise<void>;
-  confirmPayment: (txnId: string) => Promise<string | null>;
+  confirmPayment: (txnId: string, reviewId?: string) => Promise<string | null>;
   paymentRequest: PaymentRequest | null;
   status: PaymentStatus;
 }
@@ -41,8 +41,8 @@ export function useX402Payment(): X402PaymentState {
   }, []);
 
   const confirmPayment = useCallback(
-    async (txnId: string): Promise<string | null> => {
-      const reviewId = paymentRequest?.reviewId;
+    async (txnId: string, reviewIdOverride?: string): Promise<string | null> => {
+      const reviewId = reviewIdOverride ?? paymentRequest?.reviewId;
       if (!reviewId) {
         setStatus('failed');
         return null;
