@@ -26,7 +26,24 @@ interface ReportCardProps {
   data?: ReportCardData;
 }
 
+type ScoreTone = 'poor' | 'fair' | 'good';
+
+function getScoreTone(score: number): ScoreTone {
+  if (score >= 80) {
+    return 'good';
+  }
+
+  if (score >= 60) {
+    return 'fair';
+  }
+
+  return 'poor';
+}
+
 export default function ReportCard({ data = DEFAULT_REPORT_CARD }: ReportCardProps) {
+  const scoreTone = getScoreTone(data.healthScore);
+  const scoreToneClass = styles[`score${scoreTone}`];
+
   return (
     <section className={styles.section} id="metrics">
       <div className={styles.container}>
@@ -67,12 +84,14 @@ export default function ReportCard({ data = DEFAULT_REPORT_CARD }: ReportCardPro
                   <div className={styles.healthMetric}>
                     <h5 className={styles.metricLabel}>Overall Health Rating</h5>
                     <div className={styles.scoreRow}>
-                      <span className={styles.scoreValue}>{data.healthScore}</span>
+                      <span className={`${styles.scoreValue} ${scoreToneClass}`}>
+                        {data.healthScore}
+                      </span>
                       <span className={styles.scoreTotal}>/ 100</span>
                     </div>
                     <div className={styles.progressBar}>
                       <div
-                        className={styles.progressFill}
+                        className={`${styles.progressFill} ${scoreToneClass}`}
                         style={{ width: `${data.healthScore}%` }}
                       ></div>
                     </div>

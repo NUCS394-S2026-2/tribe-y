@@ -182,7 +182,6 @@
 .scoreValue {
   font-size: 3.75rem;
   font-weight: bold;
-  color: #ef4444;
 }
 
 .scoreTotal {
@@ -200,7 +199,33 @@
 .progressFill {
   height: 100%;
   width: 62%;
+}
+
+.scorepoor {
   background-color: #ef4444;
+}
+
+.scoreValue.scorepoor {
+  color: #ef4444;
+  background-color: transparent;
+}
+
+.scorefair {
+  background-color: #f97316;
+}
+
+.scoreValue.scorefair {
+  color: #f97316;
+  background-color: transparent;
+}
+
+.scoregood {
+  background-color: var(--status-success);
+}
+
+.scoreValue.scoregood {
+  color: var(--status-success);
+  background-color: transparent;
 }
 
 .metricAlert {
