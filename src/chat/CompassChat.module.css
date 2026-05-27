@@ -1,7 +1,8 @@
 /* ── Layout ── */
 .shell {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 4rem);
+  margin-top: 4rem;
   background: var(--primary);
   color: var(--contrast);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;

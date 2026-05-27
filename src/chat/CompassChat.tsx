@@ -1,11 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
+import TopNavBar from '../components/top-nav-bar/TopNavBar';
 import { CompassChatComposer } from './compass-chat/CompassChatComposer';
 import { CompassChatMessageFeed } from './compass-chat/CompassChatMessageFeed';
 import styles from './CompassChat.module.css';
 import { useChatOrchestrator } from './orchestrator/useChatOrchestrator';
 
 export function CompassChat() {
+  const navigate = useNavigate();
   const { session, sendMessage, goToPayment, handleFileUpload } = useChatOrchestrator();
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -61,40 +64,43 @@ export function CompassChat() {
   const composerBusy = session.isLoading || session.mode === 'analyzing';
 
   return (
-    <div className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarLogo}>compass.tne.ai</div>
-        <div className={styles.sidebarSub}>C++ Expert Review</div>
-      </aside>
+    <>
+      <TopNavBar onCtaClick={() => navigate('/chat')} />
+      <div className={styles.shell}>
+        <aside className={styles.sidebar}>
+          <div className={styles.sidebarLogo}>compass.tne.ai</div>
+          <div className={styles.sidebarSub}>C++ Expert Review</div>
+        </aside>
 
-      <div className={styles.main}>
-        <div className={styles.topbar}>
-          <span className={styles.topbarModel}>
-            C++ Expert Agent
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </span>
+        <div className={styles.main}>
+          <div className={styles.topbar}>
+            <span className={styles.topbarModel}>
+              C++ Expert Agent
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+          </div>
+
+          <CompassChatMessageFeed
+            session={session}
+            bottomRef={bottomRef}
+            onPayForFullReview={goToPayment}
+          />
+
+          <CompassChatComposer
+            disabled={composerBusy}
+            botLoading={session.isLoading}
+            input={input}
+            textareaRef={textareaRef}
+            fileInputRef={fileInputRef}
+            onInputChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onSend={() => void handleSend()}
+            onFileChange={handleFileChange}
+          />
         </div>
-
-        <CompassChatMessageFeed
-          session={session}
-          bottomRef={bottomRef}
-          onPayForFullReview={goToPayment}
-        />
-
-        <CompassChatComposer
-          disabled={composerBusy}
-          botLoading={session.isLoading}
-          input={input}
-          textareaRef={textareaRef}
-          fileInputRef={fileInputRef}
-          onInputChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onSend={() => void handleSend()}
-          onFileChange={handleFileChange}
-        />
       </div>
-    </div>
+    </>
   );
 }
