@@ -111,6 +111,8 @@ export function PaymentPage() {
           return;
         }
 
+        await fetchFullReviewById(reviewId);
+
         navigate(`/vault/${encodeURIComponent(reviewId)}`, {
           state: {
             txnId: confirmedSignature,
