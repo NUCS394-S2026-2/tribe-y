@@ -58,7 +58,7 @@ describe('runCodeReviewTeaser', () => {
       expect.objectContaining({
         messages: [
           expect.objectContaining({
-            content: expect.stringContaining('Review type: security'),
+            content: expect.stringContaining('Review this C++ code'),
           }),
         ],
       }),
@@ -69,7 +69,6 @@ describe('runCodeReviewTeaser', () => {
         reviewId: 'review-abc',
         uid: 'user-1',
         language: 'C++',
-        reportType: 'security',
         paymentStatus: 'unpaid',
         teaserReview: 'Found 2 issues in teaser scan.',
       }),

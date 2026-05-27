@@ -12,6 +12,8 @@ vi.mock('../../agents/salesAgent', () => ({
 vi.mock('../../agents/codeReviewAgent', () => ({
   CodeReviewAuthError: class CodeReviewAuthError extends Error {},
   runCodeReviewTeaser: vi.fn(),
+  createPendingReview: vi.fn(),
+  runSampleReport: vi.fn(),
 }));
 
 vi.mock('../../shared/firebase', () => ({
@@ -21,11 +23,12 @@ vi.mock('../../shared/firebase', () => ({
   },
 }));
 
-import { runCodeReviewTeaser } from '../../agents/codeReviewAgent';
+import { createPendingReview, runSampleReport } from '../../agents/codeReviewAgent';
 import { runSalesAgent } from '../../agents/salesAgent';
 
 const mockRunSalesAgent = vi.mocked(runSalesAgent);
-const mockRunCodeReviewTeaser = vi.mocked(runCodeReviewTeaser);
+const mockCreatePendingReview = vi.mocked(createPendingReview);
+const mockRunSampleReport = vi.mocked(runSampleReport);
 
 function renderOrchestrator() {
   return renderHook(() => useChatOrchestrator(), {
@@ -65,11 +68,8 @@ describe('useChatOrchestrator', () => {
     expect(result.current.session.mode).toBe('qualifying');
   });
 
-  test('routes C++ input through teaser flow and sets activeReviewId', async () => {
-    mockRunCodeReviewTeaser.mockResolvedValue({
-      reviewId: 'review-123',
-      teaserReview: 'Teaser: 2 potential bugs found.',
-    });
+  test('routes C++ input into report-type selector flow', async () => {
+    mockCreatePendingReview.mockResolvedValue('review-123');
     const { result } = renderOrchestrator();
 
     await act(async () => {
@@ -77,11 +77,47 @@ describe('useChatOrchestrator', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.session.mode).toBe('teaser');
+      expect(result.current.session.mode).toBe('selecting');
     });
 
-    expect(mockRunCodeReviewTeaser).toHaveBeenCalled();
+    expect(mockCreatePendingReview).toHaveBeenCalled();
     expect(result.current.session.activeReviewId).toBe('review-123');
-    expect(result.current.session.messages.at(-1)?.kind).toBe('teaser');
+    expect(result.current.session.messages.at(-1)?.kind).toBe('report-type-selector');
+    expect(result.current.session.pendingCode).toContain('#include');
+  });
+
+  test('selectReportType generates a sample-report message', async () => {
+    mockCreatePendingReview.mockResolvedValue('review-123');
+    mockRunSampleReport.mockResolvedValue({
+      reportType: 'security',
+      reportTitle: 'Security Vulnerability Report',
+      slice: { startLine: 1, endLine: 2, reason: 'r', code: 'int main() {}' },
+      summary: 'sum',
+      findings: [],
+      conclusion: 'c',
+      scores: { overall: 8, dimensions: [{ label: 'Input validation', score: 8 }] },
+      generatedAt: 0,
+    });
+    const { result } = renderOrchestrator();
+
+    await act(async () => {
+      await result.current.sendMessage('#include <iostream>\nint main() {}');
+    });
+    await waitFor(() => {
+      expect(result.current.session.mode).toBe('selecting');
+    });
+
+    await act(async () => {
+      await result.current.selectReportType('security');
+    });
+    await waitFor(() => {
+      expect(result.current.session.mode).toBe('sample');
+    });
+
+    expect(mockRunSampleReport).toHaveBeenCalledWith(
+      expect.objectContaining({ reviewId: 'review-123', reportType: 'security' }),
+    );
+    expect(result.current.session.messages.at(-1)?.kind).toBe('sample-report');
+    expect(result.current.session.selectedReportType).toBe('security');
   });
 });

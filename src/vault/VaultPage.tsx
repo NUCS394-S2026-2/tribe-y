@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 
 import { useAuth } from '../shared/hooks/useAuth';
 import { useFirestoreDoc } from '../shared/hooks/useFirestoreDoc';
 import cardStyles from '../shared/styles/actionCards.module.css';
 import type { CodeReview } from '../shared/types/CodeReview';
+import type { VaultReceipt } from '../shared/types/VaultReceipt';
 import styles from './VaultPage.module.css';
 import { VaultReceiptCard } from './VaultReceiptCard';
+import {
+  buildVaultReceipt,
+  computeContentHash,
+  downloadReceiptAsJson,
+  downloadReportAsText,
+  isReceiptValid,
+} from './vaultService';
 
 interface VaultLocationState {
   txnId?: string;
@@ -19,6 +27,9 @@ function isMockPaymentMode(): boolean {
   return typeof mode === 'string' && mode.toLowerCase() === 'mock';
 }
 
+const CHAIN_ID = 'solana-devnet';
+const DEFAULT_REPORT_TYPE = 'security';
+
 export function VaultPage() {
   const { reviewId } = useParams<{ reviewId: string }>();
   const location = useLocation();
@@ -30,6 +41,34 @@ export function VaultPage() {
     loading: reviewLoading,
     error,
   } = useFirestoreDoc<CodeReview>('codeReviews', reviewId ?? null);
+
+  const [receipt, setReceipt] = useState<VaultReceipt | null>(null);
+
+  useEffect(() => {
+    setReceipt(null);
+  }, [reviewId]);
+
+  useEffect(() => {
+    if (!review || review.paymentStatus !== 'paid' || !review.fullReview) return;
+    if (receipt && receipt.reviewId === review.reviewId) return;
+
+    let cancelled = false;
+    computeContentHash(review.fullReview).then((contentHash) => {
+      if (cancelled) return;
+      setReceipt(
+        buildVaultReceipt({
+          reviewId: review.reviewId,
+          paymentRef: review.paymentTxnId ?? '—',
+          chainId: CHAIN_ID,
+          contentHash,
+          reportType: DEFAULT_REPORT_TYPE,
+        }),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [review, receipt]);
 
   if (!reviewId) {
     return (
@@ -82,12 +121,18 @@ export function VaultPage() {
     );
   }
 
-  const txnId = navState.txnId ?? review.paymentTxSignature ?? review.paymentTxnId ?? '-';
-  const amount =
-    review.paymentAmount && review.paymentCurrency
-      ? `${review.paymentAmount} ${review.paymentCurrency}`
-      : undefined;
-  const confirmedAt = navState.confirmedAt ?? review.paidAt ?? review.updatedAt ?? null;
+  const handleDownloadReport = () => {
+    if (!receipt || !review.fullReview) return;
+    downloadReportAsText(review.reviewId, review.fullReview);
+    setReceipt({ ...receipt, downloadTokenUsed: true });
+  };
+
+  const handleDownloadReceipt = () => {
+    if (!receipt) return;
+    downloadReceiptAsJson(receipt);
+  };
+
+  const expired = receipt ? !isReceiptValid(receipt) || receipt.downloadTokenUsed : false;
 
   return (
     <div className={styles.shell}>
@@ -101,13 +146,16 @@ export function VaultPage() {
       </header>
 
       <main className={styles.content}>
-        <VaultReceiptCard
-          txnId={txnId}
-          amount={amount}
-          network={review.paymentNetwork ?? undefined}
-          confirmedAt={confirmedAt}
-          onSavePdf={() => window.print()}
-        />
+        {receipt ? (
+          <VaultReceiptCard
+            receipt={receipt}
+            isExpired={expired}
+            onDownloadReport={handleDownloadReport}
+            onDownloadReceipt={handleDownloadReceipt}
+          />
+        ) : (
+          <p className={styles.loading}>Building vault receipt…</p>
+        )}
 
         <section className={styles.reviewSection}>
           <h2 className={styles.reviewTitle}>Full Expert Review</h2>

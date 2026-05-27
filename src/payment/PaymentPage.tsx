@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { attachCodebaseToReview, fetchFullReviewById } from '../agents/codeReviewApi';
+import { isReportType, REPORT_TYPES } from '../agents/reportTypes';
 import { useX402Payment } from '../agents/useX402Payment';
 import { CodebaseUpload } from './CodebaseUpload';
 import styles from './PaymentPage.module.css';
@@ -35,6 +36,11 @@ export function PaymentPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const reviewId = searchParams.get('reviewId');
+  const reportTypeParam = searchParams.get('reportType');
+  const reportType = isReportType(reportTypeParam) ? reportTypeParam : null;
+  const reportTitle = reportType
+    ? (REPORT_TYPES.find((rt) => rt.id === reportType)?.title ?? null)
+    : null;
   const locationState = location.state as LocationState | null;
 
   const { connection } = useConnection();
@@ -194,6 +200,11 @@ export function PaymentPage() {
           Connect your wallet, upload your full codebase, and pay via X.402 to unlock your
           comprehensive C++ review in the Vault.
         </p>
+        {reportTitle && (
+          <p className={styles.subtitle}>
+            <strong>You&apos;re paying for:</strong> {reportTitle}
+          </p>
+        )}
       </header>
 
       <main className={styles.content}>
