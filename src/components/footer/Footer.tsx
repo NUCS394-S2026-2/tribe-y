@@ -13,18 +13,12 @@ export default function Footer() {
           </span>
         </div>
         <div className={styles.linksGroup}>
-          <a href="#privacy" className={styles.link}>
-            Privacy Policy
-          </a>
-          <a href="#terms" className={styles.link}>
-            Terms of Service
-          </a>
-          <a href="#standard" className={styles.link}>
-            X.402 Technical Standard
-          </a>
-          <a href="#whitepaper" className={`${styles.link} ${styles.highlight}`}>
+          <span className={styles.link}>Privacy Policy</span>
+          <span className={styles.link}>Terms of Service</span>
+          <span className={styles.link}>X.402 Technical Standard</span>
+          <span className={`${styles.link} ${styles.highlight}`}>
             Security Whitepaper
-          </a>
+          </span>
         </div>
       </div>
     </footer>

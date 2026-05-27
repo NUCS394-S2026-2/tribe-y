@@ -15,12 +15,6 @@ export default function TopNavBar({ onCtaClick }: Props) {
           <a href="#analysis" className={styles.link}>
             Analysis
           </a>
-          <a href="#protocol" className={`${styles.link} ${styles.active}`}>
-            X.402 Protocol
-          </a>
-          <a href="#compliance" className={styles.link}>
-            Compliance
-          </a>
           <a href="#enterprise" className={styles.link}>
             Enterprise
           </a>

@@ -17,9 +17,9 @@ export default function ValuePillars() {
               entire repositories to surface structural integrity and long-term
               scalability issues.
             </p>
-            <a href="#protocol" className={styles.link}>
+            <span className={styles.link}>
               Protocol details <span className="material-symbols-outlined">east</span>
-            </a>
+            </span>
           </div>
 
           <div className={styles.card}>
@@ -47,9 +47,9 @@ export default function ValuePillars() {
               billing for high-precision auditing, ensuring complete transparency and cost
               control.
             </p>
-            <a href="#standards" className={styles.link}>
+            <span className={styles.link}>
               Financial standards <span className="material-symbols-outlined">east</span>
-            </a>
+            </span>
           </div>
         </div>
       </div>
