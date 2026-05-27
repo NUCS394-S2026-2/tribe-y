@@ -1,0 +1,27 @@
+{
+  "https://github.com/getsentry/sentry/pull/93824": {
+    "pr_title": "Fix race condition in worker pool",
+    "original_url": "https://github.com/getsentry/sentry/pull/93824",
+    "source_repo": "sentry",
+    "golden_comments": [
+      {
+        "comment": "Potential deadlock in lock order",
+        "severity": "High"
+      }
+    ],
+    "reviews": [
+      {
+        "tool": "claude",
+        "pr_url": "https://github.com/code-review-benchmark/sentry/pull/1",
+        "review_comments": [
+          {
+            "path": "worker.py",
+            "line": 55,
+            "body": "Lock order can deadlock.",
+            "created_at": "2026-01-01T00:00:00.000Z"
+          }
+        ]
+      }
+    ]
+  }
+}

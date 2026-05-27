@@ -11,6 +11,7 @@ import type {
   SampleReportScores,
   SampleReportSlice,
 } from '../shared/types/ChatSession';
+import { getBenchmarkConfidence } from './benchmarkConfidence';
 import { getReportTypeDef, type ReportType } from './reportTypes';
 
 export class CodeReviewAuthError extends Error {
@@ -366,6 +367,7 @@ export async function runSampleReport({
     findings,
     conclusion,
     scores,
+    benchmarkConfidence: getBenchmarkConfidence(reportType),
     generatedAt: Date.now(),
     isFullReport: fullReport,
   };

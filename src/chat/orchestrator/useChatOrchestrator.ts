@@ -248,11 +248,14 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
 
       setSession((prev) => {
         const withoutPrevSample = prev.messages.filter((m) => m.kind !== 'sample-report');
+        const confidenceText = `Benchmark confidence: ${data.benchmarkConfidence.scorePercent}% (${data.benchmarkConfidence.source}).`;
         return {
           ...prev,
           messages: [
             ...withoutPrevSample,
-            createMessage('assistant', '', 'sample-report', { sampleReport: data }),
+            createMessage('assistant', confidenceText, 'sample-report', {
+              sampleReport: data,
+            }),
           ],
           mode: 'sample',
           isLoading: false,
@@ -311,7 +314,12 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
         ...prev,
         messages: [
           ...prev.messages,
-          createMessage('assistant', '', 'sample-report', { sampleReport: data }),
+          createMessage(
+            'assistant',
+            `Benchmark confidence: ${data.benchmarkConfidence.scorePercent}% (${data.benchmarkConfidence.source}).`,
+            'sample-report',
+            { sampleReport: data },
+          ),
         ],
         mode: 'sample',
         isLoading: false,

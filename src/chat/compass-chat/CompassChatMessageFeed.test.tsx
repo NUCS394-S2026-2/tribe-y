@@ -30,6 +30,13 @@ function makeSession(overrides: Partial<ChatSession> = {}): ChatSession {
             overall: 7,
             dimensions: [{ label: 'Memory safety', score: 7 }],
           },
+          benchmarkConfidence: {
+            score: 0.55,
+            scorePercent: 55,
+            source: 'offline-benchmark',
+            sampleSize: 5,
+            updatedAt: '2026-05-27T00:00:00.000Z',
+          },
           generatedAt: 0,
         },
       },

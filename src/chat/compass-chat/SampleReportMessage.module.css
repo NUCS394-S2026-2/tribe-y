@@ -171,6 +171,17 @@
   color: #16a34a;
 }
 
+.confidence {
+  margin-top: 12px;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--contrast);
+}
+
+.confidenceMeta {
+  color: var(--text-muted);
+}
+
 .footnote {
   margin: 14px 0 0;
   font-size: 0.78rem;

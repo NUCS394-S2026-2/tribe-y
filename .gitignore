@@ -8,3 +8,4 @@ dist-ssr
 node_modules/*
 coverage.env
 lib/
+resources/code-review-benchmark/

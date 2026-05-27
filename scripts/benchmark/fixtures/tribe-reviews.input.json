@@ -1,0 +1,23 @@
+[
+  {
+    "goldenUrl": "https://github.com/getsentry/sentry/pull/93824",
+    "prTitle": "Fix race condition in worker pool",
+    "sourceRepo": "sentry",
+    "originalUrl": "https://github.com/getsentry/sentry/pull/93824",
+    "reviewId": "review-123",
+    "reportType": "security",
+    "reportTitle": "Security Vulnerability Report",
+    "summary": "The patch introduces an unchecked pointer dereference in an auth path.",
+    "conclusion": "Address null checks before merge.",
+    "generatedAt": 1760000000000,
+    "findings": [
+      {
+        "severity": "high",
+        "line": 42,
+        "title": "Unchecked pointer before dereference",
+        "detail": "user may be null when token validation fails.",
+        "recommendation": "Guard user before accessing fields."
+      }
+    ]
+  }
+]

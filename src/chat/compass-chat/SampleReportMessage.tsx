@@ -121,6 +121,14 @@ export function SampleReportMessage({
           </span>
         </div>
 
+        <div className={styles.confidence}>
+          Benchmark confidence: {data.benchmarkConfidence.scorePercent}%
+          <span className={styles.confidenceMeta}>
+            {' '}
+            ({data.benchmarkConfidence.source}, n={data.benchmarkConfidence.sampleSize})
+          </span>
+        </div>
+
         <p className={styles.footnote}>
           Full breakdown, line-by-line findings, and recommended fixes are in the PDF.
         </p>
