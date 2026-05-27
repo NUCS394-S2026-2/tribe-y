@@ -9,6 +9,8 @@ const emptySession: ChatSession = {
   activeReviewId: null,
   isLoading: false,
   uploadedFile: null,
+  pendingCode: null,
+  selectedReportType: null,
 };
 
 describe('routeMessage', () => {

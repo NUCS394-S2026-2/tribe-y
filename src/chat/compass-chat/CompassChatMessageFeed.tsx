@@ -1,5 +1,6 @@
 import { RefObject } from 'react';
 
+import { type ReportType } from '../../agents/reportTypes';
 import type { ChatSession } from '../../shared/types/ChatSession';
 import styles from '../CompassChat.module.css';
 import { AnalyzingIndicator } from './AnalyzingIndicator';
@@ -9,14 +10,17 @@ interface CompassChatMessageFeedProps {
   session: ChatSession;
   bottomRef: RefObject<HTMLDivElement | null>;
   onPayForFullReview: () => void;
+  onSelectReportType: (reportType: ReportType) => void;
+  onGenerateFullReportPreview: () => void;
 }
 
 export function CompassChatMessageFeed({
   session,
   bottomRef,
   onPayForFullReview,
+  onSelectReportType,
+  onGenerateFullReportPreview,
 }: CompassChatMessageFeedProps) {
-  const showPayCta = session.activeReviewId !== null;
   const showGenericTyping = session.isLoading && session.mode !== 'analyzing';
 
   return (
@@ -24,8 +28,11 @@ export function CompassChatMessageFeed({
       <ChatTranscript
         messages={session.messages}
         botLoading={showGenericTyping}
-        showPayCta={showPayCta}
+        selectorDisabled={session.isLoading || session.mode === 'analyzing'}
+        selectedReportType={session.selectedReportType}
         onPayForFullReview={onPayForFullReview}
+        onSelectReportType={onSelectReportType}
+        onGenerateFullReportPreview={onGenerateFullReportPreview}
       />
 
       {session.mode === 'analyzing' && <AnalyzingIndicator />}
