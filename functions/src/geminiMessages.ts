@@ -6,7 +6,7 @@ import { verifyAuth } from './middleware/verifyAuth.js';
 const googleAiApiKey = defineSecret('GOOGLE_AI_API_KEY');
 
 const ALLOWED_MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro'];
-const MAX_TOKENS_CAP = 2000;
+const MAX_TOKENS_CAP = 16000;
 
 export const geminiMessages = onRequest(
   { cors: true, secrets: [googleAiApiKey] },

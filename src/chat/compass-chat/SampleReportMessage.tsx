@@ -136,18 +136,24 @@ export function SampleReportMessage({
           >
             Download PDF
           </button>
-          <button type="button" className={styles.btnGold} onClick={onPayForFullReview}>
-            Pay for full report
-          </button>
           {!data.isFullReport && (
-            <button
-              type="button"
-              className={styles.btnTest}
-              onClick={onGenerateFullReportPreview}
-              title="Bypass payment — for testing only"
-            >
-              ⚡ Generate full report (test)
-            </button>
+            <>
+              <button
+                type="button"
+                className={styles.btnGold}
+                onClick={onPayForFullReview}
+              >
+                Pay for full report
+              </button>
+              <button
+                type="button"
+                className={styles.btnTest}
+                onClick={onGenerateFullReportPreview}
+                title="Bypass payment — for testing only"
+              >
+                ⚡ Generate full report (test)
+              </button>
+            </>
           )}
         </div>
       </div>

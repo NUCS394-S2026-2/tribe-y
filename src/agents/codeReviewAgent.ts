@@ -99,6 +99,7 @@ function buildSampleReportSystem(reportType: ReportType, fullReport: boolean): s
   const findingsTarget = fullReport
     ? '8–16 substantive findings (more if the code clearly warrants it)'
     : '5–10 substantive findings';
+  const dimensionList = def.dimensions.map((d) => `"${d}"`).join(', ');
 
   return `You are Bjarne Stroustrup — the creator of C++ — personally reviewing this code. You speak in your own voice: precise, direct, occasionally dry, never preachy. You care about *type safety, resource safety, and zero-overhead abstractions*. You co-authored the C++ Core Guidelines and the "Type and Resource Safety" profile; you cite them by rule number naturally because you wrote them. You insist on RAII, value semantics by default, and "make interfaces strong, simple, and efficient". You are producing a "${def.title}" — a review with the depth and rigor of one of your own talks or papers.
 
@@ -144,7 +145,8 @@ Respond with ONLY a JSON object — no markdown fences, no commentary — matchi
 }
 
 HARD REQUIREMENTS:
-- Provide 4–5 dimensions tailored to this focus (security: "Input validation", "Memory safety", "Crypto hygiene", "Error handling"; performance: "Algorithmic cost", "Allocation pressure", "Cache locality", "Branch behavior"; etc.). Score honestly — a 7 is rare, a 9 is reserved for genuinely excellent code.
+- Use EXACTLY these dimension labels, in this order, with NO additions, omissions, or rewording: [${dimensionList}]. The label field of each dimension must match one of these strings verbatim. Score each honestly — a 7 is rare, a 9 is reserved for genuinely excellent code.
+- Each dimension "note" must be ≤80 characters (it renders on a small card). Be tight.
 - Aim for ${findingsTarget}. Do not pad with trivia, but DO surface every meaningful issue you can defend. A short list of weak findings is worse than a longer list of sharp ones.
 - Each finding MUST include all fields: line, evidence (verbatim), impact, recommendation, codeFix (real code), references (≥2 specific ids).
 - If the code is genuinely clean for this focus, return findings: [] and a high overall score (≥8), and the summary must defend that judgment with specific reasons.
@@ -220,6 +222,43 @@ async function pickSlice(
     console.warn('Slice picker failed, falling back:', err);
     return pickSliceFallback(snippet);
   }
+}
+
+function normalizeLabel(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function alignDimensionsToCanonical(
+  canonical: readonly string[],
+  raw: SampleReportScoreDimension[],
+): SampleReportScoreDimension[] {
+  // Match each canonical label to the best raw entry by normalized comparison.
+  // Returns dimensions in canonical order using canonical labels verbatim.
+  const used = new Set<number>();
+  return canonical.map((canonLabel) => {
+    const canonKey = normalizeLabel(canonLabel);
+    let matchIdx = raw.findIndex(
+      (d, i) => !used.has(i) && d?.label && normalizeLabel(String(d.label)) === canonKey,
+    );
+    if (matchIdx === -1) {
+      // fuzzy: substring either way
+      matchIdx = raw.findIndex((d, i) => {
+        if (used.has(i) || !d?.label) return false;
+        const k = normalizeLabel(String(d.label));
+        return k.includes(canonKey) || canonKey.includes(k);
+      });
+    }
+    if (matchIdx !== -1) {
+      used.add(matchIdx);
+      const d = raw[matchIdx];
+      return {
+        label: canonLabel,
+        score: clampScore(d?.score),
+        note: d?.note ? String(d.note).slice(0, 100) : undefined,
+      };
+    }
+    return { label: canonLabel, score: 0 };
+  });
 }
 
 function clampScore(value: unknown): number {
@@ -304,13 +343,7 @@ export async function runSampleReport({
       : [];
     scores = {
       overall: clampScore(parsed.scores?.overall),
-      dimensions: rawDims
-        .filter((d): d is SampleReportScoreDimension => Boolean(d?.label))
-        .map((d) => ({
-          label: String(d.label).slice(0, 40),
-          score: clampScore(d.score),
-          note: d.note ? String(d.note).slice(0, 80) : undefined,
-        })),
+      dimensions: alignDimensionsToCanonical(def.dimensions, rawDims),
     };
   } catch (err) {
     console.warn('Sample report parse failed, returning raw text:', err);
