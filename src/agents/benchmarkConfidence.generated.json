@@ -1,0 +1,14 @@
+{
+  "overallScore": 0,
+  "sampleSize": 1,
+  "source": "offline-code-review-benchmark:tribe-y-code-review",
+  "updatedAt": "2026-05-27T21:53:16.947Z",
+  "byReportType": {},
+  "details": {
+    "precision": 0,
+    "recall": 0,
+    "tp": 0,
+    "fp": 2,
+    "fn": 5
+  }
+}

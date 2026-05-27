@@ -8,7 +8,8 @@ Use `docs/agent/stories/_template.md` for new stories.
 
 ## Index
 
-| Slug                     | Title                                       | State | GitHub issue |
-| ------------------------ | ------------------------------------------- | ----- | ------------ |
-| chat-bjarne-bot          | Chat with Bjarne-bot and Secure Code Review | Draft | #1           |
-| code-review-report-types | Report type selection + sample PDF in chat  | Draft | —            |
+| Slug                              | Title                                                 | State | GitHub issue |
+| --------------------------------- | ----------------------------------------------------- | ----- | ------------ |
+| chat-bjarne-bot                   | Chat with Bjarne-bot and Secure Code Review           | Draft | #1           |
+| code-review-benchmark-integration | Evaluate Our Review Output with Code Review Benchmark | Draft | —            |
+| code-review-report-types          | Report type selection + sample PDF in chat            | Draft | —            |

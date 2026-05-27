@@ -1,5 +1,13 @@
 import type { ReportType } from '../../agents/reportTypes';
 
+export interface BenchmarkConfidence {
+  score: number;
+  scorePercent: number;
+  source: string;
+  sampleSize: number;
+  updatedAt: string;
+}
+
 export type ChatMode = 'qualifying' | 'analyzing' | 'teaser' | 'selecting' | 'sample';
 
 export type ChatMessageRole = 'user' | 'assistant';
@@ -49,6 +57,7 @@ export interface SampleReportData {
   findings: SampleReportFinding[];
   conclusion: string;
   scores: SampleReportScores;
+  benchmarkConfidence: BenchmarkConfidence;
   generatedAt: number;
   isFullReport?: boolean;
 }

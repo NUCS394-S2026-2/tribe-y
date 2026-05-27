@@ -96,6 +96,13 @@ describe('useChatOrchestrator', () => {
       findings: [],
       conclusion: 'c',
       scores: { overall: 8, dimensions: [{ label: 'Input validation', score: 8 }] },
+      benchmarkConfidence: {
+        score: 0.61,
+        scorePercent: 61,
+        source: 'offline-benchmark',
+        sampleSize: 12,
+        updatedAt: '2026-05-27T00:00:00.000Z',
+      },
       generatedAt: 0,
     });
     const { result } = renderOrchestrator();
