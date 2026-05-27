@@ -37,7 +37,6 @@ COMPLIANCE_STATUS: ALERT
           <button className={styles.primaryButton} onClick={onPrimaryClick}>
             Start Session with Sales Agent
           </button>
-          <button className={styles.secondaryButton}>View Sample Audit</button>
         </div>
       </div>
     </section>
