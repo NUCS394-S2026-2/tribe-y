@@ -55,6 +55,7 @@ interface UseChatOrchestratorReturn {
   goToPayment: () => void;
   handleFileUpload: (fileName: string, content: string) => Promise<void>;
   selectReportType: (reportType: ReportType) => Promise<void>;
+  generateFullReportPreview: () => Promise<void>;
 }
 
 export function useChatOrchestrator(): UseChatOrchestratorReturn {
@@ -272,6 +273,64 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
     }
   }, []);
 
+  const generateFullReportPreview = useCallback(async () => {
+    const current = sessionRef.current;
+    if (
+      !current.activeReviewId ||
+      !current.pendingCode ||
+      !current.selectedReportType ||
+      current.isLoading
+    ) {
+      return;
+    }
+    const reportType = current.selectedReportType;
+
+    setSession((prev) => ({
+      ...prev,
+      isLoading: true,
+      mode: 'analyzing',
+      messages: [
+        ...prev.messages,
+        createMessage(
+          'assistant',
+          'Generating the full report — this bypasses payment for testing.',
+          'sales',
+        ),
+      ],
+    }));
+
+    try {
+      const data: SampleReportData = await runSampleReport({
+        reviewId: current.activeReviewId,
+        snippet: current.pendingCode,
+        reportType,
+        fullReport: true,
+      });
+
+      setSession((prev) => ({
+        ...prev,
+        messages: [
+          ...prev.messages,
+          createMessage('assistant', '', 'sample-report', { sampleReport: data }),
+        ],
+        mode: 'sample',
+        isLoading: false,
+      }));
+    } catch (err) {
+      console.error('Full report preview failed:', err);
+      const errorText =
+        err instanceof Error
+          ? err.message
+          : 'Could not generate the full report preview.';
+      setSession((prev) => ({
+        ...prev,
+        messages: [...prev.messages, createMessage('assistant', errorText, 'error')],
+        isLoading: false,
+        mode: 'sample',
+      }));
+    }
+  }, []);
+
   const goToPayment = useCallback(() => {
     const current = sessionRef.current;
     if (!current.activeReviewId) return;
@@ -288,5 +347,12 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
     navigate(`/payment?${params.toString()}`, { state });
   }, [navigate]);
 
-  return { session, sendMessage, goToPayment, handleFileUpload, selectReportType };
+  return {
+    session,
+    sendMessage,
+    goToPayment,
+    handleFileUpload,
+    selectReportType,
+    generateFullReportPreview,
+  };
 }

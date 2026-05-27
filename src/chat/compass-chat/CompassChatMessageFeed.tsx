@@ -11,6 +11,7 @@ interface CompassChatMessageFeedProps {
   bottomRef: RefObject<HTMLDivElement | null>;
   onPayForFullReview: () => void;
   onSelectReportType: (reportType: ReportType) => void;
+  onGenerateFullReportPreview: () => void;
 }
 
 export function CompassChatMessageFeed({
@@ -18,8 +19,8 @@ export function CompassChatMessageFeed({
   bottomRef,
   onPayForFullReview,
   onSelectReportType,
+  onGenerateFullReportPreview,
 }: CompassChatMessageFeedProps) {
-  const showPayCta = session.activeReviewId !== null;
   const showGenericTyping = session.isLoading && session.mode !== 'analyzing';
 
   return (
@@ -27,11 +28,11 @@ export function CompassChatMessageFeed({
       <ChatTranscript
         messages={session.messages}
         botLoading={showGenericTyping}
-        showPayCta={showPayCta}
         selectorDisabled={session.isLoading || session.mode === 'analyzing'}
         selectedReportType={session.selectedReportType}
         onPayForFullReview={onPayForFullReview}
         onSelectReportType={onSelectReportType}
+        onGenerateFullReportPreview={onGenerateFullReportPreview}
       />
 
       {session.mode === 'analyzing' && <AnalyzingIndicator />}

@@ -4,7 +4,6 @@ import { type ReportType } from '../../agents/reportTypes';
 import type { ChatMessage } from '../../shared/types/ChatSession';
 import styles from '../CompassChat.module.css';
 import { BotTypingIndicator } from './BotTypingIndicator';
-import { ExpertReviewCard } from './ExpertReviewCard';
 import { ReportTypeSelectorMessage } from './ReportTypeSelectorMessage';
 import { SampleReportMessage } from './SampleReportMessage';
 import { UserMessageRow } from './UserMessageRow';
@@ -12,38 +11,27 @@ import { UserMessageRow } from './UserMessageRow';
 interface ChatTranscriptProps {
   messages: ChatMessage[];
   botLoading: boolean;
-  showPayCta: boolean;
   selectorDisabled: boolean;
   selectedReportType: ReportType | null;
   onPayForFullReview: () => void;
   onSelectReportType: (reportType: ReportType) => void;
+  onGenerateFullReportPreview: () => void;
 }
 
 export function ChatTranscript({
   messages,
   botLoading,
-  showPayCta,
   selectorDisabled,
   selectedReportType,
   onPayForFullReview,
   onSelectReportType,
+  onGenerateFullReportPreview,
 }: ChatTranscriptProps) {
   return (
     <>
       {messages.map((msg) => {
         if (msg.role === 'user') {
           return <UserMessageRow key={msg.id} message={msg} />;
-        }
-
-        if (msg.kind === 'teaser') {
-          return (
-            <ExpertReviewCard
-              key={msg.id}
-              teaserReview={msg.text}
-              showPayButton={showPayCta}
-              onPayForFullReview={onPayForFullReview}
-            />
-          );
         }
 
         if (msg.kind === 'report-type-selector') {
@@ -65,6 +53,7 @@ export function ChatTranscript({
               key={msg.id}
               data={msg.sampleReport}
               onPayForFullReview={onPayForFullReview}
+              onGenerateFullReportPreview={onGenerateFullReportPreview}
             />
           );
         }

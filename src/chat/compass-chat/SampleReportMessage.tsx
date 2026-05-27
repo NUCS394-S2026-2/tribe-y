@@ -12,6 +12,7 @@ import styles from './SampleReportMessage.module.css';
 interface SampleReportMessageProps {
   data: SampleReportData;
   onPayForFullReview: () => void;
+  onGenerateFullReportPreview: () => void;
 }
 
 function tallyBySeverity(findings: SampleReportFinding[]) {
@@ -41,6 +42,7 @@ function scoreToneClass(score: number): string {
 export function SampleReportMessage({
   data,
   onPayForFullReview,
+  onGenerateFullReportPreview,
 }: SampleReportMessageProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const tally = useMemo(() => tallyBySeverity(data.findings), [data.findings]);
@@ -68,9 +70,13 @@ export function SampleReportMessage({
       <div className={styles.card}>
         <div className={styles.header}>
           <div>
-            <div className={styles.title}>{data.reportTitle}</div>
+            <div className={styles.title}>
+              {data.reportTitle}
+              {data.isFullReport && <span className={styles.fullBadge}>FULL</span>}
+            </div>
             <div className={styles.meta}>
-              Sample scorecard · lines {data.slice.startLine}–{data.slice.endLine}
+              {data.isFullReport ? 'Full report' : 'Sample scorecard'} · lines{' '}
+              {data.slice.startLine}–{data.slice.endLine}
             </div>
           </div>
           <div className={`${styles.overall} ${scoreToneClass(overall)}`}>
@@ -133,6 +139,16 @@ export function SampleReportMessage({
           <button type="button" className={styles.btnGold} onClick={onPayForFullReview}>
             Pay for full report
           </button>
+          {!data.isFullReport && (
+            <button
+              type="button"
+              className={styles.btnTest}
+              onClick={onGenerateFullReportPreview}
+              title="Bypass payment — for testing only"
+            >
+              ⚡ Generate full report (test)
+            </button>
+          )}
         </div>
       </div>
 

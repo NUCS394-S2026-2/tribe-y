@@ -50,6 +50,7 @@ export interface SampleReportData {
   conclusion: string;
   scores: SampleReportScores;
   generatedAt: number;
+  isFullReport?: boolean;
 }
 
 export interface ReportTypeSelectorData {
