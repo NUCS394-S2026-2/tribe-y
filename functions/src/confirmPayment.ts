@@ -147,11 +147,6 @@ function createPaymentIntent(reviewId: string, config: PaymentConfig): PaymentIn
   };
 }
 
-function paymentPath(reqUrl: string | undefined): 'initiate' | 'confirm' {
-  const url = reqUrl ?? '';
-  return url.includes('/initiate') ? 'initiate' : 'confirm';
-}
-
 function buildExpectedPayment(
   reviewId: string,
   data: CodeReviewPaymentData,
@@ -207,7 +202,7 @@ class SolanaPaymentVerifier implements PaymentVerifier {
   private readonly connection: Connection;
 
   constructor(rpcUrl: string) {
-    this.connection = new Connection(rpcUrl, 'finalized');
+    this.connection = new Connection(rpcUrl, 'confirmed');
   }
 
   async verify(input: {
@@ -216,12 +211,12 @@ class SolanaPaymentVerifier implements PaymentVerifier {
     expected: ExpectedPayment;
   }): Promise<PaymentProof> {
     const transaction = await this.connection.getParsedTransaction(input.txSignature, {
-      commitment: 'finalized',
+      commitment: 'confirmed',
       maxSupportedTransactionVersion: 0,
     });
 
     if (!transaction) {
-      throw new Error('Transaction was not found or is not finalized');
+      throw new Error('Transaction was not found or is not confirmed');
     }
     if (transaction.meta?.err) {
       throw new Error('Transaction did not finalize successfully');
@@ -284,7 +279,39 @@ function createVerifier(config: PaymentConfig): PaymentVerifier {
     : new SolanaPaymentVerifier(config.rpcUrl);
 }
 
-export const confirmPayment = onRequest({ cors: true }, async (req, res) => {
+function readExistingIntent(
+  reviewId: string,
+  data: CodeReviewPaymentData,
+): PaymentIntent | null {
+  const intentId = asString(data.paymentIntentId);
+  const memo = asString(data.paymentMemo);
+  const amountLamports = asNumber(data.paymentAmountLamports);
+  const receiverAddress = asString(data.paymentRecipientPublicKey);
+  const expiresAt = asString(
+    (data as unknown as { paymentIntentExpiresAt?: unknown }).paymentIntentExpiresAt,
+  );
+  const network = asString(
+    (data as unknown as { paymentNetwork?: unknown }).paymentNetwork,
+  );
+  const amount = asString((data as unknown as { paymentAmount?: unknown }).paymentAmount);
+
+  if (!intentId || !memo || !amountLamports || !receiverAddress) return null;
+
+  return {
+    reviewId,
+    intentId,
+    memo,
+    amount: amount ?? amountSol(amountLamports),
+    amountLamports,
+    currency: 'SOL',
+    network: network ?? 'devnet',
+    receiverAddress,
+    walletAddress: receiverAddress,
+    expiresAt: expiresAt ?? new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+  };
+}
+
+export const initiatePayment = onRequest({ cors: true }, async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).send('Method not allowed');
     return;
@@ -327,22 +354,83 @@ export const confirmPayment = onRequest({ cors: true }, async (req, res) => {
     return;
   }
 
-  if (paymentPath(req.url) === 'initiate') {
-    const intent = createPaymentIntent(reviewId, config);
-    await docRef.update({
-      paymentStatus: 'pending',
-      paymentIntentId: intent.intentId,
-      paymentAmountLamports: intent.amountLamports,
-      paymentAmount: intent.amount,
-      paymentCurrency: intent.currency,
-      paymentNetwork: intent.network,
-      paymentRecipientPublicKey: intent.receiverAddress,
-      paymentMemo: intent.memo,
-      paymentIntentExpiresAt: intent.expiresAt,
-      updatedAt: new Date().toISOString(),
-    });
+  // Idempotency: never overwrite a paid review back to pending.
+  if (data.paymentStatus === 'paid') {
+    const existing = readExistingIntent(reviewId, data);
+    if (existing) {
+      res.status(200).json(existing);
+      return;
+    }
+    res.status(200).json({ success: true, alreadyPaid: true });
+    return;
+  }
 
-    res.status(200).json(intent);
+  // Idempotency: if we already have a pending intent, return it.
+  if (data.paymentStatus === 'pending') {
+    const existing = readExistingIntent(reviewId, data);
+    if (existing) {
+      res.status(200).json(existing);
+      return;
+    }
+  }
+
+  const intent = createPaymentIntent(reviewId, config);
+  await docRef.update({
+    paymentStatus: 'pending',
+    paymentIntentId: intent.intentId,
+    paymentAmountLamports: intent.amountLamports,
+    paymentAmount: intent.amount,
+    paymentCurrency: intent.currency,
+    paymentNetwork: intent.network,
+    paymentRecipientPublicKey: intent.receiverAddress,
+    paymentMemo: intent.memo,
+    paymentIntentExpiresAt: intent.expiresAt,
+    updatedAt: new Date().toISOString(),
+  });
+
+  res.status(200).json(intent);
+});
+
+export const confirmPayment = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== 'POST') {
+    res.status(405).send('Method not allowed');
+    return;
+  }
+
+  const verified = await verifyAuth(req.headers.authorization);
+  if (!verified) {
+    res.status(401).send('Invalid or missing authentication token');
+    return;
+  }
+
+  let config: PaymentConfig;
+  try {
+    config = readConfig();
+  } catch (err) {
+    res
+      .status(503)
+      .send(err instanceof Error ? err.message : 'Payment is not configured');
+    return;
+  }
+
+  const { reviewId } = req.body as { reviewId?: string };
+  if (!reviewId) {
+    res.status(400).send('reviewId is required');
+    return;
+  }
+
+  const db = getFirestore();
+  const docRef = db.collection('codeReviews').doc(reviewId);
+  const doc = await docRef.get();
+
+  if (!doc.exists) {
+    res.status(404).send('Review not found');
+    return;
+  }
+
+  const data = doc.data() as CodeReviewPaymentData;
+  if (data.uid !== verified.uid) {
+    res.status(403).send('Forbidden');
     return;
   }
 

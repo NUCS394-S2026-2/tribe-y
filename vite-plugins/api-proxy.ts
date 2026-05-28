@@ -73,6 +73,12 @@ function firestoreString(
   return v ?? null;
 }
 
+function firestoreBool(fields: FirestoreFields | undefined, key: string): boolean {
+  const raw = (fields?.[key] as unknown as { booleanValue?: unknown } | undefined)
+    ?.booleanValue;
+  return raw === true;
+}
+
 async function verifyFirebaseIdToken(
   idToken: string,
   firebaseWebApiKey: string,
@@ -100,6 +106,37 @@ async function fetchCodeReviewDoc(
   });
   if (!res.ok) return null;
   return (await res.json()) as { fields: FirestoreFields };
+}
+
+async function patchCodeReviewDoc(
+  idToken: string,
+  reviewId: string,
+  patch: { mockPaid?: boolean; mockPaidAt?: string },
+): Promise<void> {
+  const path = `projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/codeReviews/${encodeURIComponent(reviewId)}`;
+  const params = new URLSearchParams();
+  if (typeof patch.mockPaid === 'boolean')
+    params.append('updateMask.fieldPaths', 'mockPaid');
+  if (typeof patch.mockPaidAt === 'string')
+    params.append('updateMask.fieldPaths', 'mockPaidAt');
+  const url = `https://firestore.googleapis.com/v1/${path}?${params.toString()}`;
+
+  const fields: Record<string, unknown> = {};
+  if (typeof patch.mockPaid === 'boolean') {
+    fields.mockPaid = { booleanValue: patch.mockPaid };
+  }
+  if (typeof patch.mockPaidAt === 'string') {
+    fields.mockPaidAt = { stringValue: patch.mockPaidAt };
+  }
+
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields }),
+  });
+  if (!res.ok) {
+    throw new Error((await res.text()) || 'Failed to persist mock payment state');
+  }
 }
 
 async function callGemini(
@@ -225,7 +262,8 @@ async function handleFullCodeReview(
   }
 
   const paymentStatus = firestoreString(doc.fields, 'paymentStatus');
-  if (paymentStatus !== 'paid' && !mockPaidReviewIds.has(reviewId)) {
+  const mockPaid = firestoreBool(doc.fields, 'mockPaid');
+  if (paymentStatus !== 'paid' && !mockPaid && !mockPaidReviewIds.has(reviewId)) {
     res.statusCode = 402;
     res.end('Payment required');
     return;
@@ -362,6 +400,14 @@ async function handleMockPayment(
   }
 
   mockPaidReviewIds.add(reviewId);
+  try {
+    await patchCodeReviewDoc(idToken, reviewId, {
+      mockPaid: true,
+      mockPaidAt: new Date().toISOString(),
+    });
+  } catch {
+    // If Firestore PATCH fails (rules/network), keep in-memory as a fallback for this session.
+  }
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify({ success: true, txSignature }));

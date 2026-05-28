@@ -24,12 +24,6 @@ export async function fetchFullReviewById(reviewId: string): Promise<string> {
   }
   const data = (await res.json()) as { fullReview?: string };
   const fullReview = typeof data.fullReview === 'string' ? data.fullReview : '';
-  if (fullReview.trim()) {
-    await updateDoc(doc(db, 'codeReviews', reviewId), {
-      fullReview,
-      updatedAt: serverTimestamp(),
-    });
-  }
   return fullReview;
 }
 

@@ -4,7 +4,8 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       { "source": "/api/gemini/**", "function": "geminiMessages" },
-      { "source": "/api/payment/**", "function": "confirmPayment" },
+      { "source": "/api/payment/initiate", "function": "initiatePayment" },
+      { "source": "/api/payment/confirm", "function": "confirmPayment" },
       { "source": "/api/code-review/**", "function": "fullCodeReview" },
       { "source": "**", "destination": "/index.html" }
     ]
