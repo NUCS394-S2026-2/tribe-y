@@ -15,7 +15,13 @@ export default defineConfig(({ mode }) => {
       react(),
       apiProxyPlugin({
         GOOGLE_AI_API_KEY: loaded.GOOGLE_AI_API_KEY ?? loaded.VITE_GOOGLE_AI_API_KEY,
+        PAYMENT_AMOUNT_LAMPORTS: loaded.PAYMENT_AMOUNT_LAMPORTS,
+        PAYMENT_VERIFIER: loaded.PAYMENT_VERIFIER,
+        SOLANA_NETWORK: loaded.SOLANA_NETWORK,
+        SOLANA_SERVICE_WALLET: loaded.SOLANA_SERVICE_WALLET,
         VITE_FIREBASE_API_KEY: loaded.VITE_FIREBASE_API_KEY,
+        VITE_PAYMENT_MODE: loaded.VITE_PAYMENT_MODE,
+        VITE_PAYMENT_VERIFIER: loaded.VITE_PAYMENT_VERIFIER,
       }),
     ],
     server: {

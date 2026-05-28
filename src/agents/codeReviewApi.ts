@@ -23,7 +23,8 @@ export async function fetchFullReviewById(reviewId: string): Promise<string> {
     throw new Error((await res.text()) || `Full review request failed (${res.status})`);
   }
   const data = (await res.json()) as { fullReview?: string };
-  return typeof data.fullReview === 'string' ? data.fullReview : '';
+  const fullReview = typeof data.fullReview === 'string' ? data.fullReview : '';
+  return fullReview;
 }
 
 /**

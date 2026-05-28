@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
+import { fetchFullReviewById } from '../agents/codeReviewApi';
 import { useAuth } from '../shared/hooks/useAuth';
 import { useFirestoreDoc } from '../shared/hooks/useFirestoreDoc';
 import cardStyles from '../shared/styles/actionCards.module.css';
@@ -16,11 +17,25 @@ import {
   isReceiptValid,
 } from './vaultService';
 
+interface VaultLocationState {
+  txnId?: string;
+  confirmedAt?: string;
+  mockPaid?: boolean;
+}
+
+function isMockPaymentMode(): boolean {
+  const mode = import.meta.env.VITE_PAYMENT_MODE ?? import.meta.env.VITE_PAYMENT_VERIFIER;
+  return typeof mode === 'string' && mode.toLowerCase() === 'mock';
+}
+
 const CHAIN_ID = 'solana-devnet';
 const DEFAULT_REPORT_TYPE = 'security';
 
 export function VaultPage() {
   const { reviewId } = useParams<{ reviewId: string }>();
+  const location = useLocation();
+  const navState = (location.state as VaultLocationState | null) ?? {};
+  const mockPaymentMode = isMockPaymentMode();
   const { user, loading: authLoading } = useAuth();
   const {
     data: review,
@@ -29,14 +44,56 @@ export function VaultPage() {
   } = useFirestoreDoc<CodeReview>('codeReviews', reviewId ?? null);
 
   const [receipt, setReceipt] = useState<VaultReceipt | null>(null);
+  const [fullReviewError, setFullReviewError] = useState<string | null>(null);
+  const [isFetchingFullReview, setIsFetchingFullReview] = useState(false);
+
+  const hasVaultAccess =
+    review?.paymentStatus === 'paid' || (mockPaymentMode && navState.mockPaid);
 
   useEffect(() => {
     setReceipt(null);
+    setFullReviewError(null);
   }, [reviewId]);
 
   useEffect(() => {
-    if (!review || review.paymentStatus !== 'paid' || !review.fullReview) return;
+    if (!reviewId || !review || !user || review.uid !== user.uid || !hasVaultAccess)
+      return;
+    if (review.fullReview?.trim()) return;
+
+    let cancelled = false;
+    setIsFetchingFullReview(true);
+    setFullReviewError(null);
+
+    void fetchFullReviewById(reviewId)
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const message =
+          err instanceof Error ? err.message : 'Could not load the full expert review.';
+        setFullReviewError(message);
+      })
+      .finally(() => {
+        if (!cancelled) setIsFetchingFullReview(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reviewId, review, user, hasVaultAccess]);
+
+  useEffect(() => {
+    if (
+      !review ||
+      !user ||
+      review.uid !== user.uid ||
+      !review.fullReview?.trim() ||
+      !hasVaultAccess
+    ) {
+      return;
+    }
     if (receipt && receipt.reviewId === review.reviewId) return;
+
+    const paymentRef =
+      review.paymentTxnId ?? review.paymentTxSignature ?? navState.txnId ?? '—';
 
     let cancelled = false;
     computeContentHash(review.fullReview).then((contentHash) => {
@@ -44,7 +101,7 @@ export function VaultPage() {
       setReceipt(
         buildVaultReceipt({
           reviewId: review.reviewId,
-          paymentRef: review.paymentTxnId ?? '—',
+          paymentRef,
           chainId: CHAIN_ID,
           contentHash,
           reportType: DEFAULT_REPORT_TYPE,
@@ -54,7 +111,7 @@ export function VaultPage() {
     return () => {
       cancelled = true;
     };
-  }, [review, receipt]);
+  }, [review, receipt, hasVaultAccess, navState.txnId]);
 
   if (!reviewId) {
     return (
@@ -68,7 +125,7 @@ export function VaultPage() {
   }
 
   if (authLoading || reviewLoading) {
-    return <p className={styles.loading}>Loading your vault…</p>;
+    return <p className={styles.loading}>Loading your vault...</p>;
   }
 
   if (error) {
@@ -93,7 +150,7 @@ export function VaultPage() {
     );
   }
 
-  if (review.paymentStatus !== 'paid') {
+  if (review.paymentStatus !== 'paid' && !(mockPaymentMode && navState.mockPaid)) {
     return (
       <div className={styles.denied}>
         <p>Payment is required to access this vault report.</p>
@@ -148,12 +205,16 @@ export function VaultPage() {
           <pre className={cardStyles.reviewCardBody}>
             {review.fullReview?.trim()
               ? review.fullReview
-              : 'Full review is being generated. Refresh in a moment.'}
+              : fullReviewError
+                ? `Could not load full review: ${fullReviewError}`
+                : isFetchingFullReview
+                  ? 'Generating full expert review…'
+                  : 'Full review is being generated. Refresh in a moment.'}
           </pre>
         </section>
 
         <Link to="/chat" className={styles.backLink}>
-          ← Back to Chat
+          Back to Chat
         </Link>
       </main>
     </div>

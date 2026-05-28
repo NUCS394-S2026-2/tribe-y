@@ -1,3 +1,10 @@
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import {
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -16,6 +23,14 @@ interface LocationState {
   };
 }
 
+const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+const MOCK_PAYER_PUBLIC_KEY = '11111111111111111111111111111111';
+
+function isMockPaymentMode(): boolean {
+  const mode = import.meta.env.VITE_PAYMENT_MODE ?? import.meta.env.VITE_PAYMENT_VERIFIER;
+  return typeof mode === 'string' && mode.toLowerCase() === 'mock';
+}
+
 export function PaymentPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -28,8 +43,18 @@ export function PaymentPage() {
     : null;
   const locationState = location.state as LocationState | null;
 
-  const { initiatePayment, confirmPayment, paymentRequest } = useX402Payment();
-  const [walletConnected, setWalletConnected] = useState(false);
+  const { connection } = useConnection();
+  const { connected, publicKey, sendTransaction } = useWallet();
+  const mockPaymentMode = isMockPaymentMode();
+  const {
+    initiatePayment,
+    confirmPayment,
+    paymentRequest,
+    status,
+    error: paymentError,
+    setWalletConnecting,
+    setTransactionSigning,
+  } = useX402Payment();
   const [codebaseFile, setCodebaseFile] = useState<{
     name: string;
     content: string;
@@ -38,7 +63,6 @@ export function PaymentPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Pre-populate the codebase file if it was passed from chat
     if (locationState?.uploadedFile) {
       setCodebaseFile(locationState.uploadedFile);
     }
@@ -56,8 +80,12 @@ export function PaymentPage() {
 
   const handlePay = async () => {
     if (!reviewId || !paymentRequest) return;
-    if (!walletConnected) {
+    if (!mockPaymentMode && (!connected || !publicKey)) {
       setError('Connect your wallet before paying.');
+      return;
+    }
+    if (!mockPaymentMode && paymentRequest.amountLamports === null) {
+      setError('Payment amount is missing. Refresh the page and try again.');
       return;
     }
 
@@ -65,19 +93,82 @@ export function PaymentPage() {
     setError(null);
 
     try {
+      setTransactionSigning();
+
       if (codebaseFile) {
         await attachCodebaseToReview(reviewId, codebaseFile.name, codebaseFile.content);
       }
 
-      const txnId = await confirmPayment(paymentRequest.txnId, reviewId);
-      if (!txnId) {
+      if (mockPaymentMode) {
+        const mockSignature = `mock-${reviewId}-${Date.now()}`;
+        const confirmedSignature = await confirmPayment(
+          mockSignature,
+          reviewId,
+          MOCK_PAYER_PUBLIC_KEY,
+        );
+        if (!confirmedSignature) {
+          setError('Mock payment could not be confirmed. Please try again.');
+          return;
+        }
+
+        await fetchFullReviewById(reviewId);
+
+        navigate(`/vault/${encodeURIComponent(reviewId)}`, {
+          state: {
+            txnId: confirmedSignature,
+            confirmedAt: new Date().toLocaleString(),
+            mockPaid: true,
+          },
+        });
+        return;
+      }
+
+      if (!publicKey || paymentRequest.amountLamports === null) {
+        setError('Connect your wallet before paying.');
+        return;
+      }
+
+      const { blockhash, lastValidBlockHeight } =
+        await connection.getLatestBlockhash('confirmed');
+      const transaction = new Transaction({
+        blockhash,
+        feePayer: publicKey,
+        lastValidBlockHeight,
+      }).add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: new PublicKey(paymentRequest.receiverAddress),
+          lamports: paymentRequest.amountLamports,
+        }),
+        new TransactionInstruction({
+          keys: [],
+          programId: MEMO_PROGRAM_ID,
+          data: new TextEncoder().encode(paymentRequest.memo) as unknown as Buffer,
+        }),
+      );
+
+      const txSignature = await sendTransaction(transaction, connection);
+      await connection.confirmTransaction(
+        { signature: txSignature, blockhash, lastValidBlockHeight },
+        'confirmed',
+      );
+
+      const confirmedSignature = await confirmPayment(
+        txSignature,
+        reviewId,
+        publicKey.toBase58(),
+      );
+      if (!confirmedSignature) {
         setError('Payment could not be confirmed. Please try again.');
         return;
       }
 
       await fetchFullReviewById(reviewId);
       navigate(`/vault/${encodeURIComponent(reviewId)}`, {
-        state: { txnId, confirmedAt: new Date().toLocaleString() },
+        state: {
+          txnId: confirmedSignature,
+          confirmedAt: new Date().toLocaleString(),
+        },
       });
     } catch (e) {
       console.error('Payment flow error:', e);
@@ -119,10 +210,17 @@ export function PaymentPage() {
       </header>
 
       <main className={styles.content}>
-        <WalletConnect
-          connected={walletConnected}
-          onConnect={() => setWalletConnected(true)}
-        />
+        {mockPaymentMode ? (
+          <div className={styles.mockPaymentNotice}>
+            <div className={styles.connectedBadge}>Mock mode</div>
+            <p>
+              Wallet signing is bypassed for local development. The backend still needs
+              `PAYMENT_VERIFIER=mock` to accept the mock signature.
+            </p>
+          </div>
+        ) : (
+          <WalletConnect onConnecting={setWalletConnecting} />
+        )}
 
         <CodebaseUpload
           onFileSelected={handleFileSelected}
@@ -131,25 +229,36 @@ export function PaymentPage() {
 
         {paymentRequest && (
           <X402PaymentCard
-            payment={{
-              amount: paymentRequest.amount,
-              walletAddress: paymentRequest.walletAddress,
-            }}
+            payment={paymentRequest}
             isPaying={isPaying}
+            canPay={
+              mockPaymentMode || (connected && paymentRequest.amountLamports !== null)
+            }
+            paymentMode={mockPaymentMode ? 'mock' : 'solana'}
             onPay={handlePay}
           />
         )}
 
-        {isPaying && <p className={styles.processing}>Confirming payment on testnet…</p>}
+        {(status === 'connecting' || !paymentRequest) && (
+          <p className={styles.processing}>Preparing payment intent...</p>
+        )}
 
-        {error && (
+        {(isPaying || status === 'signing' || status === 'verifying') && (
+          <p className={styles.processing}>
+            {mockPaymentMode
+              ? 'Confirming mock payment...'
+              : 'Confirming payment on Solana Devnet...'}
+          </p>
+        )}
+
+        {(error || paymentError) && (
           <p className={styles.error} role="alert">
-            {error}
+            {error ?? paymentError}
           </p>
         )}
 
         <Link to="/chat" className={styles.backLink}>
-          ← Back to Chat
+          Back to Chat
         </Link>
       </main>
     </div>

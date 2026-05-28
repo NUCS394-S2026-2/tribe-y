@@ -19,6 +19,11 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@solana/wallet-adapter-base": "^0.9.27",
+    "@solana/wallet-adapter-phantom": "^0.9.29",
+    "@solana/wallet-adapter-react": "^0.15.39",
+    "@solana/web3.js": "^1.98.4",
+    "buffer": "^6.0.3",
     "firebase": "^12.13.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.16.0",

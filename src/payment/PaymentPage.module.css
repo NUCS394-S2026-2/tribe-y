@@ -39,6 +39,10 @@
 
 .walletActions {
   margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .connectedBadge {
@@ -51,6 +55,44 @@
   color: var(--status-success);
   border: 1px solid var(--status-success);
   padding: 6px 12px;
+}
+
+.walletList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.walletOption,
+.walletOptionSelected {
+  border: 1px solid var(--surface-border);
+  background: transparent;
+  color: var(--contrast);
+  padding: 7px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.walletOptionSelected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.mockPaymentNotice {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-left: 3px solid var(--status-warning);
+  padding: 16px 20px;
+  max-width: 440px;
+}
+
+.mockPaymentNotice p {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 .uploadHint {
