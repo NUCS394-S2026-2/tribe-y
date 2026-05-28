@@ -33,9 +33,9 @@ export default function ValuePillars() {
               code&quot; into specific financial liability assessments ready for the
               boardroom.
             </p>
-            <a href="#metrics" className={styles.link}>
+            <Link to="/risk-metrics" className={styles.link}>
               Risk metrics <span className="material-symbols-outlined">east</span>
-            </a>
+            </Link>
           </div>
 
           <div className={styles.card}>
@@ -49,7 +49,7 @@ export default function ValuePillars() {
               control.
             </p>
             <Link to="/financial-standards" className={styles.link}>
-              Financial standards <span className="material-symbols-outlined">east</span>
+              X.402 payment flow <span className="material-symbols-outlined">east</span>
             </Link>
           </div>
         </div>
