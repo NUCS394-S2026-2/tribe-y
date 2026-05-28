@@ -103,3 +103,25 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+.secondaryButton {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.secondaryButton:hover,
+.secondaryButton:focus-visible {
+  background-color: rgba(34, 211, 238, 0.1);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

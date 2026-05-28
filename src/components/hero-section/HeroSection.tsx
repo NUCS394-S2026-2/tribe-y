@@ -4,9 +4,10 @@ import styles from './HeroSection.module.css';
 
 interface Props {
   onPrimaryClick?: () => void;
+  onSampleClick?: () => void;
 }
 
-export default function HeroSection({ onPrimaryClick }: Props) {
+export default function HeroSection({ onPrimaryClick, onSampleClick }: Props) {
   return (
     <section className={styles.hero}>
       <div className={styles.backgroundCode} aria-hidden="true">
@@ -36,6 +37,9 @@ COMPLIANCE_STATUS: ALERT
         <div className={styles.buttonGroup}>
           <button className={styles.primaryButton} onClick={onPrimaryClick}>
             Start Session with Sales Agent
+          </button>
+          <button className={styles.secondaryButton} onClick={onSampleClick}>
+            View Sample Audit
           </button>
         </div>
       </div>

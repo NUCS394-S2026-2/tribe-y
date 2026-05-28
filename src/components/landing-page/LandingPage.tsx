@@ -12,12 +12,13 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   const goToChat = () => navigate('/chat');
+  const goToSample = () => navigate('/sample');
 
   return (
     <div>
       <TopNavBar onCtaClick={goToChat} />
       <main style={{ paddingTop: '4rem' }}>
-        <HeroSection onPrimaryClick={goToChat} />
+        <HeroSection onPrimaryClick={goToChat} onSampleClick={goToSample} />
         <ValuePillars />
         <ReportCard />
         <CtaSection onCtaClick={goToChat} />
