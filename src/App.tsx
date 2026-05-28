@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { CompassChat } from './chat/CompassChat';
+import FinancialStandardsPage from './components/financial-standards/FinancialStandardsPage';
 import LandingPage from './components/landing-page/LandingPage';
 import SampleAuditPage from './components/sample-audit/SampleAuditPage';
 import { PaymentPage } from './payment/PaymentPage';
@@ -16,6 +17,7 @@ function App() {
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/vault/:reviewId" element={<VaultPage />} />
         <Route path="/sample" element={<SampleAuditPage />} />
+        <Route path="/financial-standards" element={<FinancialStandardsPage />} />
       </Routes>
     </BrowserRouter>
   );

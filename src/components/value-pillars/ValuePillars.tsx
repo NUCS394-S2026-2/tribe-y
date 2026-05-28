@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 import styles from './ValuePillars.module.css';
 
@@ -47,9 +48,9 @@ export default function ValuePillars() {
               billing for high-precision auditing, ensuring complete transparency and cost
               control.
             </p>
-            <span className={styles.link}>
+            <Link to="/financial-standards" className={styles.link}>
               Financial standards <span className="material-symbols-outlined">east</span>
-            </span>
+            </Link>
           </div>
         </div>
       </div>
