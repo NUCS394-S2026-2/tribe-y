@@ -1,5 +1,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 
+import { REVIEWER_WALLET_ADDRESS, REVIEW_FULL_PRICE_LAMPORTS } from './wallet.js';
+
 // NOTE: This endpoint is INTENTIONALLY PUBLIC — no Firebase auth.
 // `GET /.well-known/agent.json` is the A2A discovery document. By the
 // A2A protocol it MUST be reachable unauthenticated so peer agents can
@@ -51,21 +53,24 @@ export function buildAgentCard(rpcEndpoint: string): AgentCard {
         paid: false,
       },
       {
-        name: 'review',
-        description:
-          'Produce a structured C++ code review on the submitted snippet. Returns a SampleReportData JSON document (scorecard, findings, slice, summary, conclusion). The response includes an optional `artifacts.pdfUrl` v4 signed URL valid for ~24h that points to a rendered PDF of the same report in Firebase Storage; `artifacts` is omitted if the server-side render or upload failed.',
-        params: '{ code: string, reportType: ReportType, fullReport?: boolean }',
+        name: 'reviewSample',
+        description: 'Free sample review on a representative slice. No payment required.',
+        params: '{ code: string, reportType: ReportType }',
         result: 'SampleReportData',
-        // The method is fully implemented in this release. Payment via x402
-        // is NOT yet enforced — that lands in a follow-up. Treat `paid: true`
-        // as a forward-looking declaration so peer agents already know to
-        // expect an x402 challenge once it ships.
+        paid: false,
+      },
+      {
+        name: 'reviewFull',
+        description:
+          'Full C++ review on the entire submitted snippet. Paid: x402 over Solana devnet. On HTTP 402 the response body contains the payment instructions; resubmit the same JSON-RPC body with `X-Payment: <solana tx signature>` to claim the result.',
+        params: '{ code: string, reportType: ReportType }',
+        result: 'SampleReportData',
         paid: true,
         pricing: {
-          amount: '0',
+          amount: String(REVIEW_FULL_PRICE_LAMPORTS),
           currency: 'SOL_LAMPORTS',
           network: 'solana-devnet',
-          recipient: null,
+          recipient: REVIEWER_WALLET_ADDRESS,
         },
       },
     ],

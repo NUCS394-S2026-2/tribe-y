@@ -2,7 +2,7 @@ import { defineSecret } from 'firebase-functions/params';
 
 import { createServerGeminiCall } from '../serverGeminiCall.js';
 import { listReportTypes } from './listReportTypes.js';
-import { buildReviewHandler } from './review.js';
+import { buildReviewFullHandler, buildReviewSampleHandler } from './review.js';
 import type { MethodHandler } from './types.js';
 
 /**
@@ -19,22 +19,26 @@ export const googleAiApiKey: ReturnType<typeof defineSecret> =
 /**
  * Build the registry of JSON-RPC method handlers.
  *
- * Today the `review` method is registered but NOT gated by payment. x402
- * lives in `x402Middleware.ts` (PR 6) and will wrap this handler then.
+ * PR 6 replaces the single `review` method with two:
+ *   - `reviewSample` — free, runs against a representative slice.
+ *   - `reviewFull`   — paid (x402 over Solana devnet), runs the whole
+ *     snippet. The x402 gate is applied in `rpc.ts` BEFORE this handler
+ *     runs; handlers themselves are payment-agnostic.
  */
 export function buildMethodHandlers(apiKey: string): Record<string, MethodHandler> {
   const geminiCall = createServerGeminiCall(apiKey);
   return {
     listReportTypes,
-    review: buildReviewHandler(geminiCall),
+    reviewSample: buildReviewSampleHandler(geminiCall),
+    reviewFull: buildReviewFullHandler(geminiCall),
   };
 }
 
 /**
  * Default registry used in unit tests and when the API key is unset. Only
- * the free, no-Gemini methods are registered; calling `review` falls
- * through to a method-not-found error envelope. Production code paths
- * always go through `buildMethodHandlers(apiKey)`.
+ * the free, no-Gemini methods are registered; calling `reviewSample` or
+ * `reviewFull` falls through to a method-not-found error envelope.
+ * Production code paths always go through `buildMethodHandlers(apiKey)`.
  */
 export const methodHandlers: Record<string, MethodHandler> = {
   listReportTypes,

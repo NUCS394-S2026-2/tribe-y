@@ -6,13 +6,13 @@ import { defineSecret } from 'firebase-functions/params';
 type ReviewerSecret = ReturnType<typeof defineSecret>;
 
 /**
- * Public address of the reviewer's Solana devnet wallet.
- *
- * TODO: replace with the real devnet keypair public key generated per the README
- * (see ./README.md). Currently this is the Solana System Program address, used as
- * a safe placeholder so the code compiles and PR 6 can swap in the real one.
+ * Public address of the reviewer's Solana devnet wallet. Payments for the
+ * `reviewFull` method must be SOL transfers to this address. The matching
+ * secret key lives only in the (gitignored) `reviewer-devnet.json` keypair
+ * file at the repo root — never commit it. See ./README.md.
  */
-export const REVIEWER_WALLET_ADDRESS: string = '11111111111111111111111111111112';
+export const REVIEWER_WALLET_ADDRESS: string =
+  '2vCfh5Cia6iwb7uBfrWeXaG6UtvTzV6kzzH5XCfAVmZp';
 
 /**
  * The Solana network the reviewer wallet operates on.
@@ -36,3 +36,13 @@ export const SOLANA_RPC_URL: string =
 export const reviewerWalletSecret: ReviewerSecret = defineSecret(
   'REVIEWER_WALLET_SECRET_KEY',
 );
+
+/**
+ * Price for the paid `reviewFull` method, in lamports (1e-9 SOL).
+ * 1_000_000 lamports = 0.001 SOL on Solana devnet — matches the
+ * pre-x402 stub amount used in earlier reviewer prototypes.
+ *
+ * Added in PR 6 (x402 gate). Consumed by `x402Middleware.ts` and
+ * `agentCard.ts`.
+ */
+export const REVIEW_FULL_PRICE_LAMPORTS = 1_000_000;

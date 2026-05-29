@@ -7,7 +7,6 @@ import { InvalidParamsError } from './errors.js';
 export interface ReviewParams {
   code: string;
   reportType: ReportType;
-  fullReport?: boolean;
 }
 
 /**
@@ -22,6 +21,11 @@ export type PdfUploader = (
   fullReport: boolean,
 ) => Promise<UploadedPdfArtifact>;
 
+/**
+ * Validate JSON-RPC params for the review methods. Both `reviewSample` and
+ * `reviewFull` accept the same shape — `fullReport` is no longer a client-
+ * controllable param; it's implied by which method was called.
+ */
 export function validateReviewParams(params: unknown): ReviewParams {
   if (typeof params !== 'object' || params === null) {
     throw new InvalidParamsError('params must be an object');
@@ -35,32 +39,31 @@ export function validateReviewParams(params: unknown): ReviewParams {
       'params.reportType must be one of the supported report types — call listReportTypes to discover them',
     );
   }
-  if (p.fullReport !== undefined && typeof p.fullReport !== 'boolean') {
-    throw new InvalidParamsError('params.fullReport must be a boolean if provided');
-  }
   return {
     code: p.code,
     reportType: p.reportType,
-    fullReport: p.fullReport === true,
   };
 }
 
 /**
- * Build the `review` method handler. The Gemini caller is injected so the
- * dispatcher and tests can substitute a mock without touching network. The
- * PDF uploader is also injected (defaulting to the real Firebase Storage
- * implementation) so tests don't touch real GCS.
+ * Build a review handler for either sample or full mode. The Gemini caller is
+ * injected so the dispatcher and tests can substitute a mock without touching
+ * network. The PDF uploader is also injected (defaulting to the real Firebase
+ * Storage implementation) so tests don't touch real GCS.
  *
- * NOTE: This method is advertised as `paid: true` in the agent card. In this
- * PR there is NO x402 gate yet — the dispatcher runs the review for any
- * caller. The x402 middleware lands in PR 6.
+ * The `fullReport` boolean is fixed per-handler at construction time: pass
+ * `false` to build the `reviewSample` (free) handler, `true` to build the
+ * `reviewFull` (paid via x402) handler. Both share the same param schema and
+ * return shape; the only behavioural difference lives in the brain (slice
+ * picker vs whole-snippet pass).
  */
 export function buildReviewHandler(
   geminiCall: GeminiCall,
   uploadPdf: PdfUploader = buildAndUploadReportPdf,
+  fullReport = false,
 ): (params: unknown) => Promise<SampleReportData> {
   return async (params: unknown) => {
-    const { code, reportType, fullReport } = validateReviewParams(params);
+    const { code, reportType } = validateReviewParams(params);
     const def = getReportTypeDef(reportType);
     const data = await runReview({
       snippet: code,
@@ -74,7 +77,7 @@ export function buildReviewHandler(
     // Failures here MUST NOT fail the review — the JSON response is the
     // canonical result. The PDF is a convenience artifact.
     try {
-      const artifact = await uploadPdf(data, code, reportType, fullReport === true);
+      const artifact = await uploadPdf(data, code, reportType, fullReport);
       data.artifacts = artifact;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -83,4 +86,24 @@ export function buildReviewHandler(
 
     return data;
   };
+}
+
+/** Free, sample-slice handler (`reviewSample` JSON-RPC method). */
+export function buildReviewSampleHandler(
+  geminiCall: GeminiCall,
+  uploadPdf: PdfUploader = buildAndUploadReportPdf,
+): (params: unknown) => Promise<SampleReportData> {
+  return buildReviewHandler(geminiCall, uploadPdf, false);
+}
+
+/**
+ * Paid, full-snippet handler (`reviewFull` JSON-RPC method). The x402 gate
+ * is enforced one level up in `rpc.ts` — this handler assumes payment has
+ * already been verified and claimed.
+ */
+export function buildReviewFullHandler(
+  geminiCall: GeminiCall,
+  uploadPdf: PdfUploader = buildAndUploadReportPdf,
+): (params: unknown) => Promise<SampleReportData> {
+  return buildReviewHandler(geminiCall, uploadPdf, true);
 }

@@ -105,12 +105,17 @@ function resolveRpcEndpoint(card: AgentCard): string {
 }
 
 /**
- * Invoke the `review` JSON-RPC method on the A2A reviewer agent.
+ * Invoke the reviewer agent over JSON-RPC.
  *
- * Today this call is unauthenticated and free. PR 6 will add an x402
- * payment handshake here (HTTP 402 → Solana transfer → retry with
- * `X-Payment` header). The client signature for this function will not
- * change.
+ * As of PR 6 the server splits the surface into two methods:
+ *   - `reviewSample` — free, sample slice of the snippet.
+ *   - `reviewFull`   — paid via x402 over Solana devnet (full snippet).
+ *
+ * This client routes to the right method based on `fullReport`. The wallet/
+ * x402 handshake (HTTP 402 → sign → retry with `X-Payment`) is intentionally
+ * NOT implemented here — that lands in PR 7. For now, `fullReport: true`
+ * will surface the server's HTTP 402 as an error message; the test-bypass
+ * button still works because the server only gates `reviewFull`.
  */
 export async function invokeReviewer(
   args: InvokeReviewerArgs,
@@ -123,17 +128,18 @@ export async function invokeReviewer(
       ? crypto.randomUUID()
       : `req-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
+  const method = args.fullReport ? 'reviewFull' : 'reviewSample';
+
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       jsonrpc: '2.0',
       id: requestId,
-      method: 'review',
+      method,
       params: {
         code: args.code,
         reportType: args.reportType,
-        fullReport: args.fullReport ?? false,
       },
     }),
   });

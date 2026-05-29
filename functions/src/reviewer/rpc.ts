@@ -1,12 +1,14 @@
 import { onRequest, type Request } from 'firebase-functions/v2/https';
 
 import { buildMethodHandlers, googleAiApiKey, methodHandlers } from './methods/index.js';
+import { REVIEWER_WALLET_ADDRESS, REVIEW_FULL_PRICE_LAMPORTS } from './wallet.js';
+import { checkX402Payment, type X402Quote } from './x402Middleware.js';
 
 // NOTE: This endpoint is INTENTIONALLY PUBLIC — no Firebase auth.
-// `/rpc` is the A2A JSON-RPC surface. Free, read-only methods like
-// `listReportTypes` are open to any caller. Paid methods (`review`)
-// will be gated by x402 over Solana devnet in a later PR; they are NOT
-// gated by Firebase auth. Do NOT call verifyAuth here.
+// `/rpc` is the A2A JSON-RPC surface. Free methods (`listReportTypes`,
+// `reviewSample`) are open to any caller. The paid method (`reviewFull`)
+// is gated by x402 over Solana devnet (PR 6) — see the 402 handshake
+// below. None of this is gated by Firebase auth.
 
 /** JSON-RPC 2.0 standard error codes. */
 export const JSON_RPC_ERRORS = {
@@ -203,7 +205,57 @@ export const reviewerRpc = onRequest(
     }
     const handlers = apiKey ? buildMethodHandlers(apiKey) : methodHandlers;
 
+    // x402 gate: if the caller targets `reviewFull` we verify (or quote)
+    // payment BEFORE dispatching. The 402 response is at the HTTP layer —
+    // its body is a payment-instructions document, not a JSON-RPC envelope.
+    // (Yes, this means clients must handle both shapes. That matches the
+    // x402 spec.) Sample, listReportTypes, and anything else go straight
+    // to the JSON-RPC dispatcher untouched.
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      (parsed as { method?: unknown }).method === 'reviewFull'
+    ) {
+      const paymentHeader = readPaymentHeader(req);
+      const gate = await checkX402Payment({
+        paymentHeader,
+        expectedAmount: REVIEW_FULL_PRICE_LAMPORTS,
+        expectedRecipient: REVIEWER_WALLET_ADDRESS,
+        reviewSnapshot: {
+          method: 'reviewFull',
+          timestamp: new Date().toISOString(),
+        },
+      });
+      if (!gate.ok) {
+        res.status(402).json(serializeQuote(gate.quote, gate.reason));
+        return;
+      }
+    }
+
     const response = await dispatchRpc(parsed, handlers);
     res.status(200).json(response);
   },
 );
+
+/**
+ * Pull the `X-Payment` header (case-insensitive) off the incoming request.
+ * Returns `undefined` when missing.
+ */
+export function readPaymentHeader(req: Request): string | undefined {
+  const raw = req.headers['x-payment'] ?? req.headers['X-Payment'];
+  if (Array.isArray(raw)) return raw[0];
+  if (typeof raw === 'string' && raw.length > 0) return raw;
+  return undefined;
+}
+
+/**
+ * Shape the HTTP 402 response body. Carries the quote plus an optional
+ * `reason` so clients can distinguish "payment never supplied" from
+ * "signature was replayed" without needing extra headers.
+ */
+export function serializeQuote(
+  quote: X402Quote,
+  reason?: string,
+): X402Quote & { reason?: string } {
+  return reason ? { ...quote, reason } : { ...quote };
+}

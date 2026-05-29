@@ -10,19 +10,27 @@
  *   node --experimental-strip-types functions/scripts/a2a-client.ts
  *   BASE_URL=http://127.0.0.1:5002 node ... a2a-client.ts            # emulator
  *   BASE_URL=https://reviewer.tne.ai node ... a2a-client.ts          # prod
- *   BASE_URL=...                 REPORT_TYPE=performance node ... a2a-client.ts
+ *   BASE_URL=... REPORT_TYPE=performance node ... a2a-client.ts
+ *   PAID=1 node ... a2a-client.ts                                    # demo 402
+ *   node ... a2a-client.ts --full                                    # same
  *
  * Steps:
  *   1. GET <BASE_URL>/.well-known/agent.json    → discover endpoint + methods.
  *   2. POST <rpc-endpoint> {listReportTypes}    → enumerate the catalog.
- *   3. POST <rpc-endpoint> {review, ...}        → invoke the agent.
+ *   3. POST <rpc-endpoint> {reviewSample|Full}  → invoke the agent.
  *
- * NOTE: Today the `review` method is NOT yet gated by x402. When PR 6 lands
- * this script will need to handle HTTP 402 + Solana wallet signing.
+ * As of PR 6 the surface splits into:
+ *   - `reviewSample` — FREE, returns a SampleReportData JSON document.
+ *   - `reviewFull`   — PAID via x402 over Solana devnet. Without an
+ *     `X-Payment` header the server returns HTTP 402 with the payment
+ *     instructions in the body. PR 7 will wire a Solana wallet into the
+ *     React UI to sign and resubmit; this CLI only demonstrates the 402
+ *     handshake from a caller's perspective and exits cleanly.
  */
 
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:5002';
 const REPORT_TYPE = process.env.REPORT_TYPE ?? 'memory';
+const PAID = process.env.PAID === '1' || process.argv.includes('--full');
 
 const SAMPLE_CPP = `#include <vector>
 #include <string>
@@ -61,6 +69,16 @@ interface JsonRpcResponse<T> {
   id: number | string | null;
   result?: T;
   error?: { code: number; message: string };
+}
+
+interface X402Quote {
+  amount: number;
+  currency: string;
+  network: string;
+  recipient: string;
+  expiresAt: string;
+  nonce: string;
+  reason?: string;
 }
 
 async function jsonRpc<T>(
@@ -108,9 +126,52 @@ async function main() {
     console.log(`           - ${rt.id.padEnd(14)} ${rt.title}`);
   }
 
+  const method = PAID ? 'reviewFull' : 'reviewSample';
   console.log(
-    `\n[review]   POST ${rpcEndpoint} {review, reportType=${REPORT_TYPE}, code=...}`,
+    `\n[review]   POST ${rpcEndpoint} {${method}, reportType=${REPORT_TYPE}, code=...}`,
   );
+
+  if (PAID) {
+    // Demonstrate the x402 handshake. No wallet here — we expect a 402.
+    const res = await fetch(rpcEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: Date.now(),
+        method: 'reviewFull',
+        params: { code: SAMPLE_CPP, reportType: REPORT_TYPE },
+      }),
+    });
+
+    if (res.status === 402) {
+      const quote = (await res.json()) as X402Quote;
+      console.log(`         ↳ HTTP 402 — payment required`);
+      console.log(`         ↳ amount   : ${quote.amount} ${quote.currency}`);
+      console.log(`         ↳ network  : ${quote.network}`);
+      console.log(`         ↳ recipient: ${quote.recipient}`);
+      console.log(`         ↳ expiresAt: ${quote.expiresAt}`);
+      console.log(`         ↳ nonce    : ${quote.nonce}`);
+      if (quote.reason) console.log(`         ↳ reason   : ${quote.reason}`);
+      console.log(
+        `\n[info]     PR 7 will sign and retry from the chat UI. This CLI has no wallet wired up; exiting cleanly.`,
+      );
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    }
+    const env = (await res.json()) as JsonRpcResponse<{ reportTitle: string }>;
+    if (env.error) {
+      throw new Error(`JSON-RPC ${env.error.code}: ${env.error.message}`);
+    }
+    console.log(
+      `         ↳ unexpected success without payment: ${env.result?.reportTitle}`,
+    );
+    return;
+  }
+
   const start = Date.now();
   const report = await jsonRpc<{
     reportTitle: string;
@@ -118,7 +179,7 @@ async function main() {
     findings: unknown[];
     summary: string;
     artifacts?: { pdfUrl: string; pdfExpiresAt: string; pdfSha256: string };
-  }>(rpcEndpoint, 'review', { code: SAMPLE_CPP, reportType: REPORT_TYPE });
+  }>(rpcEndpoint, 'reviewSample', { code: SAMPLE_CPP, reportType: REPORT_TYPE });
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
   console.log(`         ↳ ${report.reportTitle} (${elapsed}s)`);
