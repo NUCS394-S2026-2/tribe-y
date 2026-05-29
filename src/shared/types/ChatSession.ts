@@ -51,6 +51,17 @@ export interface SampleReportData {
   scores: SampleReportScores;
   generatedAt: number;
   isFullReport?: boolean;
+  /**
+   * Optional signed-URL PDF artifact returned by the reviewer service when
+   * the server successfully rendered and uploaded the report PDF. Clients
+   * should treat this as optional: if absent, the consultant degrades the
+   * preview/download buttons gracefully. See PR 4.5.
+   */
+  artifacts?: {
+    pdfUrl: string;
+    pdfExpiresAt: string;
+    pdfSha256: string;
+  };
 }
 
 export interface ReportTypeSelectorData {

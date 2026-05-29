@@ -1,10 +1,20 @@
+// Server-side PDF renderer for the reviewer agent.
+//
+// Lifted from `src/shared/reportPdf.ts` (the browser-side renderer used by the
+// consultant UI) in PR 4.5. The drawing code is identical; only the imports and
+// the exported surface area differ:
+//   - imports use `.js` extensions for the functions tsconfig (NodeNext-style)
+//   - we export only `renderReportToPdf`. The browser-only conveniences
+//     (`downloadReportPdf`, `reportPdfBlobUrl`) are intentionally omitted —
+//     the server returns a `jsPDF` instance which the caller converts to a
+//     Node `Buffer` via `pdf.output('arraybuffer')`.
 import jsPDF from 'jspdf';
 
 import type {
   SampleReportData,
   SampleReportFinding,
   SampleReportScoreDimension,
-} from './types/ChatSession';
+} from '../brain/types.js';
 
 const PAGE_W = 612;
 const PAGE_H = 792;
@@ -579,15 +589,4 @@ export function renderReportToPdf(data: SampleReportData): jsPDF {
 
   pageFooter(pdf, ctx.cur.page, data);
   return pdf;
-}
-
-export function downloadReportPdf(data: SampleReportData): void {
-  const pdf = renderReportToPdf(data);
-  const safeTitle = data.reportTitle.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
-  pdf.save(`compass-${safeTitle}-sample.pdf`);
-}
-
-export function reportPdfBlobUrl(data: SampleReportData): string {
-  const pdf = renderReportToPdf(data);
-  return pdf.output('bloburl') as unknown as string;
 }

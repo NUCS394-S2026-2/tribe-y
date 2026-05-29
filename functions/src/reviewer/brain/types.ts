@@ -48,6 +48,17 @@ export interface SampleReportData {
   scores: SampleReportScores;
   generatedAt: number;
   isFullReport?: boolean;
+  /**
+   * Optional signed-URL artifact attached by the server when the PDF was
+   * successfully rendered and uploaded to Firebase Storage. Omitted when
+   * upload failed (the JSON response is still valid). See PR 4.5 in
+   * `code-review-agent-revamp-plan.md`.
+   */
+  artifacts?: {
+    pdfUrl: string;
+    pdfExpiresAt: string;
+    pdfSha256: string;
+  };
 }
 
 export interface GeminiCallRequest {

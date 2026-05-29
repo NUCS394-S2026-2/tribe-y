@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { downloadReportPdf, reportPdfBlobUrl } from '../../shared/reportPdf';
 import type {
   SampleReportData,
   SampleReportFinding,
@@ -39,31 +38,46 @@ function scoreToneClass(score: number): string {
   return styles.scoreBad;
 }
 
+function safeFilename(title: string): string {
+  return title.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'report';
+}
+
 export function SampleReportMessage({
   data,
   onPayForFullReview,
   onGenerateFullReportPreview,
 }: SampleReportMessageProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = React.useState(false);
   const tally = useMemo(() => tallyBySeverity(data.findings), [data.findings]);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+  const pdfUrl = data.artifacts?.pdfUrl;
+  const hasPdf = typeof pdfUrl === 'string' && pdfUrl.length > 0;
+  const downloadName = `compass-${safeFilename(data.reportTitle).toLowerCase()}-sample.pdf`;
 
   const openPreview = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(reportPdfBlobUrl(data));
+    if (!hasPdf) return;
+    setPreviewOpen(true);
   };
 
-  const closePreview = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(null);
+  const closePreview = () => setPreviewOpen(false);
+
+  const downloadPdf = () => {
+    if (!hasPdf || !pdfUrl) return;
+    // Anchor-based download. Cross-origin signed URLs may ignore the
+    // `download` attribute and open inline, which is still acceptable
+    // (the user gets the file either way via the storage server's
+    // `Content-Disposition: inline; filename=...` header).
+    const a = document.createElement('a');
+    a.href = pdfUrl;
+    a.download = downloadName;
+    a.rel = 'noopener';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const overall = data.scores.overall;
+  const unavailableTip = 'PDF unavailable for this review';
 
   return (
     <AssistantMessageRow>
@@ -126,13 +140,21 @@ export function SampleReportMessage({
         </p>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.btnGhost} onClick={openPreview}>
+          <button
+            type="button"
+            className={styles.btnGhost}
+            onClick={openPreview}
+            disabled={!hasPdf}
+            title={hasPdf ? undefined : unavailableTip}
+          >
             Preview PDF
           </button>
           <button
             type="button"
             className={styles.btnPrimary}
-            onClick={() => downloadReportPdf(data)}
+            onClick={downloadPdf}
+            disabled={!hasPdf}
+            title={hasPdf ? undefined : unavailableTip}
           >
             Download PDF
           </button>
@@ -158,12 +180,12 @@ export function SampleReportMessage({
         </div>
       </div>
 
-      {previewUrl && (
+      {previewOpen && hasPdf && pdfUrl && (
         <PdfPreviewModal
           title={data.reportTitle}
-          url={previewUrl}
+          url={pdfUrl}
           onClose={closePreview}
-          onDownload={() => downloadReportPdf(data)}
+          onDownload={downloadPdf}
         />
       )}
     </AssistantMessageRow>
