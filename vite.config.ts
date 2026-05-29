@@ -9,6 +9,16 @@ import { apiProxyPlugin } from './vite-plugins/api-proxy';
 export default defineConfig(({ mode }) => {
   const loaded = loadEnv(mode, process.cwd(), '');
 
+  // Firebase Hosting emulator port. Defaults to 5000, but macOS often
+  // squats on 5000 with AirPlay Receiver (returns 403 to most traffic),
+  // forcing the emulator to fall back to 5002. Set
+  // `FIREBASE_HOSTING_EMULATOR_PORT=5002` in .env.local to match.
+  const hostingPort =
+    loaded.FIREBASE_HOSTING_EMULATOR_PORT ??
+    loaded.VITE_FIREBASE_HOSTING_EMULATOR_PORT ??
+    '5002';
+  const emulatorTarget = `http://127.0.0.1:${hostingPort}`;
+
   return {
     plugins: [
       tailwindcss(),
@@ -21,18 +31,18 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:5000',
+          target: emulatorTarget,
           changeOrigin: true,
         },
         // A2A reviewer surfaces (PR 4). Forwarded to the Firebase Hosting
         // emulator, which rewrites them to the `agentCard` / `reviewerRpc`
         // Cloud Functions per `firebase.json`.
         '/rpc': {
-          target: 'http://127.0.0.1:5000',
+          target: emulatorTarget,
           changeOrigin: true,
         },
         '/.well-known': {
-          target: 'http://127.0.0.1:5000',
+          target: emulatorTarget,
           changeOrigin: true,
         },
       },
