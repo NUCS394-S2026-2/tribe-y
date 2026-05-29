@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import {
-  CodeReviewAuthError,
-  createPendingReview,
-  runSampleReport,
-} from '../../agents/codeReviewAgent';
 import { type ReportType } from '../../agents/reportTypes';
+import { invokeReviewer } from '../../agents/reviewerClient';
 import { runSalesAgent } from '../../agents/salesAgent';
 import { CODE_SNIPPET_MAX_CHARS } from '../../shared/codeSnippetLimits';
 import { auth } from '../../shared/firebase';
@@ -35,6 +31,21 @@ function createMessage(
     createdAt: Date.now(),
     ...extras,
   };
+}
+
+/**
+ * Generate a stable client-side review id. Used to thread together the
+ * report-type-selector → sample-report → (future) payment messages for
+ * a single chat session. Prior to PR 4 this id came from a Firestore
+ * document created server-side by `createPendingReview`; now that the
+ * unpaid path no longer writes to Firestore, a client-generated UUID
+ * is sufficient.
+ */
+function newReviewId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `rev-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function createInitialSession(): ChatSession {
@@ -69,7 +80,7 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
 
   const startReportSelection = useCallback(
     async (snippet: string, fileLabel: string | null) => {
-      const reviewId = await createPendingReview(snippet);
+      const reviewId = newReviewId();
       const intro = fileLabel
         ? `Got your file (${fileLabel}). Which report do you want me to preview?`
         : 'Got your code. Which report do you want me to preview?';
@@ -157,11 +168,9 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
       } catch (err) {
         console.error('Chat orchestrator error:', err);
         const errorText =
-          err instanceof CodeReviewAuthError
+          err instanceof Error
             ? err.message
-            : err instanceof Error
-              ? err.message
-              : 'Sorry, something went wrong. Please try again.';
+            : 'Sorry, something went wrong. Please try again.';
 
         setSession((prev) => ({
           ...prev,
@@ -240,9 +249,8 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
     }));
 
     try {
-      const data: SampleReportData = await runSampleReport({
-        reviewId: current.activeReviewId,
-        snippet: current.pendingCode,
+      const data: SampleReportData = await invokeReviewer({
+        code: current.pendingCode,
         reportType,
       });
 
@@ -300,9 +308,8 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
     }));
 
     try {
-      const data: SampleReportData = await runSampleReport({
-        reviewId: current.activeReviewId,
-        snippet: current.pendingCode,
+      const data: SampleReportData = await invokeReviewer({
+        code: current.pendingCode,
         reportType,
         fullReport: true,
       });
