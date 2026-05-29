@@ -10,7 +10,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   __resetConnectionFactory,
+  __resetRetryConfig,
   __setConnectionFactory,
+  __setRetryConfig,
   verifyPayment,
 } from './verifyPayment.js';
 
@@ -85,24 +87,28 @@ describe('verifyPayment', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+    // Skip propagation-retry backoff in tests so failure-path cases finish
+    // in a single attempt; the retry behaviour itself is exercised separately.
+    __setRetryConfig({ attempts: 1, delayMs: 0 });
   });
 
   afterEach(() => {
     vi.useRealTimers();
     __resetConnectionFactory();
+    __resetRetryConfig();
   });
 
-  it('returns tx not finalized when getTransaction resolves null', async () => {
+  it('returns tx not confirmed when getTransaction resolves null', async () => {
     __setConnectionFactory(() => makeMockConnection(null) as never);
     const result = await verifyPayment({
       signature: SIGNATURE,
       expectedAmount: 1000,
       expectedRecipient: recipient.toBase58(),
     });
-    expect(result).toEqual({ ok: false, reason: 'tx not finalized' });
+    expect(result).toEqual({ ok: false, reason: 'tx not confirmed' });
   });
 
-  it('returns tx not finalized when getTransaction throws', async () => {
+  it('returns tx not confirmed when getTransaction throws', async () => {
     __setConnectionFactory(
       () =>
         ({
@@ -114,7 +120,7 @@ describe('verifyPayment', () => {
       expectedAmount: 1000,
       expectedRecipient: recipient.toBase58(),
     });
-    expect(result).toEqual({ ok: false, reason: 'tx not finalized' });
+    expect(result).toEqual({ ok: false, reason: 'tx not confirmed' });
   });
 
   it('returns tx is not a SOL transfer when no transfer instruction found', async () => {

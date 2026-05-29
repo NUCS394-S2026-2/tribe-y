@@ -1,14 +1,14 @@
 import {
   Connection,
+  type Message,
+  type MessageCompiledInstruction,
   PublicKey,
   SystemInstruction,
   SystemProgram,
   TransactionInstruction,
-  type Message,
-  type MessageCompiledInstruction,
   type VersionedTransactionResponse,
 } from '@solana/web3.js';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
 import { SOLANA_RPC_URL } from './wallet.js';
 
@@ -32,17 +32,48 @@ export type VerifyPaymentResult =
 const STALE_TX_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
+ * Solana commitment level we require for a payment. We use `'confirmed'`
+ * (≈400ms–2s on devnet) rather than `'finalized'` (≈13s+) because at the
+ * 0.001 SOL price point a confirmed transaction is more than sufficient
+ * — there's no economic incentive to attempt a rollback — and the latency
+ * difference is a brutal UX hit. The client signs and waits for
+ * `'confirmed'` too, so requiring `'finalized'` here was guaranteeing a
+ * race on every paid call.
+ */
+const PAYMENT_COMMITMENT = 'confirmed' as const;
+
+/**
+ * How long to keep retrying `getTransaction` while waiting for the tx to
+ * propagate from the wallet's RPC to our RPC. devnet RPCs can briefly
+ * disagree on confirmation status; a short bounded retry papers over
+ * that without surfacing a spurious 402 to the user.
+ */
+let fetchRetryAttempts = 6;
+let fetchRetryDelayMs = 1500;
+
+/** Test-only hook to skip the propagation-retry delay. */
+export function __setRetryConfig(config: { attempts?: number; delayMs?: number }): void {
+  if (typeof config.attempts === 'number') fetchRetryAttempts = config.attempts;
+  if (typeof config.delayMs === 'number') fetchRetryDelayMs = config.delayMs;
+}
+
+export function __resetRetryConfig(): void {
+  fetchRetryAttempts = 6;
+  fetchRetryDelayMs = 1500;
+}
+
+/**
  * Allow tests / PR 6 to inject a custom Connection (e.g. a mocked one).
  */
 let connectionFactory: (url: string) => Connection = (url) =>
-  new Connection(url, 'finalized');
+  new Connection(url, PAYMENT_COMMITMENT);
 
 export function __setConnectionFactory(factory: (url: string) => Connection): void {
   connectionFactory = factory;
 }
 
 export function __resetConnectionFactory(): void {
-  connectionFactory = (url) => new Connection(url, 'finalized');
+  connectionFactory = (url) => new Connection(url, PAYMENT_COMMITMENT);
 }
 
 interface DecodedTransfer {
@@ -120,7 +151,7 @@ function decodeFirstSystemTransfer(
  * Verify a Solana SOL transfer payment.
  *
  * Performs five checks:
- *   1. Transaction is fetched and finalized.
+ *   1. Transaction is fetched at `confirmed` commitment (with bounded retry).
  *   2. Transaction contains a SystemProgram.transfer instruction.
  *   3. Transfer recipient equals `expectedRecipient`.
  *   4. Transfer amount (lamports) >= `expectedAmount`.
@@ -137,18 +168,27 @@ export async function verifyPayment(
 
   const connection = connectionFactory(SOLANA_RPC_URL);
 
-  // 1. Fetch finalized tx.
-  let tx: VersionedTransactionResponse | null;
-  try {
-    tx = await connection.getTransaction(signature, {
-      maxSupportedTransactionVersion: 0,
-      commitment: 'finalized',
-    });
-  } catch {
-    return { ok: false, reason: 'tx not finalized' };
+  // 1. Fetch the tx at `confirmed` commitment, retrying briefly to absorb
+  // any short propagation delay between the wallet's RPC and ours. If
+  // after the retry budget the tx still isn't visible we surface
+  // "tx not confirmed" so the client can retry on its own.
+  let tx: VersionedTransactionResponse | null = null;
+  for (let attempt = 0; attempt < fetchRetryAttempts; attempt += 1) {
+    try {
+      tx = await connection.getTransaction(signature, {
+        maxSupportedTransactionVersion: 0,
+        commitment: PAYMENT_COMMITMENT,
+      });
+    } catch {
+      tx = null;
+    }
+    if (tx) break;
+    if (attempt < fetchRetryAttempts - 1 && fetchRetryDelayMs > 0) {
+      await new Promise((r) => setTimeout(r, fetchRetryDelayMs));
+    }
   }
   if (!tx) {
-    return { ok: false, reason: 'tx not finalized' };
+    return { ok: false, reason: 'tx not confirmed' };
   }
 
   // 2. Decode transfer.
