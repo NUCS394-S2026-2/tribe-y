@@ -1,0 +1,77 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Style the wallet-adapter button to match the topbar's JetBrains Mono aesthetic. */
+.wrap :global(.wallet-adapter-button) {
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  color: var(--contrast);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  height: auto;
+  line-height: 1.2;
+  border-radius: 0;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.wrap :global(.wallet-adapter-button:hover) {
+  background: var(--surface-bright);
+  border-color: var(--accent);
+  color: var(--contrast);
+}
+
+.wrap :global(.wallet-adapter-button-start-icon) {
+  margin-right: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.chip:hover {
+  background: rgba(34, 211, 238, 0.16);
+  border-color: var(--accent);
+}
+
+.chip:hover .pubkey::after {
+  content: ' · disconnect';
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-success, #4ade80);
+  flex-shrink: 0;
+}
+
+.pubkey {
+  font-family: 'JetBrains Mono', monospace;
+}

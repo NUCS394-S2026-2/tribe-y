@@ -178,6 +178,99 @@ describe('reviewerClient', () => {
     );
   });
 
+  test('invokeReviewer handles 402 by paying and retrying with X-Payment header', async () => {
+    const quote = {
+      amount: 1_000_000,
+      currency: 'SOL_LAMPORTS',
+      network: 'solana-devnet',
+      recipient: '2vCfh5Cia6iwb7uBfrWeXaG6UtvTzV6kzzH5XCfAVmZp',
+      expiresAt: '2099-01-01T00:00:00Z',
+      nonce: 'abc',
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(FAKE_CARD))
+      .mockResolvedValueOnce(jsonResponse(quote, { status: 402 }))
+      .mockResolvedValueOnce(
+        jsonResponse({ jsonrpc: '2.0', id: 1, result: FAKE_REPORT }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const pay = vi.fn().mockResolvedValue('fake-sig');
+
+    const out = await invokeReviewer({
+      code: 'int main() {}',
+      reportType: 'security',
+      fullReport: true,
+      pay,
+    });
+
+    expect(out).toEqual(FAKE_REPORT);
+    expect(pay).toHaveBeenCalledWith(expect.objectContaining({ amount: 1_000_000 }));
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    const [, retryInit] = fetchMock.mock.calls[2] as [string, RequestInit];
+    const retryHeaders = retryInit.headers as Record<string, string>;
+    expect(retryHeaders['X-Payment']).toBe('fake-sig');
+    expect(retryHeaders['Content-Type']).toBe('application/json');
+  });
+
+  test('invokeReviewer throws a friendly error when 402 arrives without a pay callback', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(FAKE_CARD))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            amount: 1_000_000,
+            currency: 'SOL_LAMPORTS',
+            network: 'solana-devnet',
+            recipient: 'r',
+            expiresAt: 'x',
+            nonce: 'n',
+          },
+          { status: 402 },
+        ),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      invokeReviewer({ code: 'x', reportType: 'security', fullReport: true }),
+    ).rejects.toThrow(/connect a wallet first/i);
+  });
+
+  test('invokeReviewer surfaces pay-callback rejections with the original message', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(FAKE_CARD))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            amount: 1_000_000,
+            currency: 'SOL_LAMPORTS',
+            network: 'solana-devnet',
+            recipient: 'r',
+            expiresAt: 'x',
+            nonce: 'n',
+          },
+          { status: 402 },
+        ),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const pay = vi.fn().mockRejectedValue(new Error('Payment cancelled.'));
+
+    await expect(
+      invokeReviewer({
+        code: 'x',
+        reportType: 'security',
+        fullReport: true,
+        pay,
+      }),
+    ).rejects.toThrow(/Payment cancelled\./);
+    expect(fetchMock).toHaveBeenCalledTimes(2); // no retry
+  });
+
   test('invokeReviewer falls back to /rpc when the card host does not match window.location', async () => {
     const otherHostCard: AgentCard = {
       ...FAKE_CARD,

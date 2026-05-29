@@ -1,8 +1,9 @@
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { type ReportType } from '../../agents/reportTypes';
-import { invokeReviewer } from '../../agents/reviewerClient';
+import { invokeReviewer, type X402Quote } from '../../agents/reviewerClient';
 import { runSalesAgent } from '../../agents/salesAgent';
 import { CODE_SNIPPET_MAX_CHARS } from '../../shared/codeSnippetLimits';
 import { auth } from '../../shared/firebase';
@@ -12,6 +13,7 @@ import type {
   ChatSession,
   SampleReportData,
 } from '../../shared/types/ChatSession';
+import { payQuote } from '../../wallet/payQuote';
 import { routeMessage } from './routeMessage';
 
 const GREETING_TEXT =
@@ -71,6 +73,8 @@ interface UseChatOrchestratorReturn {
 
 export function useChatOrchestrator(): UseChatOrchestratorReturn {
   const navigate = useNavigate();
+  const { connection } = useConnection();
+  const wallet = useWallet();
   const [session, setSession] = useState<ChatSession>(createInitialSession);
   const sessionRef = useRef(session);
 
@@ -301,17 +305,27 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
         ...prev.messages,
         createMessage(
           'assistant',
-          'Generating the full report — this bypasses payment for testing.',
+          'Generating your full report — if payment is required, your wallet will prompt you to sign.',
           'sales',
         ),
       ],
     }));
+
+    const pay = async (quote: X402Quote): Promise<string> => {
+      if (!wallet.connected || !wallet.publicKey) {
+        throw new Error(
+          'Connect a wallet from the topbar before paying for the full report.',
+        );
+      }
+      return payQuote({ quote, connection, wallet });
+    };
 
     try {
       const data: SampleReportData = await invokeReviewer({
         code: current.pendingCode,
         reportType,
         fullReport: true,
+        pay,
       });
 
       setSession((prev) => ({
@@ -336,7 +350,7 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
         mode: 'sample',
       }));
     }
-  }, []);
+  }, [connection, wallet]);
 
   const goToPayment = useCallback(() => {
     const current = sessionRef.current;
