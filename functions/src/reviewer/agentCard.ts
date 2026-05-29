@@ -53,9 +53,13 @@ export function buildAgentCard(rpcEndpoint: string): AgentCard {
       {
         name: 'review',
         description:
-          'Produce a structured code review on a C++ snippet. NOT YET IMPLEMENTED — coming in a future release.',
+          'Produce a structured C++ code review on the submitted snippet. Returns a SampleReportData JSON document (scorecard, findings, slice, summary, conclusion).',
         params: '{ code: string, reportType: ReportType, fullReport?: boolean }',
         result: 'SampleReportData',
+        // The method is fully implemented in this release. Payment via x402
+        // is NOT yet enforced — that lands in a follow-up. Treat `paid: true`
+        // as a forward-looking declaration so peer agents already know to
+        // expect an x402 challenge once it ships.
         paid: true,
         pricing: {
           amount: '0',
@@ -72,14 +76,30 @@ export function buildAgentCard(rpcEndpoint: string): AgentCard {
  * Derive the absolute `/rpc` URL from an incoming request. Honors the
  * `x-forwarded-*` headers Firebase Hosting sets in front of Cloud
  * Functions, so the URL we advertise matches what clients used to reach us.
+ *
+ * Protocol resolution order:
+ *   1. `x-forwarded-proto` (set by Firebase Hosting / any HTTPS terminator)
+ *   2. `req.protocol` (Express-derived; reflects the actual transport)
+ *   3. `http` when the host looks local (127.0.0.1 / localhost), `https`
+ *      otherwise. Local emulators serve plain http; production Cloud
+ *      Functions are always https.
  */
 export function deriveRpcEndpoint(
   headers: Record<string, string | string[] | undefined>,
+  reqProtocol?: string,
 ): string {
-  const proto = pickHeader(headers, 'x-forwarded-proto') ?? 'https';
   const host =
     pickHeader(headers, 'x-forwarded-host') ?? pickHeader(headers, 'host') ?? 'localhost';
+  const proto =
+    pickHeader(headers, 'x-forwarded-proto') ??
+    (reqProtocol && reqProtocol.length > 0 ? reqProtocol : undefined) ??
+    (isLocalHost(host) ? 'http' : 'https');
   return `${proto}://${host}/rpc`;
+}
+
+function isLocalHost(host: string): boolean {
+  const h = host.split(':')[0]?.toLowerCase() ?? '';
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h === '[::1]';
 }
 
 function pickHeader(
@@ -101,6 +121,6 @@ export const agentCard = onRequest({ cors: true }, (req, res) => {
     res.status(405).send('Method Not Allowed: use GET');
     return;
   }
-  const card = buildAgentCard(deriveRpcEndpoint(req.headers));
+  const card = buildAgentCard(deriveRpcEndpoint(req.headers, req.protocol));
   res.status(200).type('application/json').send(JSON.stringify(card));
 });

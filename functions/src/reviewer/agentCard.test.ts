@@ -18,7 +18,7 @@ describe('buildAgentCard', () => {
     expect(m?.paid).toBe(false);
   });
 
-  it('advertises review as paid (not yet implemented)', () => {
+  it('advertises review as a paid method backed by solana-devnet', () => {
     const card = buildAgentCard('https://example.com/rpc');
     const m = card.methods.find((x) => x.name === 'review');
     expect(m).toBeDefined();
@@ -38,13 +38,28 @@ describe('deriveRpcEndpoint', () => {
     ).toBe('https://reviewer.example.com/rpc');
   });
 
-  it('falls back to host header when forwarded headers are absent', () => {
+  it('prefers req.protocol over the localhost default when no forwarded headers exist', () => {
+    expect(deriveRpcEndpoint({ host: 'reviewer.example.com' }, 'https')).toBe(
+      'https://reviewer.example.com/rpc',
+    );
+  });
+
+  it('defaults to http for localhost-style hosts (so emulators work)', () => {
     expect(deriveRpcEndpoint({ host: 'localhost:5001' })).toBe(
-      'https://localhost:5001/rpc',
+      'http://localhost:5001/rpc',
+    );
+    expect(deriveRpcEndpoint({ host: '127.0.0.1:5002' })).toBe(
+      'http://127.0.0.1:5002/rpc',
+    );
+  });
+
+  it('defaults to https for non-localhost hosts', () => {
+    expect(deriveRpcEndpoint({ host: 'reviewer.example.com' })).toBe(
+      'https://reviewer.example.com/rpc',
     );
   });
 
   it('returns sensible default when nothing is provided', () => {
-    expect(deriveRpcEndpoint({})).toBe('https://localhost/rpc');
+    expect(deriveRpcEndpoint({})).toBe('http://localhost/rpc');
   });
 });
