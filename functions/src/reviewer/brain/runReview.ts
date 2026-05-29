@@ -1,10 +1,5 @@
 import { alignDimensionsToCanonical } from './dimensions.js';
-import {
-  attemptJsonRepair,
-  clampScore,
-  CodeReviewParseError,
-  stripJsonFences,
-} from './parse.js';
+import { attemptJsonRepair, clampScore, stripJsonFences } from './parse.js';
 import { pickSlice } from './pickSlice.js';
 import { buildSampleReportSystem } from './prompts.js';
 import type {
@@ -96,20 +91,24 @@ export async function runReview({
       dimensions: alignDimensionsToCanonical(def.dimensions, rawDims),
     };
   } else {
-    summary = raw.slice(0, 400);
+    // The model returned text we couldn't parse into structured JSON even
+    // after best-effort repair. Don't throw — surface a placeholder report
+    // so the caller at least gets a recognizable shape back. The summary
+    // explains what happened so the user can retry. (We previously threw a
+    // CodeReviewParseError here, which made every parse hiccup look like a
+    // crash to the consultant; with `responseMimeType: 'application/json'`
+    // on the Gemini call this branch should be rare.)
+    console.warn(
+      '[reviewer brain] Unparseable model response; returning placeholder report.',
+    );
+    summary =
+      "The reviewer received a response from the model that couldn't be parsed into a structured report. Please retry — this is usually transient.";
     findings = [];
-    conclusion =
-      'Full report (paid) provides structured findings across the whole codebase.';
-    scores = { overall: 0, dimensions: [] };
-  }
-
-  if (findings.length === 0 && scores.dimensions.every((d) => d.score === 0)) {
-    if (!parsed) {
-      throw new CodeReviewParseError(
-        'Code review brain returned no parseable findings or dimensions.',
-        raw,
-      );
-    }
+    conclusion = 'No findings to report from this attempt. Please retry.';
+    scores = {
+      overall: 0,
+      dimensions: alignDimensionsToCanonical(def.dimensions, []),
+    };
   }
 
   return {
