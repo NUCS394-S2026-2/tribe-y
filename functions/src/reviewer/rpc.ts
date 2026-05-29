@@ -157,7 +157,16 @@ export function extractRawBody(req: Request): string {
  * `Content-Type: text/plain` to reach our `-32700` envelope.
  */
 export const reviewerRpc = onRequest(
-  { cors: true, secrets: [googleAiApiKey] },
+  {
+    cors: true,
+    secrets: [googleAiApiKey],
+    // Gemini 2.5 Pro takes 30–60s for a full review, and we add a PDF
+    // render + GCS upload on top. Default Cloud Functions HTTP timeout
+    // is 60s, which is too tight. 540s is the Cloud Functions v2 hard
+    // ceiling for HTTP triggers.
+    timeoutSeconds: 540,
+    memory: '512MiB',
+  },
   async (req, res) => {
     if (req.method !== 'POST') {
       res
