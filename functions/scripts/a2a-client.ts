@@ -117,6 +117,7 @@ async function main() {
     scores: { overall: number };
     findings: unknown[];
     summary: string;
+    artifacts?: { pdfUrl: string; pdfExpiresAt: string; pdfSha256: string };
   }>(rpcEndpoint, 'review', { code: SAMPLE_CPP, reportType: REPORT_TYPE });
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
@@ -124,6 +125,16 @@ async function main() {
   console.log(`         ↳ overall score: ${report.scores.overall}/10`);
   console.log(`         ↳ ${report.findings.length} findings`);
   console.log(`         ↳ summary: ${report.summary.slice(0, 180)}…`);
+  if (report.artifacts) {
+    console.log(`         ↳ pdfUrl: ${report.artifacts.pdfUrl}`);
+    console.log(
+      `         ↳ pdf expires: ${report.artifacts.pdfExpiresAt} · sha256=${report.artifacts.pdfSha256.slice(0, 12)}…`,
+    );
+  } else {
+    console.log(
+      `         ↳ (no pdfUrl — server did not attach an artifact; PDF upload likely unavailable)`,
+    );
+  }
 }
 
 main().catch((e) => {

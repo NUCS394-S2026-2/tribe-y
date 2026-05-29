@@ -53,7 +53,7 @@ export function buildAgentCard(rpcEndpoint: string): AgentCard {
       {
         name: 'review',
         description:
-          'Produce a structured C++ code review on the submitted snippet. Returns a SampleReportData JSON document (scorecard, findings, slice, summary, conclusion).',
+          'Produce a structured C++ code review on the submitted snippet. Returns a SampleReportData JSON document (scorecard, findings, slice, summary, conclusion). The response includes an optional `artifacts.pdfUrl` v4 signed URL valid for ~24h that points to a rendered PDF of the same report in Firebase Storage; `artifacts` is omitted if the server-side render or upload failed.',
         params: '{ code: string, reportType: ReportType, fullReport?: boolean }',
         result: 'SampleReportData',
         // The method is fully implemented in this release. Payment via x402
