@@ -17,7 +17,22 @@ export default defineConfig(({ mode }) => {
     loaded.FIREBASE_HOSTING_EMULATOR_PORT ??
     loaded.VITE_FIREBASE_HOSTING_EMULATOR_PORT ??
     '5002';
-  const emulatorTarget = `http://127.0.0.1:${hostingPort}`;
+  const hostingTarget = `http://127.0.0.1:${hostingPort}`;
+
+  // Firebase Functions emulator port. The reviewer RPC + agent card go
+  // straight here in dev (bypassing the hosting layer) because the
+  // hosting emulator's proxy enforces a hard ~60s timeout on rewrites
+  // that we can't override, and our `reviewFull` calls can legitimately
+  // run 60–120s (Gemini 2.5 Pro + PDF render + GCS upload + the
+  // payment-verification retry budget on the server). The function
+  // itself is configured with a 540s timeout.
+  const functionsPort =
+    loaded.FIREBASE_FUNCTIONS_EMULATOR_PORT ??
+    loaded.VITE_FIREBASE_FUNCTIONS_EMULATOR_PORT ??
+    '5001';
+  const functionsProjectId =
+    loaded.FIREBASE_PROJECT_ID ?? loaded.VITE_FIREBASE_PROJECT_ID ?? 'tribe-y';
+  const functionsBase = `http://127.0.0.1:${functionsPort}/${functionsProjectId}/us-central1`;
 
   return {
     plugins: [
@@ -31,19 +46,26 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: emulatorTarget,
+          target: hostingTarget,
           changeOrigin: true,
         },
-        // A2A reviewer surfaces (PR 4). Forwarded to the Firebase Hosting
-        // emulator, which rewrites them to the `agentCard` / `reviewerRpc`
-        // Cloud Functions per `firebase.json`.
+        // A2A reviewer surfaces. In dev we bypass the Hosting emulator
+        // and call the Functions emulator directly so long-running
+        // `reviewFull` calls don't hit hosting's 60s rewrite timeout.
+        // Production deployments use the same /rpc and /.well-known/
+        // paths via firebase.json rewrites; only the dev proxy differs.
         '/rpc': {
-          target: emulatorTarget,
+          target: functionsBase,
           changeOrigin: true,
+          rewrite: () => '/reviewerRpc',
+          // No upstream proxy timeout — let the function decide.
+          timeout: 0,
+          proxyTimeout: 0,
         },
-        '/.well-known': {
-          target: emulatorTarget,
+        '/.well-known/agent.json': {
+          target: functionsBase,
           changeOrigin: true,
+          rewrite: () => '/agentCard',
         },
       },
     },
