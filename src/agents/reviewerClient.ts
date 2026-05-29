@@ -68,10 +68,33 @@ export function __resetAgentCardCache(): void {
   inflightCard = null;
 }
 
+/**
+ * Shape of the JSON body the reviewer service returns on HTTP 402
+ * (payment required). The consultant passes this through to a `pay`
+ * callback supplied by the React wallet layer; the resulting signature
+ * is then sent back as the `X-Payment` header on the retry.
+ */
+export interface X402Quote {
+  amount: number;
+  currency: 'SOL_LAMPORTS';
+  network: 'solana-devnet';
+  recipient: string;
+  expiresAt: string;
+  nonce: string;
+  reason?: string;
+}
+
 export interface InvokeReviewerArgs {
   code: string;
   reportType: ReportType;
   fullReport?: boolean;
+  /**
+   * Supplied by the React orchestrator from `useWallet()` / `useConnection()`.
+   * Required when `fullReport: true` and the server returns 402; ignored
+   * otherwise. Kept out of this module deliberately so the HTTP client
+   * stays free of wallet-adapter imports.
+   */
+  pay?: (quote: X402Quote) => Promise<string>;
 }
 
 interface JsonRpcEnvelope<T> {
@@ -104,6 +127,35 @@ function resolveRpcEndpoint(card: AgentCard): string {
   return '/rpc';
 }
 
+interface PostRpcArgs {
+  endpoint: string;
+  requestId: string;
+  method: string;
+  code: string;
+  reportType: ReportType;
+  paymentHeader?: string;
+}
+
+function buildBody({ requestId, method, code, reportType }: PostRpcArgs): string {
+  return JSON.stringify({
+    jsonrpc: '2.0',
+    id: requestId,
+    method,
+    params: { code, reportType },
+  });
+}
+
+async function postRpc(args: PostRpcArgs): Promise<Response> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (args.paymentHeader) headers['X-Payment'] = args.paymentHeader;
+
+  return fetch(args.endpoint, {
+    method: 'POST',
+    headers,
+    body: buildBody(args),
+  });
+}
+
 /**
  * Invoke the reviewer agent over JSON-RPC.
  *
@@ -111,11 +163,10 @@ function resolveRpcEndpoint(card: AgentCard): string {
  *   - `reviewSample` — free, sample slice of the snippet.
  *   - `reviewFull`   — paid via x402 over Solana devnet (full snippet).
  *
- * This client routes to the right method based on `fullReport`. The wallet/
- * x402 handshake (HTTP 402 → sign → retry with `X-Payment`) is intentionally
- * NOT implemented here — that lands in PR 7. For now, `fullReport: true`
- * will surface the server's HTTP 402 as an error message; the test-bypass
- * button still works because the server only gates `reviewFull`.
+ * PR 7 adds 402 handling: when the server returns HTTP 402, the body is
+ * an `X402Quote`. We hand the quote to the caller-supplied `pay` callback
+ * (which lives in the wallet layer, not here), receive a Solana tx
+ * signature, and retry the same POST with `X-Payment: <signature>`.
  */
 export async function invokeReviewer(
   args: InvokeReviewerArgs,
@@ -129,20 +180,24 @@ export async function invokeReviewer(
       : `req-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
   const method = args.fullReport ? 'reviewFull' : 'reviewSample';
+  const postArgs: PostRpcArgs = {
+    endpoint,
+    requestId,
+    method,
+    code: args.code,
+    reportType: args.reportType,
+  };
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: requestId,
-      method,
-      params: {
-        code: args.code,
-        reportType: args.reportType,
-      },
-    }),
-  });
+  let res = await postRpc(postArgs);
+
+  if (res.status === 402) {
+    if (!args.pay) {
+      throw new Error('Payment required — connect a wallet first.');
+    }
+    const quote = (await res.json()) as X402Quote;
+    const signature = await args.pay(quote);
+    res = await postRpc({ ...postArgs, paymentHeader: signature });
+  }
 
   if (!res.ok) {
     const text = await safeReadText(res);

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { WalletConnectButton } from '../wallet/WalletConnectButton';
 import { CompassChatComposer } from './compass-chat/CompassChatComposer';
 import { CompassChatMessageFeed } from './compass-chat/CompassChatMessageFeed';
 import styles from './CompassChat.module.css';
@@ -9,7 +10,6 @@ export function CompassChat() {
   const {
     session,
     sendMessage,
-    goToPayment,
     handleFileUpload,
     selectReportType,
     generateFullReportPreview,
@@ -82,12 +82,15 @@ export function CompassChat() {
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </span>
+          <span className={styles.topbarRight}>
+            <WalletConnectButton />
+          </span>
         </div>
 
         <CompassChatMessageFeed
           session={session}
           bottomRef={bottomRef}
-          onPayForFullReview={goToPayment}
+          onPayForFullReview={() => void generateFullReportPreview()}
           onSelectReportType={(rt) => void selectReportType(rt)}
           onGenerateFullReportPreview={() => void generateFullReportPreview()}
         />

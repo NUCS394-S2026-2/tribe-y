@@ -20,6 +20,20 @@ vi.mock('../../shared/firebase', () => ({
   },
 }));
 
+vi.mock('@solana/wallet-adapter-react', () => ({
+  useConnection: () => ({ connection: {} }),
+  useWallet: () => ({
+    connected: false,
+    publicKey: null,
+    sendTransaction: undefined,
+    disconnect: vi.fn(),
+  }),
+}));
+
+vi.mock('../../wallet/payQuote', () => ({
+  payQuote: vi.fn(),
+}));
+
 import { invokeReviewer } from '../../agents/reviewerClient';
 import { runSalesAgent } from '../../agents/salesAgent';
 
