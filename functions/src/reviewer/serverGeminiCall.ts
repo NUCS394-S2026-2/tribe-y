@@ -34,24 +34,61 @@ export function createServerGeminiCall(
       req.model,
     )}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    // Gemini's gateway occasionally returns 5xx (502/503/504) when it's
+    // briefly overloaded. The errors are transient — the page literally
+    // says "try again in 30 seconds" — so retry with backoff before
+    // surfacing the failure to the caller. 429 rate-limits get the same
+    // treatment. Anything else (400 invalid request, 401 bad key, etc.)
+    // we propagate immediately because retrying won't help.
+    const maxAttempts = 3;
+    const baseDelayMs = 2000;
 
-    if (!res.ok) {
+    let lastError = '';
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      } catch (e) {
+        // Network-level failure (DNS, connection reset, etc.) — also retry.
+        lastError = e instanceof Error ? e.message : String(e);
+        if (attempt < maxAttempts) {
+          await new Promise((r) => setTimeout(r, baseDelayMs * attempt));
+          continue;
+        }
+        throw new Error(
+          `Gemini network error after ${maxAttempts} attempts: ${lastError}`,
+        );
+      }
+
+      if (res.ok) {
+        const data = (await res.json()) as {
+          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+        };
+        const parts = data.candidates?.[0]?.content?.parts ?? [];
+        return parts
+          .map((p) => p.text ?? '')
+          .join('')
+          .trim();
+      }
+
+      const retriable = res.status >= 500 || res.status === 429;
       const detail = await res.text();
-      throw new Error(detail || `Gemini API error: ${res.status}`);
+      lastError = detail || `Gemini API error: ${res.status}`;
+
+      if (!retriable || attempt === maxAttempts) {
+        throw new Error(lastError);
+      }
+      console.warn(
+        `[gemini] ${res.status} on attempt ${attempt}/${maxAttempts}; retrying in ${baseDelayMs * attempt}ms`,
+      );
+      await new Promise((r) => setTimeout(r, baseDelayMs * attempt));
     }
 
-    const data = (await res.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    const parts = data.candidates?.[0]?.content?.parts ?? [];
-    return parts
-      .map((p) => p.text ?? '')
-      .join('')
-      .trim();
+    // Unreachable, but TypeScript needs the explicit throw.
+    throw new Error(lastError || 'Gemini retry loop exhausted');
   };
 }
