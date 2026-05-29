@@ -9,11 +9,8 @@ vi.mock('../../agents/salesAgent', () => ({
   runSalesAgent: vi.fn(),
 }));
 
-vi.mock('../../agents/codeReviewAgent', () => ({
-  CodeReviewAuthError: class CodeReviewAuthError extends Error {},
-  runCodeReviewTeaser: vi.fn(),
-  createPendingReview: vi.fn(),
-  runSampleReport: vi.fn(),
+vi.mock('../../agents/reviewerClient', () => ({
+  invokeReviewer: vi.fn(),
 }));
 
 vi.mock('../../shared/firebase', () => ({
@@ -23,12 +20,11 @@ vi.mock('../../shared/firebase', () => ({
   },
 }));
 
-import { createPendingReview, runSampleReport } from '../../agents/codeReviewAgent';
+import { invokeReviewer } from '../../agents/reviewerClient';
 import { runSalesAgent } from '../../agents/salesAgent';
 
 const mockRunSalesAgent = vi.mocked(runSalesAgent);
-const mockCreatePendingReview = vi.mocked(createPendingReview);
-const mockRunSampleReport = vi.mocked(runSampleReport);
+const mockInvokeReviewer = vi.mocked(invokeReviewer);
 
 function renderOrchestrator() {
   return renderHook(() => useChatOrchestrator(), {
@@ -69,7 +65,6 @@ describe('useChatOrchestrator', () => {
   });
 
   test('routes C++ input into report-type selector flow', async () => {
-    mockCreatePendingReview.mockResolvedValue('review-123');
     const { result } = renderOrchestrator();
 
     await act(async () => {
@@ -80,15 +75,13 @@ describe('useChatOrchestrator', () => {
       expect(result.current.session.mode).toBe('selecting');
     });
 
-    expect(mockCreatePendingReview).toHaveBeenCalled();
-    expect(result.current.session.activeReviewId).toBe('review-123');
+    expect(result.current.session.activeReviewId).toBeTruthy();
     expect(result.current.session.messages.at(-1)?.kind).toBe('report-type-selector');
     expect(result.current.session.pendingCode).toContain('#include');
   });
 
-  test('selectReportType generates a sample-report message', async () => {
-    mockCreatePendingReview.mockResolvedValue('review-123');
-    mockRunSampleReport.mockResolvedValue({
+  test('selectReportType invokes the A2A reviewer and renders a sample-report message', async () => {
+    mockInvokeReviewer.mockResolvedValue({
       reportType: 'security',
       reportTitle: 'Security Vulnerability Report',
       slice: { startLine: 1, endLine: 2, reason: 'r', code: 'int main() {}' },
@@ -114,8 +107,11 @@ describe('useChatOrchestrator', () => {
       expect(result.current.session.mode).toBe('sample');
     });
 
-    expect(mockRunSampleReport).toHaveBeenCalledWith(
-      expect.objectContaining({ reviewId: 'review-123', reportType: 'security' }),
+    expect(mockInvokeReviewer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: expect.stringContaining('#include'),
+        reportType: 'security',
+      }),
     );
     expect(result.current.session.messages.at(-1)?.kind).toBe('sample-report');
     expect(result.current.session.selectedReportType).toBe('security');

@@ -24,6 +24,17 @@ export default defineConfig(({ mode }) => {
           target: 'http://127.0.0.1:5000',
           changeOrigin: true,
         },
+        // A2A reviewer surfaces (PR 4). Forwarded to the Firebase Hosting
+        // emulator, which rewrites them to the `agentCard` / `reviewerRpc`
+        // Cloud Functions per `firebase.json`.
+        '/rpc': {
+          target: 'http://127.0.0.1:5000',
+          changeOrigin: true,
+        },
+        '/.well-known': {
+          target: 'http://127.0.0.1:5000',
+          changeOrigin: true,
+        },
       },
     },
     test: {
