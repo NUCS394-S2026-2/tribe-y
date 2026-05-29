@@ -8,3 +8,10 @@ dist-ssr
 node_modules/*
 coverage.env
 lib/
+# Firebase Admin SDK service account keys — NEVER commit
+tribe-y-key.json
+*-firebase-adminsdk-*.json
+*-key.json
+
+# Firebase emulator debug log
+firebase-debug.log
