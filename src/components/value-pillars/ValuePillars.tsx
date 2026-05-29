@@ -18,9 +18,9 @@ export default function ValuePillars() {
               entire repositories to surface structural integrity and long-term
               scalability issues.
             </p>
-            <span className={styles.link}>
-              Protocol details <span className="material-symbols-outlined">east</span>
-            </span>
+            <Link to="/sample" className={styles.link}>
+              Sample audit <span className="material-symbols-outlined">east</span>
+            </Link>
           </div>
 
           <div className={styles.card}>

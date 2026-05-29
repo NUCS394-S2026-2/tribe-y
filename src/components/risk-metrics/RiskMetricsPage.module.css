@@ -115,6 +115,131 @@
   font-weight: 600;
 }
 
+/* Standards */
+.standards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.standard {
+  padding: 1.25rem;
+  background-color: var(--surface);
+  border: 1px solid var(--surface-border);
+}
+
+.standardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.625rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.standardName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--contrast);
+}
+
+.standardCategory {
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+  padding: 0.15rem 0.5rem;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.standardDesc {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 0.75rem;
+}
+
+.relevance {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  border-top: 1px solid var(--surface-border);
+  padding-top: 0.625rem;
+}
+
+.relevanceLabel {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Adjustment table */
+.sectionSubtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.adjustmentTable {
+  border: 1px solid var(--surface-border);
+  margin-bottom: 1rem;
+}
+
+.adjustmentRow {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.adjustmentRow:last-child {
+  border-bottom: none;
+}
+
+.adjustmentRating {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+  min-width: 3.5rem;
+}
+
+.row_green .adjustmentRating {
+  color: var(--status-success);
+}
+.row_neutral .adjustmentRating {
+  color: var(--text-muted);
+}
+.row_yellow .adjustmentRating {
+  color: var(--status-warning);
+}
+.row_orange .adjustmentRating {
+  color: #f97316;
+}
+.row_red .adjustmentRating {
+  color: #ef4444;
+}
+
+.adjustmentLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--contrast);
+  min-width: 10rem;
+}
+
+.adjustmentValue {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.disclaimer {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-style: italic;
+}
+
 /* Formula */
 .formula {
   padding: 1.5rem;

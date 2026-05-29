@@ -5,51 +5,70 @@ import Footer from '../footer/Footer';
 import TopNavBar from '../top-nav-bar/TopNavBar';
 import styles from './RiskMetricsPage.module.css';
 
+const ADJUSTMENTS = [
+  {
+    rating: '9–10',
+    label: 'Premium Quality',
+    adjustment: '+2–5% to deal value',
+    color: 'green',
+  },
+  { rating: '7–8', label: 'Acceptable', adjustment: 'No adjustment', color: 'neutral' },
+  {
+    rating: '5–6',
+    label: 'Below Standard',
+    adjustment: '−3–8% or escrow clause',
+    color: 'yellow',
+  },
+  {
+    rating: '3–4',
+    label: 'Significant Risk',
+    adjustment: '−10–20% or renegotiation',
+    color: 'orange',
+  },
+  {
+    rating: '0–2',
+    label: 'Critical Defects',
+    adjustment: 'Deal pause or walk-away',
+    color: 'red',
+  },
+];
+
 const METRICS = [
   {
-    id: 'security',
-    label: 'Security Vulnerability Index',
+    id: 'resource-safety',
+    label: 'Resource Safety',
     score: '0–10',
     description:
-      'Counts and weights known vulnerability patterns: buffer overflows, use-after-free, injection surfaces, hardcoded secrets, and unsafe API usage. Each finding is weighted by exploitability and blast radius.',
+      'Evaluates ownership semantics, RAII compliance, use of raw pointers versus smart pointers, manual memory management, and undefined behavior patterns such as dangling references, use-after-free, and double-frees. Also flags unbounded allocations and missing destructor cleanup.',
     financialImpact:
-      'A single critical CVE in production code can cost $4.45M on average in breach remediation (IBM Cost of a Data Breach, 2024). Acquirers discount deal value proportionally to unpatched critical findings.',
+      'Memory safety issues account for ~70% of critical CVEs in C++ codebases (Microsoft Security Response Center). High raw-pointer density signals ongoing maintenance liability and latent breach exposure that acquirers must price into the deal.',
   },
   {
-    id: 'memory',
-    label: 'Memory Safety Score',
+    id: 'exception-safety',
+    label: 'Exception Safety',
     score: '0–10',
     description:
-      'Evaluates use of raw pointers, manual memory management, RAII compliance, and undefined behavior patterns such as dangling references, uninitialized reads, and double-frees.',
+      'Assesses exception safety guarantees (no-throw, strong, basic), error propagation patterns, resource cleanup in error paths, and silent failure modes. Checks for missing noexcept annotations on move constructors and destructors, and for catch blocks that swallow exceptions without logging.',
     financialImpact:
-      'Memory safety issues account for ~70% of critical CVEs in C++ codebases (Microsoft Security Response Center). High raw-pointer density signals ongoing maintenance cost and latent liability.',
+      'Poor exception handling is the leading cause of production outages in acquired systems. Downtime costs for enterprise software average $5,600/minute (Gartner). Latent exception unsafety often surfaces only under production load post-acquisition.',
   },
   {
-    id: 'maintainability',
-    label: 'Maintainability Index',
+    id: 'interface-design',
+    label: 'Interface Design',
     score: '0–10',
     description:
-      'Derived from cyclomatic complexity, code duplication ratio, function length distribution, and comment density. High complexity correlates directly with defect density and ramp-up time for new engineers.',
+      'Rates API clarity and defensive design: const-correctness, appropriate use of explicit constructors, parameter ordering and naming, encapsulation, precondition documentation, and absence of implicit narrowing conversions or silent truncation at public boundaries.',
     financialImpact:
-      'Every 1-point drop in maintainability index maps to an estimated 8–12% increase in annual engineering cost to keep the codebase stable post-acquisition.',
+      'Weak interface design multiplies integration cost for the acquiring team. Every ambiguous API boundary discovered post-close adds engineering rework — typically priced at 2–4× the cost of a pre-deal remediation sprint.',
   },
   {
-    id: 'reliability',
-    label: 'Reliability & Error Handling',
+    id: 'idiomatic-cpp',
+    label: 'Idiomatic C++',
     score: '0–10',
     description:
-      'Assesses exception safety guarantees, error propagation patterns, division-by-zero guards, null checks, and resource cleanup in error paths. Also flags silent failure modes.',
+      'Measures alignment with modern C++ best practices (C++14–C++23): range-based loops, structured bindings, STL algorithm usage versus manual loops, Rule of Zero compliance, and avoidance of C-style casts, raw arrays, and deprecated patterns.',
     financialImpact:
-      'Poor error handling is the leading cause of production outages in acquired systems. Downtime costs for enterprise software average $5,600/minute (Gartner).',
-  },
-  {
-    id: 'compliance',
-    label: 'Standards Compliance',
-    score: '0–10',
-    description:
-      'Checks against MISRA C++, CERT C++, and AUTOSAR C++ guidelines depending on the selected report type. Flags deviations from the applicable standard with rule citations.',
-    financialImpact:
-      'Non-compliance blocks deployment in regulated industries (automotive, aerospace, medical). Retroactive remediation to meet a standard post-acquisition can cost 3–10× the original development effort.',
+      'Codebases stuck on C++03/C++11 idioms carry a ramp-up premium for new engineers and a higher defect rate. Acquirers increasingly treat idiomatic modernity as a proxy for team discipline — and discount accordingly when it is absent.',
   },
 ];
 
@@ -66,7 +85,7 @@ export default function RiskMetricsPage() {
             <div className={styles.badge}>Risk Metrics</div>
             <h1 className={styles.title}>How Compass AI Quantifies Technical Risk</h1>
             <p className={styles.subtitle}>
-              Compass AI translates C++ code quality into five measurable dimensions —
+              Compass AI translates C++ code quality into four measurable dimensions —
               each scored 0–10 and mapped to a concrete financial liability estimate. The
               result is a boardroom-ready risk profile, not just a list of lint warnings.
             </p>
@@ -92,20 +111,44 @@ export default function RiskMetricsPage() {
           </section>
 
           <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Deal Value Adjustment Framework</h2>
+            <p className={styles.sectionSubtitle}>
+              How Compass AI scores translate to standard M&amp;A deal adjustments:
+            </p>
+            <div className={styles.adjustmentTable}>
+              {ADJUSTMENTS.map((a) => (
+                <div
+                  key={a.rating}
+                  className={`${styles.adjustmentRow} ${styles[`row_${a.color}`]}`}
+                >
+                  <span className={styles.adjustmentRating}>{a.rating}</span>
+                  <span className={styles.adjustmentLabel}>{a.label}</span>
+                  <span className={styles.adjustmentValue}>{a.adjustment}</span>
+                </div>
+              ))}
+            </div>
+            <p className={styles.disclaimer}>
+              Adjustments are illustrative estimates based on industry benchmarks. Actual
+              deal terms depend on deal structure, market conditions, and legal counsel.
+            </p>
+          </section>
+
+          <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Overall Score Calculation</h2>
             <div className={styles.formula}>
               <div className={styles.formulaRow}>
                 <span className={styles.formulaLabel}>Overall Score</span>
                 <span className={styles.formulaEq}>=</span>
                 <span className={styles.formulaExpr}>
-                  (Security × 0.30) + (Memory Safety × 0.25) + (Reliability × 0.20) +
-                  (Maintainability × 0.15) + (Compliance × 0.10)
+                  (Resource Safety × 0.35) + (Exception Safety × 0.30) + (Interface Design
+                  × 0.20) + (Idiomatic C++ × 0.15)
                 </span>
               </div>
               <p className={styles.formulaNote}>
-                Weights are adjusted for domain-specific reports. Aerospace and automotive
-                reports weight compliance more heavily; startup and general reports weight
-                maintainability higher.
+                Weights are adjusted for domain-specific reports. Safety-critical domains
+                (automotive, aerospace, medical) shift more weight toward Resource Safety
+                and Exception Safety; general-purpose and startup reports weight Interface
+                Design and Idiomatic C++ more heavily.
               </p>
             </div>
           </section>
