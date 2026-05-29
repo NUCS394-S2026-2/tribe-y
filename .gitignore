@@ -13,5 +13,9 @@ tribe-y-key.json
 *-firebase-adminsdk-*.json
 *-key.json
 
+# Solana devnet keypair secret files — NEVER commit
+reviewer-devnet.json
+*-devnet.json
+
 # Firebase emulator debug log
 firebase-debug.log

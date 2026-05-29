@@ -8,7 +8,12 @@ import {
   type JsonRpcErrorEnvelope,
   type JsonRpcSuccess,
 } from '../rpc.js';
-import { buildReviewHandler, type PdfUploader, validateReviewParams } from './review.js';
+import {
+  buildReviewFullHandler,
+  buildReviewSampleHandler,
+  type PdfUploader,
+  validateReviewParams,
+} from './review.js';
 
 /** Helper: a PDF uploader that always returns a deterministic artifact. */
 function stubUploader(out: UploadedPdfArtifact): PdfUploader {
@@ -74,29 +79,18 @@ describe('validateReviewParams', () => {
     ).toThrow();
   });
 
-  it('throws when fullReport is not a boolean', () => {
-    expect(() =>
-      validateReviewParams({
-        code: 'int main(){}',
-        reportType: 'security',
-        fullReport: 'yes',
-      }),
-    ).toThrow();
-  });
-
-  it('returns the validated shape on success', () => {
+  it('returns the validated shape on success (no fullReport param accepted)', () => {
     expect(validateReviewParams({ code: 'int main(){}', reportType: 'memory' })).toEqual({
       code: 'int main(){}',
       reportType: 'memory',
-      fullReport: false,
     });
   });
 });
 
-describe('buildReviewHandler', () => {
-  it('runs a review end-to-end with a mocked geminiCall', async () => {
+describe('buildReviewSampleHandler', () => {
+  it('runs a sample review end-to-end with a mocked geminiCall', async () => {
     const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
-    const handler = buildReviewHandler(
+    const handler = buildReviewSampleHandler(
       geminiCall,
       stubUploader({
         pdfUrl: 'https://signed.example/x',
@@ -114,7 +108,6 @@ describe('buildReviewHandler', () => {
     expect(result.reportTitle).toBe('Memory Safety Audit');
     expect(result.findings).toHaveLength(1);
     expect(result.scores.overall).toBe(3);
-    // Canonical alignment uses our verbatim dimension labels.
     expect(result.scores.dimensions.map((d) => d.label)).toEqual([
       'Resource management',
       'Ownership semantics',
@@ -127,59 +120,28 @@ describe('buildReviewHandler', () => {
     expect(result.artifacts?.pdfSha256).toBe('a'.repeat(64));
   });
 
-  it('honors fullReport=true (skips slice picker, asks for full review)', async () => {
-    const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
-    const handler = buildReviewHandler(
-      geminiCall,
-      stubUploader({
-        pdfUrl: 'https://signed.example/full',
-        pdfExpiresAt: new Date(Date.now() + 86_400_000).toISOString(),
-        pdfSha256: 'b'.repeat(64),
-      }),
-    );
-
-    const result = (await handler({
-      code: SHORT_CPP,
-      reportType: 'memory',
-      fullReport: true,
-    })) as SampleReportData;
-
-    expect(result.isFullReport).toBe(true);
-    expect(result.slice.startLine).toBe(1);
-    expect(result.slice.endLine).toBeGreaterThanOrEqual(1);
-  });
-
-  it('invokes the PDF uploader and attaches artifacts to the response', async () => {
+  it('passes fullReport=false to the PDF uploader', async () => {
     const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
     const uploader = stubUploader({
       pdfUrl: 'https://signed.example/from-uploader',
       pdfExpiresAt: new Date(Date.now() + 86_400_000).toISOString(),
       pdfSha256: 'c'.repeat(64),
     });
-    const handler = buildReviewHandler(geminiCall, uploader);
+    const handler = buildReviewSampleHandler(geminiCall, uploader);
 
-    const result = (await handler({
-      code: SHORT_CPP,
-      reportType: 'memory',
-    })) as SampleReportData;
+    await handler({ code: SHORT_CPP, reportType: 'memory' });
 
-    expect(uploader).toHaveBeenCalledOnce();
     expect(uploader).toHaveBeenCalledWith(
       expect.objectContaining({ reportType: 'memory' }),
       SHORT_CPP,
       'memory',
       false,
     );
-    expect(result.artifacts).toEqual({
-      pdfUrl: 'https://signed.example/from-uploader',
-      pdfExpiresAt: expect.any(String),
-      pdfSha256: 'c'.repeat(64),
-    });
   });
 
   it('returns JSON without artifacts when the PDF uploader fails', async () => {
     const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
-    const handler = buildReviewHandler(geminiCall, failingUploader('boom'));
+    const handler = buildReviewSampleHandler(geminiCall, failingUploader('boom'));
 
     const result = (await handler({
       code: SHORT_CPP,
@@ -191,18 +153,60 @@ describe('buildReviewHandler', () => {
   });
 });
 
-describe('dispatchRpc + review integration', () => {
-  it('routes review requests through the registered handler', async () => {
+describe('buildReviewFullHandler', () => {
+  it('runs a full review (skips slice picker, asks for full review)', async () => {
+    const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
+    const handler = buildReviewFullHandler(
+      geminiCall,
+      stubUploader({
+        pdfUrl: 'https://signed.example/full',
+        pdfExpiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+        pdfSha256: 'b'.repeat(64),
+      }),
+    );
+
+    const result = (await handler({
+      code: SHORT_CPP,
+      reportType: 'memory',
+    })) as SampleReportData;
+
+    expect(result.isFullReport).toBe(true);
+    expect(result.slice.startLine).toBe(1);
+    expect(result.slice.endLine).toBeGreaterThanOrEqual(1);
+  });
+
+  it('passes fullReport=true to the PDF uploader', async () => {
+    const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
+    const uploader = stubUploader({
+      pdfUrl: 'https://signed.example/full2',
+      pdfExpiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+      pdfSha256: 'd'.repeat(64),
+    });
+    const handler = buildReviewFullHandler(geminiCall, uploader);
+
+    await handler({ code: SHORT_CPP, reportType: 'memory' });
+
+    expect(uploader).toHaveBeenCalledWith(
+      expect.objectContaining({ reportType: 'memory' }),
+      SHORT_CPP,
+      'memory',
+      true,
+    );
+  });
+});
+
+describe('dispatchRpc + reviewSample integration', () => {
+  it('routes reviewSample requests through the registered handler', async () => {
     const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
     const handlers = {
-      review: buildReviewHandler(geminiCall, failingUploader('no-bucket')),
+      reviewSample: buildReviewSampleHandler(geminiCall, failingUploader('no-bucket')),
     };
 
     const r = (await dispatchRpc(
       {
         jsonrpc: '2.0',
         id: 99,
-        method: 'review',
+        method: 'reviewSample',
         params: { code: SHORT_CPP, reportType: 'memory' },
       },
       handlers,
@@ -213,20 +217,61 @@ describe('dispatchRpc + review integration', () => {
     const result = r.result as SampleReportData;
     expect(result.reportType).toBe('memory');
     expect(result.findings).toHaveLength(1);
+    expect(result.isFullReport).toBe(false);
+  });
+
+  it('routes reviewFull requests through the registered handler', async () => {
+    const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
+    const handlers = {
+      reviewFull: buildReviewFullHandler(geminiCall, failingUploader('no-bucket')),
+    };
+
+    const r = (await dispatchRpc(
+      {
+        jsonrpc: '2.0',
+        id: 100,
+        method: 'reviewFull',
+        params: { code: SHORT_CPP, reportType: 'memory' },
+      },
+      handlers,
+    )) as JsonRpcSuccess;
+
+    const result = r.result as SampleReportData;
+    expect(result.isFullReport).toBe(true);
   });
 
   it('returns INVALID_PARAMS when params are malformed', async () => {
     const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
     const handlers = {
-      review: buildReviewHandler(geminiCall, failingUploader('no-bucket')),
+      reviewSample: buildReviewSampleHandler(geminiCall, failingUploader('no-bucket')),
     };
 
     const r = (await dispatchRpc(
-      { jsonrpc: '2.0', id: 100, method: 'review', params: { code: '' } },
+      { jsonrpc: '2.0', id: 100, method: 'reviewSample', params: { code: '' } },
       handlers,
     )) as JsonRpcErrorEnvelope;
 
     expect(r.error.code).toBe(JSON_RPC_ERRORS.INVALID_PARAMS);
     expect(geminiCall).not.toHaveBeenCalled();
+  });
+
+  it('returns METHOD_NOT_FOUND for the legacy `review` method', async () => {
+    const geminiCall: GeminiCall = vi.fn(async () => VALID_REPORT_JSON);
+    const handlers = {
+      reviewSample: buildReviewSampleHandler(geminiCall, failingUploader('no-bucket')),
+      reviewFull: buildReviewFullHandler(geminiCall, failingUploader('no-bucket')),
+    };
+
+    const r = (await dispatchRpc(
+      {
+        jsonrpc: '2.0',
+        id: 200,
+        method: 'review',
+        params: { code: SHORT_CPP, reportType: 'memory' },
+      },
+      handlers,
+    )) as JsonRpcErrorEnvelope;
+
+    expect(r.error.code).toBe(JSON_RPC_ERRORS.METHOD_NOT_FOUND);
   });
 });

@@ -84,7 +84,7 @@ describe('reviewerClient', () => {
     await expect(fetchAgentCard()).rejects.toThrow(/HTTP 500/);
   });
 
-  test('invokeReviewer posts a valid JSON-RPC envelope and returns the result', async () => {
+  test('invokeReviewer posts a reviewSample envelope by default', async () => {
     const fetchMock = vi
       .fn()
       // 1st call: agent card
@@ -109,20 +109,20 @@ describe('reviewerClient', () => {
     const body = JSON.parse(init.body as string) as {
       jsonrpc: string;
       method: string;
-      params: { code: string; reportType: string; fullReport: boolean };
+      params: { code: string; reportType: string; fullReport?: boolean };
       id: unknown;
     };
     expect(body.jsonrpc).toBe('2.0');
-    expect(body.method).toBe('review');
+    expect(body.method).toBe('reviewSample');
     expect(body.params).toEqual({
       code: 'int main() {}',
       reportType: 'security',
-      fullReport: false,
     });
+    expect(body.params.fullReport).toBeUndefined();
     expect(body.id).toBeTruthy();
   });
 
-  test('invokeReviewer passes fullReport=true through', async () => {
+  test('invokeReviewer routes to reviewFull when fullReport=true', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse(FAKE_CARD))
@@ -139,9 +139,11 @@ describe('reviewerClient', () => {
 
     const [, init] = fetchMock.mock.calls[1] as [string, RequestInit];
     const body = JSON.parse(init.body as string) as {
-      params: { fullReport: boolean };
+      method: string;
+      params: { code: string; reportType: string; fullReport?: boolean };
     };
-    expect(body.params.fullReport).toBe(true);
+    expect(body.method).toBe('reviewFull');
+    expect(body.params.fullReport).toBeUndefined();
   });
 
   test('invokeReviewer throws when the server returns a JSON-RPC error', async () => {
