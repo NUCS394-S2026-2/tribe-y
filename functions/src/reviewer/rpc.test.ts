@@ -31,11 +31,13 @@ describe('dispatchRpc', () => {
     expect(r.error.code).toBe(JSON_RPC_ERRORS.INVALID_REQUEST);
   });
 
-  it('returns METHOD_NOT_FOUND for unknown method', async () => {
+  it('returns METHOD_NOT_FOUND for unknown method with default registry', async () => {
+    // The default (test) registry only has listReportTypes — `review` needs
+    // an API key supplied at construction time via `buildMethodHandlers`.
     const r = (await dispatchRpc({
       jsonrpc: '2.0',
       id: 'abc',
-      method: 'review', // advertised but not registered yet
+      method: 'definitelyDoesNotExist',
     })) as JsonRpcErrorEnvelope;
     expect(r.error.code).toBe(JSON_RPC_ERRORS.METHOD_NOT_FOUND);
     expect(r.id).toBe('abc');
