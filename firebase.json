@@ -6,6 +6,8 @@
       { "source": "/api/gemini/**", "function": "geminiMessages" },
       { "source": "/api/payment/**", "function": "confirmPayment" },
       { "source": "/api/code-review/**", "function": "fullCodeReview" },
+      { "source": "/.well-known/agent.json", "function": "agentCard" },
+      { "source": "/rpc", "function": "reviewerRpc" },
       { "source": "**", "destination": "/index.html" }
     ]
   },
