@@ -8,7 +8,11 @@
 //     (`downloadReportPdf`, `reportPdfBlobUrl`) are intentionally omitted —
 //     the server returns a `jsPDF` instance which the caller converts to a
 //     Node `Buffer` via `pdf.output('arraybuffer')`.
-import jsPDF from 'jspdf';
+// jspdf's package only exports the constructor as a named binding under
+// ESM (`{ jsPDF }`). Doing `import jsPDF from 'jspdf'` returns the module
+// namespace object, which is not callable — `new jsPDF(...)` throws
+// "jsPDF is not a constructor" at runtime under the functions ESM build.
+import { jsPDF } from 'jspdf';
 
 import type {
   SampleReportData,
