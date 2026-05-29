@@ -5,6 +5,14 @@ import type { GeminiCallRequest } from './brain/types.js';
  * shape `geminiClient.ts` uses on the client but calls the public Google
  * Generative Language API directly (no Firebase auth in the request path —
  * the API key lives in a Cloud Function secret).
+ *
+ * Forces `responseMimeType: 'application/json'` on every call. Both the
+ * slice picker and the review prompt instruct Gemini to return JSON, but
+ * Gemini occasionally responds with prose anyway — especially on trivial
+ * snippets where the model wants to say "nothing to review here". Forcing
+ * JSON mode at the API level makes that failure mode impossible: Gemini
+ * will return a JSON object (possibly with an empty findings array) or
+ * an HTTP error, but not freeform text.
  */
 export function createServerGeminiCall(
   apiKey: string,
@@ -16,7 +24,10 @@ export function createServerGeminiCall(
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }],
       })),
-      generationConfig: { maxOutputTokens: req.max_tokens },
+      generationConfig: {
+        maxOutputTokens: req.max_tokens,
+        responseMimeType: 'application/json',
+      },
     };
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
