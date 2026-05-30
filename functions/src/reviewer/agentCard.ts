@@ -78,14 +78,36 @@ export function buildAgentCard(rpcEndpoint: string): AgentCard {
 }
 
 /**
+ * Optional override for the JSON-RPC endpoint advertised in the agent card.
+ *
+ * Why this exists: in production, Firebase Hosting → Cloud Run rewrites
+ * have a hard 60-second edge timeout that's too tight for `reviewFull`
+ * (Gemini Pro alone takes 30–60s, plus PDF render + GCS upload). The
+ * function itself has its 540s budget, but Hosting's edge cuts the
+ * connection at 60s and returns a 502. The fix is to advertise the
+ * direct Cloud Run URL so clients call the function past Hosting.
+ *
+ * Discovery (`GET /.well-known/agent.json`) stays on Hosting because
+ * it's instant and benefits from Hosting's caching/CDN. Only the
+ * payload-heavy `POST /rpc` path needs to skip Hosting.
+ *
+ * Set `REVIEWER_RPC_ENDPOINT_OVERRIDE` in the function's environment
+ * (e.g. `https://reviewerrpc-<hash>-uc.a.run.app`) and it'll be used
+ * verbatim. If unset, fall back to deriving from the request host.
+ */
+const RPC_ENDPOINT_OVERRIDE = process.env.REVIEWER_RPC_ENDPOINT_OVERRIDE;
+
+/**
  * Derive the absolute `/rpc` URL from an incoming request. Honors the
  * `x-forwarded-*` headers Firebase Hosting sets in front of Cloud
  * Functions, so the URL we advertise matches what clients used to reach us.
  *
  * Protocol resolution order:
- *   1. `x-forwarded-proto` (set by Firebase Hosting / any HTTPS terminator)
- *   2. `req.protocol` (Express-derived; reflects the actual transport)
- *   3. `http` when the host looks local (127.0.0.1 / localhost), `https`
+ *   1. `REVIEWER_RPC_ENDPOINT_OVERRIDE` env var if set (production: direct
+ *      Cloud Run URL to bypass Hosting's 60s rewrite timeout).
+ *   2. `x-forwarded-proto` (set by Firebase Hosting / any HTTPS terminator)
+ *   3. `req.protocol` (Express-derived; reflects the actual transport)
+ *   4. `http` when the host looks local (127.0.0.1 / localhost), `https`
  *      otherwise. Local emulators serve plain http; production Cloud
  *      Functions are always https.
  */
@@ -93,6 +115,9 @@ export function deriveRpcEndpoint(
   headers: Record<string, string | string[] | undefined>,
   reqProtocol?: string,
 ): string {
+  if (RPC_ENDPOINT_OVERRIDE && RPC_ENDPOINT_OVERRIDE.length > 0) {
+    return RPC_ENDPOINT_OVERRIDE;
+  }
   const host =
     pickHeader(headers, 'x-forwarded-host') ?? pickHeader(headers, 'host') ?? 'localhost';
   const proto =

@@ -20,6 +20,28 @@ vi.mock('firebase-admin/storage', () => ({
 // Lazy-import so the mock is applied first.
 const { buildAndUploadReportPdf } = await import('./upload.js');
 
+/**
+ * Recompute the content hash the same way `upload.ts` does — over snippet
+ * + reportType + fullReport + a JSON.stringify of the relevant data
+ * fields. Tests assert the production hash matches this.
+ */
+function expectedHashFor(
+  snippet: string,
+  reportType: string,
+  fullReport: boolean,
+  data: SampleReportData,
+): string {
+  const dataKey = JSON.stringify({
+    scores: data.scores,
+    findings: data.findings,
+    summary: data.summary,
+    conclusion: data.conclusion,
+    slice: data.slice,
+  });
+  const key = `${snippet}|${reportType}|${fullReport ? '1' : '0'}|${dataKey}`;
+  return createHash('sha256').update(key, 'utf8').digest('hex');
+}
+
 const SAMPLE_DATA: SampleReportData = {
   reportType: 'memory',
   reportTitle: 'Memory Safety Audit',
@@ -50,10 +72,7 @@ describe('buildAndUploadReportPdf', () => {
 
     expect(out.pdfUrl).toBe('https://signed.example/x');
     expect(out.pdfSha256).toHaveLength(64);
-    // sha256 over the deterministic key
-    const expectedHash = createHash('sha256')
-      .update('snippet|memory|0', 'utf8')
-      .digest('hex');
+    const expectedHash = expectedHashFor('snippet', 'memory', false, SAMPLE_DATA);
     expect(out.pdfSha256).toBe(expectedHash);
     expect(bucketFile).toHaveBeenCalledWith(`reports/${expectedHash}.pdf`);
     expect(fileMocks.save).toHaveBeenCalledOnce();
@@ -77,11 +96,31 @@ describe('buildAndUploadReportPdf', () => {
     expect(out.pdfUrl).toBe('https://signed.example/dedup');
     expect(fileMocks.save).not.toHaveBeenCalled();
     expect(fileMocks.getSignedUrl).toHaveBeenCalledOnce();
-    // fullReport=true flips the trailing byte
-    const expectedHash = createHash('sha256')
-      .update('snippet|memory|1', 'utf8')
-      .digest('hex');
+    // fullReport=true flips the trailing byte (and the data is mixed in too)
+    const expectedHash = expectedHashFor('snippet', 'memory', true, SAMPLE_DATA);
     expect(out.pdfSha256).toBe(expectedHash);
+  });
+
+  it('uses different content hashes for identical inputs but different data', async () => {
+    fileMocks.exists.mockResolvedValue([false]);
+    fileMocks.save.mockResolvedValue(undefined);
+    fileMocks.getSignedUrl.mockResolvedValue(['https://signed.example/a']);
+
+    const out1 = await buildAndUploadReportPdf(SAMPLE_DATA, 'snippet', 'memory', false);
+    const out2 = await buildAndUploadReportPdf(
+      {
+        ...SAMPLE_DATA,
+        scores: { overall: 8, dimensions: SAMPLE_DATA.scores.dimensions },
+      },
+      'snippet',
+      'memory',
+      false,
+    );
+
+    // Same snippet+reportType+fullReport but different scores → different
+    // hash. This guarantees scorecard and PDF stay in sync when Gemini
+    // returns different values on a re-run.
+    expect(out1.pdfSha256).not.toBe(out2.pdfSha256);
   });
 
   it('propagates errors from the underlying storage layer', async () => {

@@ -162,6 +162,25 @@ function rule(ctx: Ctx, color: string = C.rule, spacing = 10): void {
   ctx.cur.y += spacing;
 }
 
+/**
+ * Format a generation timestamp in Central Time (Chicago — handles both
+ * CST and CDT automatically based on the date). The trailing "CT" label
+ * makes the timezone explicit because the auto-format ("CST"/"CDT") can
+ * vary by ICU locale data on the Cloud Functions runtime.
+ */
+function formatGeneratedAt(ms: number): string {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  return `${formatter.format(new Date(ms))} CT`;
+}
+
 function sectionHeading(ctx: Ctx, kicker: string, title: string): void {
   ensure(ctx, 60);
   ctx.cur.y += 6;
@@ -212,7 +231,7 @@ function drawCoverPage(ctx: Ctx): void {
   }
 
   setFont(pdf, 'normal', 10, '#cbd5e1');
-  pdf.text(`Generated ${new Date(data.generatedAt).toLocaleString()}`, MARGIN_X, 198);
+  pdf.text(`Generated ${formatGeneratedAt(data.generatedAt)}`, MARGIN_X, 198);
 
   ctx.cur.y = 260;
 
