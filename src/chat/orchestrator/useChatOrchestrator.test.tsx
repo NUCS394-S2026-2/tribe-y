@@ -51,7 +51,7 @@ describe('useChatOrchestrator', () => {
     vi.clearAllMocks();
   });
 
-  test('seeds session with sales greeting', () => {
+  test('seeds session with consultant greeting', () => {
     const { result } = renderOrchestrator();
 
     expect(result.current.session.messages).toHaveLength(1);
@@ -59,8 +59,10 @@ describe('useChatOrchestrator', () => {
     expect(result.current.session.mode).toBe('qualifying');
   });
 
-  test('routes English messages to sales agent', async () => {
-    mockRunSalesAgent.mockResolvedValue({ text: 'Tell me more about your C++ issue.' });
+  test('routes plain conversation through the consultant — no review fires', async () => {
+    mockRunSalesAgent.mockResolvedValue({
+      text: 'What are you building?',
+    });
     const { result } = renderOrchestrator();
 
     await act(async () => {
@@ -72,13 +74,15 @@ describe('useChatOrchestrator', () => {
     });
 
     expect(mockRunSalesAgent).toHaveBeenCalled();
-    expect(result.current.session.messages.at(-1)?.text).toBe(
-      'Tell me more about your C++ issue.',
-    );
+    expect(mockInvokeReviewer).not.toHaveBeenCalled();
+    expect(result.current.session.messages.at(-1)?.text).toBe('What are you building?');
     expect(result.current.session.mode).toBe('qualifying');
   });
 
-  test('routes C++ input into report-type selector flow', async () => {
+  test('captures pendingCode when the user pastes C++ but defers to the consultant', async () => {
+    mockRunSalesAgent.mockResolvedValue({
+      text: 'Thanks for the snippet — what is your top concern: security, perf, or memory?',
+    });
     const { result } = renderOrchestrator();
 
     await act(async () => {
@@ -86,15 +90,83 @@ describe('useChatOrchestrator', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.session.mode).toBe('selecting');
+      expect(result.current.session.isLoading).toBe(false);
     });
 
-    expect(result.current.session.activeReviewId).toBeTruthy();
-    expect(result.current.session.messages.at(-1)?.kind).toBe('report-type-selector');
     expect(result.current.session.pendingCode).toContain('#include');
+    expect(result.current.session.activeReviewId).toBeTruthy();
+    // No selector card should auto-appear anymore.
+    expect(mockInvokeReviewer).not.toHaveBeenCalled();
+    expect(
+      result.current.session.messages.some((m) => m.kind === 'report-type-selector'),
+    ).toBe(false);
   });
 
-  test('selectReportType invokes the A2A reviewer and renders a sample-report message', async () => {
+  test('initiate_review action triggers the reviewer when code is pending', async () => {
+    mockRunSalesAgent
+      .mockResolvedValueOnce({ text: 'Got it — paste the code.' })
+      .mockResolvedValueOnce({
+        text: 'Running the Security report on what you pasted.',
+        action: { type: 'initiate_review', reportType: 'security', fullReport: false },
+      });
+    mockInvokeReviewer.mockResolvedValue({
+      reportType: 'security',
+      reportTitle: 'Security Vulnerability Report',
+      slice: { startLine: 1, endLine: 2, reason: 'r', code: 'int main() {}' },
+      summary: 'sum',
+      findings: [],
+      conclusion: 'c',
+      scores: { overall: 8, dimensions: [{ label: 'Input validation', score: 8 }] },
+      generatedAt: 0,
+    });
+
+    const { result } = renderOrchestrator();
+
+    await act(async () => {
+      await result.current.sendMessage('#include <iostream>\nint main() {}');
+    });
+    await waitFor(() => {
+      expect(result.current.session.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.sendMessage('yes please run a security review');
+    });
+    await waitFor(() => {
+      expect(result.current.session.mode).toBe('sample');
+    });
+
+    expect(mockInvokeReviewer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: expect.stringContaining('#include'),
+        reportType: 'security',
+      }),
+    );
+    expect(result.current.session.messages.at(-1)?.kind).toBe('sample-report');
+    expect(result.current.session.selectedReportType).toBe('security');
+  });
+
+  test('initiate_review without pendingCode surfaces a friendly nudge', async () => {
+    mockRunSalesAgent.mockResolvedValue({
+      text: 'Starting the memory audit.',
+      action: { type: 'initiate_review', reportType: 'memory', fullReport: false },
+    });
+    const { result } = renderOrchestrator();
+
+    await act(async () => {
+      await result.current.sendMessage('go ahead');
+    });
+    await waitFor(() => {
+      expect(result.current.session.isLoading).toBe(false);
+    });
+
+    expect(mockInvokeReviewer).not.toHaveBeenCalled();
+    const lastText = result.current.session.messages.at(-1)?.text ?? '';
+    expect(lastText.toLowerCase()).toContain("don't have any code");
+  });
+
+  test('selectReportType still works via direct card click (selector path preserved)', async () => {
+    mockRunSalesAgent.mockResolvedValue({ text: 'Thanks for the snippet.' });
     mockInvokeReviewer.mockResolvedValue({
       reportType: 'security',
       reportTitle: 'Security Vulnerability Report',
@@ -111,7 +183,7 @@ describe('useChatOrchestrator', () => {
       await result.current.sendMessage('#include <iostream>\nint main() {}');
     });
     await waitFor(() => {
-      expect(result.current.session.mode).toBe('selecting');
+      expect(result.current.session.pendingCode).toBeTruthy();
     });
 
     await act(async () => {
@@ -121,13 +193,6 @@ describe('useChatOrchestrator', () => {
       expect(result.current.session.mode).toBe('sample');
     });
 
-    expect(mockInvokeReviewer).toHaveBeenCalledWith(
-      expect.objectContaining({
-        code: expect.stringContaining('#include'),
-        reportType: 'security',
-      }),
-    );
-    expect(result.current.session.messages.at(-1)?.kind).toBe('sample-report');
     expect(result.current.session.selectedReportType).toBe('security');
   });
 });

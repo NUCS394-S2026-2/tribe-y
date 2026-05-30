@@ -1,10 +1,14 @@
-import { classifyInput } from '../../shared/routing/inputClassifier';
 import type { ChatSession } from '../../shared/types/ChatSession';
 
-export type MessageRoute = 'sales' | 'codeReview';
+export type MessageRoute = 'sales';
 
-export function routeMessage(_session: ChatSession, text: string): MessageRoute {
-  const kind = classifyInput(text);
-  if (kind === 'cpp') return 'codeReview';
+/**
+ * Every user message now routes to the conversational consultant agent
+ * (the only entry point). Code detection is handled separately via
+ * `classifyInput` to populate `pendingCode` — it no longer affects routing.
+ */
+export function routeMessage(session: ChatSession, text: string): MessageRoute {
+  void session;
+  void text;
   return 'sales';
 }
