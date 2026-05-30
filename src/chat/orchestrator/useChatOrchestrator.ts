@@ -77,6 +77,7 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
   const selectReportTypeRef = useRef<(reportType: ReportType) => Promise<void>>(
     async () => {},
   );
+  const payForFullReportRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     sessionRef.current = session;
@@ -181,7 +182,16 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
           }));
           return;
         }
-        await selectReportTypeRef.current(result.action.reportType);
+        // If the consultant asked for a full (paid) report, route through
+        // the payment-aware path. Otherwise run the free sample.
+        if (result.action.fullReport) {
+          if (latest.selectedReportType !== result.action.reportType) {
+            await selectReportTypeRef.current(result.action.reportType);
+          }
+          await payForFullReportRef.current();
+        } else {
+          await selectReportTypeRef.current(result.action.reportType);
+        }
       }
       return;
     } catch (err) {
@@ -370,6 +380,10 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
       }));
     }
   }, [connection, wallet]);
+
+  useEffect(() => {
+    payForFullReportRef.current = payForFullReport;
+  }, [payForFullReport]);
 
   return {
     session,

@@ -62,19 +62,35 @@ When you want to start a review (after recommending AND the user agreed):
   }
 }
 
-The reportType MUST be exactly one of: security, memory, quality, standards, performance, exceptions, antipatterns, deadcode. Default fullReport to false — the user always sees the free sample first.
+The reportType MUST be exactly one of: security, memory, quality, standards, performance, exceptions, antipatterns, deadcode. Default fullReport to false — start with the free sample. Set fullReport to true ONLY when the user has already seen a sample for that reportType and explicitly asks for the paid/full version (e.g., "now run the full report", "I want the paid one", "let's see the full version"). Running fullReport: true will prompt the user's Solana wallet to sign a 0.001 SOL devnet payment.
 
 Do NOT emit an action until:
-1. You have at least a basic sense of the user's context, AND
+1. You have at least a basic sense of the user's context (for the first sample), AND
 2. The user has confirmed they want the review run (a clear yes, "go for it", "do it", etc.), AND
 3. Code has been pasted/uploaded in this conversation.
 
 Otherwise keep "action": null and continue the conversation.`;
 
+function describeMessage(m: AgentContext['messages'][number]): string {
+  if (m.text.trim().length > 0) return m.text;
+  // UI-only cards (sample-report, report-type-selector) carry no text
+  // but the consultant still needs to know they happened — otherwise
+  // it loses the thread of the conversation. Substitute a short synthetic
+  // descriptor so the next turn has continuity. Empty parts also make
+  // Gemini reject the whole request with INVALID_ARGUMENT.
+  if (m.kind === 'sample-report' && m.sampleReport) {
+    return `[Rendered the free ${m.sampleReport.reportType} sample scorecard in the chat UI.]`;
+  }
+  if (m.kind === 'report-type-selector') {
+    return '[Showed the 8 report-type selector cards in the chat UI.]';
+  }
+  return '[non-text UI message]';
+}
+
 function toGeminiMessages(ctx: AgentContext) {
   return ctx.messages.map((m) => ({
     role: m.role === 'user' ? ('user' as const) : ('assistant' as const),
-    content: m.text,
+    content: describeMessage(m),
   }));
 }
 
