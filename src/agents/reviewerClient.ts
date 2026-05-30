@@ -105,26 +105,41 @@ interface JsonRpcEnvelope<T> {
 }
 
 /**
- * Resolve the RPC endpoint to use against the agent. The agent card
- * advertises an absolute URL derived server-side; that's correct in
- * production where the consultant and reviewer share an origin. In dev
- * the emulator advertises something like `http://127.0.0.1:5002/rpc`
- * which the browser may not be able to reach directly. To keep dev
- * working through the Vite proxy we prefer the same-origin relative
- * `/rpc` whenever the cached endpoint's host doesn't match
- * `window.location.host`.
+ * Resolve the RPC endpoint to use against the agent.
+ *
+ * Three cases:
+ *
+ *   1. Same origin as the page → use the card endpoint as-is.
+ *   2. Card advertises a localhost-style URL (the dev emulator does this
+ *      because it has no way to know the dev server's port) → fall back
+ *      to the same-origin relative `/rpc`, which the Vite proxy forwards
+ *      to the emulator. Without this dev would break.
+ *   3. Otherwise → trust the card. Production deliberately advertises
+ *      the direct Cloud Run URL for the reviewer so paid calls bypass
+ *      Firebase Hosting's 60s rewrite timeout. Going through `/rpc`
+ *      here would 502 us back to Hosting on every reviewFull call.
  */
 function resolveRpcEndpoint(card: AgentCard): string {
   if (typeof window === 'undefined') return card.endpoint;
+  let advertised: URL;
   try {
-    const advertised = new URL(card.endpoint);
-    if (advertised.host === window.location.host) {
-      return card.endpoint;
-    }
+    advertised = new URL(card.endpoint);
   } catch {
-    // Card endpoint isn't a parseable absolute URL — fall through.
+    return '/rpc';
   }
-  return '/rpc';
+  if (advertised.host === window.location.host) {
+    return card.endpoint;
+  }
+  const hostname = advertised.hostname.toLowerCase();
+  const isLocal =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname === '[::1]';
+  if (isLocal) {
+    return '/rpc';
+  }
+  return card.endpoint;
 }
 
 interface PostRpcArgs {
