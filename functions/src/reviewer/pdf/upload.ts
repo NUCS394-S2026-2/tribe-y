@@ -1,8 +1,12 @@
 // Render-and-upload a PDF for a `SampleReportData` to Firebase Storage and
 // return a short-lived v4 signed URL.
 //
-// Dedup: the object path is content-addressed (sha256 over snippet + reportType
-// + fullReport). Identical requests reuse the same object — we only re-sign.
+// Dedup: the object path is content-addressed over the FULL review data
+// (scores + findings + summary + conclusion + slice) so the PDF on disk
+// always matches the JSON we just returned to the caller. Hashing only on
+// the request inputs (snippet + reportType + fullReport) caused stale PDFs
+// to be re-served whenever Gemini's non-deterministic output gave a
+// different score on a fresh run.
 //
 // Failure mode: callers (review.ts) treat all errors here as best-effort. If
 // the bucket isn't configured or the upload fails, the review JSON still goes
@@ -34,13 +38,27 @@ function safeFilename(title: string): string {
   return title.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'report';
 }
 
-/** Hex sha256 over the deterministic key. */
+/**
+ * Hex sha256 keyed on the full review payload. This guarantees the PDF
+ * we serve matches the JSON we just returned — same scores, same
+ * findings, same summary. Gemini is non-deterministic, so two calls with
+ * identical inputs can produce different output; without including the
+ * output in the hash we'd serve a stale PDF.
+ */
 function computeContentHash(
   snippet: string,
   reportType: string,
   fullReport: boolean,
+  data: SampleReportData,
 ): string {
-  const key = `${snippet}|${reportType}|${fullReport ? '1' : '0'}`;
+  const dataKey = JSON.stringify({
+    scores: data.scores,
+    findings: data.findings,
+    summary: data.summary,
+    conclusion: data.conclusion,
+    slice: data.slice,
+  });
+  const key = `${snippet}|${reportType}|${fullReport ? '1' : '0'}|${dataKey}`;
   return createHash('sha256').update(key, 'utf8').digest('hex');
 }
 
@@ -57,7 +75,7 @@ export async function buildAndUploadReportPdf(
   reportType: string,
   fullReport: boolean,
 ): Promise<UploadedPdfArtifact> {
-  const pdfSha256 = computeContentHash(snippet, reportType, fullReport);
+  const pdfSha256 = computeContentHash(snippet, reportType, fullReport, data);
   const path = `reports/${pdfSha256}.pdf`;
 
   const bucket = getStorage().bucket();

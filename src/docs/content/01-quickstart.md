@@ -5,7 +5,7 @@ Three calls take you from zero to a working review. No SDK, no auth, no Firebase
 Set the agent's base URL once and reuse it everywhere:
 
 ```bash
-export BASE_URL=https://reviewer.tne.ai
+export BASE_URL=https://tribe-y.web.app
 ```
 
 ## 1. Discover the agent

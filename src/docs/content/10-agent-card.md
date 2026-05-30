@@ -15,7 +15,7 @@ Discovery is **unauthenticated** by design — the A2A protocol requires that pe
   "name": "compass.tne.ai Code Reviewer (Bjarne)",
   "description": "Principal-engineer-grade C++ code review by an agent in the voice of Bjarne Stroustrup.",
   "version": "0.1.0",
-  "endpoint": "https://reviewer.tne.ai/rpc",
+  "endpoint": "https://reviewerrpc-dwap3scwgq-uc.a.run.app",
   "methods": [
     {
       "name": "listReportTypes",
@@ -50,23 +50,27 @@ Discovery is **unauthenticated** by design — the A2A protocol requires that pe
 
 ## Field reference
 
-| Field                   | Meaning                                                                                                                                                                                                        |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                  | Human-readable identifier of the agent. Stable across versions.                                                                                                                                                |
-| `description`           | One-line capability summary, suitable for surfacing in an agent picker.                                                                                                                                        |
-| `version`               | SemVer of the agent's protocol surface. Bumped on breaking changes.                                                                                                                                            |
-| `endpoint`              | Absolute URL of the JSON-RPC 2.0 endpoint (always `<host>/rpc`). Always absolute so peer agents do not have to reconstruct it.                                                                                 |
-| `methods`               | Array of method descriptors.                                                                                                                                                                                   |
-| `methods[].name`        | Canonical method name. Pass as the JSON-RPC `method` field.                                                                                                                                                    |
-| `methods[].description` | Free-text description of the method.                                                                                                                                                                           |
-| `methods[].params`      | Either the empty object `{}` or a TypeScript-style signature string of the params schema.                                                                                                                      |
-| `methods[].result`      | TypeScript-style type name of the success result shape.                                                                                                                                                        |
-| `methods[].paid`        | `true` for methods that require an x402 payment.                                                                                                                                                               |
-| `methods[].pricing`     | Present iff `paid: true`. Carries the canonical amount, currency, network, and destination wallet. Clients should use this to _budget_ the call but the _authoritative_ quote is the 402 response from `/rpc`. |
+| Field                   | Meaning                                                                                                                                                                                                                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                  | Human-readable identifier of the agent. Stable across versions.                                                                                                                                                                                                              |
+| `description`           | One-line capability summary, suitable for surfacing in an agent picker.                                                                                                                                                                                                      |
+| `version`               | SemVer of the agent's protocol surface. Bumped on breaking changes.                                                                                                                                                                                                          |
+| `endpoint`              | Absolute URL of the JSON-RPC 2.0 endpoint. In production this points at the direct Cloud Run URL (`https://reviewerrpc-<hash>-uc.a.run.app`) so paid calls bypass Hosting's 60s rewrite cap. Always absolute — peer agents should follow it verbatim and not reconstruct it. |
+| `methods`               | Array of method descriptors.                                                                                                                                                                                                                                                 |
+| `methods[].name`        | Canonical method name. Pass as the JSON-RPC `method` field.                                                                                                                                                                                                                  |
+| `methods[].description` | Free-text description of the method.                                                                                                                                                                                                                                         |
+| `methods[].params`      | Either the empty object `{}` or a TypeScript-style signature string of the params schema.                                                                                                                                                                                    |
+| `methods[].result`      | TypeScript-style type name of the success result shape.                                                                                                                                                                                                                      |
+| `methods[].paid`        | `true` for methods that require an x402 payment.                                                                                                                                                                                                                             |
+| `methods[].pricing`     | Present iff `paid: true`. Carries the canonical amount, currency, network, and destination wallet. Clients should use this to _budget_ the call but the _authoritative_ quote is the 402 response from `/rpc`.                                                               |
 
 ## Endpoint derivation
 
-The `endpoint` URL is built from the incoming request headers. The server honors `x-forwarded-proto` and `x-forwarded-host` so the URL we advertise matches whatever proxy or hosting layer fronts the agent (Firebase Hosting in production, the Functions emulator locally). Clients should always read the advertised `endpoint` rather than hard-coding `/rpc`.
+If the `REVIEWER_RPC_ENDPOINT_OVERRIDE` environment variable is set on the agent's runtime, that value is advertised verbatim. Production uses the override to point at the direct Cloud Run URL so paid calls don't hit Firebase Hosting's 60-second rewrite timeout.
+
+Without the override, the URL is built from `x-forwarded-proto` + `x-forwarded-host` on the incoming request — useful for local emulator setups where the URL is whatever the hosting layer presents.
+
+Either way, clients should always read the advertised `endpoint` from the card rather than hard-coding `/rpc` themselves.
 
 ## Further reading
 
