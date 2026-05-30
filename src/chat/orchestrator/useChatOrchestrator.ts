@@ -6,6 +6,7 @@ import { invokeReviewer, type X402Quote } from '../../agents/reviewerClient';
 import { runSalesAgent } from '../../agents/salesAgent';
 import { CODE_SNIPPET_MAX_CHARS } from '../../shared/codeSnippetLimits';
 import { auth } from '../../shared/firebase';
+import { classifyInput } from '../../shared/routing/inputClassifier';
 import type {
   ChatMessage,
   ChatMessageKind,
@@ -13,10 +14,9 @@ import type {
   SampleReportData,
 } from '../../shared/types/ChatSession';
 import { payQuote } from '../../wallet/payQuote';
-import { routeMessage } from './routeMessage';
 
 const GREETING_TEXT =
-  "Hi! I'm Salesbot for compass.tne.ai. We connect you with our C++ Expert agent for premium, annotated code reviews. What C++ problem are you working on today?";
+  "Hi — I'm a senior C++ code review consultant at compass.tne.ai. Before we look at any code: who are you, what are you building, and what's the concern that brought you here? (Embedded firmware? A pre-ship security audit? A refactor you want a second opinion on?)";
 
 function createMessage(
   role: ChatMessage['role'],
@@ -74,6 +74,10 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
   const wallet = useWallet();
   const [session, setSession] = useState<ChatSession>(createInitialSession);
   const sessionRef = useRef(session);
+  const selectReportTypeRef = useRef<(reportType: ReportType) => Promise<void>>(
+    async () => {},
+  );
+  const payForFullReportRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     sessionRef.current = session;
@@ -105,84 +109,106 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
     [],
   );
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed) return;
+  const sendMessage = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
 
-      const current = sessionRef.current;
-      if (current.isLoading || current.mode === 'analyzing') {
-        return;
-      }
+    const current = sessionRef.current;
+    if (current.isLoading || current.mode === 'analyzing') {
+      return;
+    }
 
-      const messagesWithUser: ChatMessage[] = [
-        ...current.messages,
-        createMessage('user', trimmed, 'sales'),
-      ];
+    const messagesWithUser: ChatMessage[] = [
+      ...current.messages,
+      createMessage('user', trimmed, 'sales'),
+    ];
 
-      setSession({
-        ...current,
-        messages: messagesWithUser,
-        isLoading: true,
-      });
+    // Detect code in the user message; capture as pendingCode so the
+    // consultant can later trigger a review without losing context.
+    const looksLikeCode = classifyInput(trimmed) === 'cpp';
+    const capturedSnippet = looksLikeCode
+      ? trimmed.slice(0, CODE_SNIPPET_MAX_CHARS)
+      : null;
+    const pendingCodeAfter = capturedSnippet ?? current.pendingCode;
+    const activeReviewIdAfter =
+      current.activeReviewId ?? (capturedSnippet ? newReviewId() : null);
 
-      const route = routeMessage(
-        {
-          messages: messagesWithUser,
-          mode: 'qualifying',
-          activeReviewId: null,
-          isLoading: true,
-          uploadedFile: null,
-          pendingCode: null,
-          selectedReportType: null,
-        },
-        trimmed,
-      );
+    const afterUserMsg: ChatSession = {
+      ...current,
+      messages: messagesWithUser,
+      isLoading: true,
+      pendingCode: pendingCodeAfter,
+      activeReviewId: activeReviewIdAfter,
+    };
+    sessionRef.current = afterUserMsg;
+    setSession(afterUserMsg);
 
-      try {
-        await auth.authStateReady();
-        const uid = auth.currentUser?.uid ?? null;
-        const ctx = { messages: messagesWithUser, uid };
+    try {
+      await auth.authStateReady();
+      const uid = auth.currentUser?.uid ?? null;
+      const ctx = { messages: messagesWithUser, uid };
 
-        if (route === 'sales') {
-          const result = await runSalesAgent(ctx, trimmed);
+      const result = await runSalesAgent(ctx, trimmed);
+
+      // Append the consultant's message first. Keep sessionRef in sync
+      // synchronously so any follow-up action below sees the updated state
+      // (React 18 may not have flushed the setter before we dispatch the
+      // action, so the ref mutation below is critical).
+      const afterAssistant: ChatSession = {
+        ...sessionRef.current,
+        messages: [
+          ...sessionRef.current.messages,
+          createMessage('assistant', result.text, 'sales'),
+        ],
+        mode: 'qualifying',
+        isLoading: false,
+      };
+      sessionRef.current = afterAssistant;
+      setSession(afterAssistant);
+
+      if (result.action?.type === 'initiate_review') {
+        const latest = sessionRef.current;
+        if (!latest.pendingCode) {
           setSession((prev) => ({
             ...prev,
             messages: [
-              ...messagesWithUser,
-              createMessage('assistant', result.text, 'sales'),
+              ...prev.messages,
+              createMessage(
+                'assistant',
+                "I don't have any code to review yet — paste a C++ snippet here, or upload a .cpp / .zip file, and I'll run that report for you.",
+                'sales',
+              ),
             ],
-            mode: 'qualifying',
-            isLoading: false,
           }));
           return;
         }
-
-        const snippet = trimmed.slice(0, CODE_SNIPPET_MAX_CHARS);
-        setSession((prev) => ({
-          ...prev,
-          messages: messagesWithUser,
-          mode: 'analyzing',
-          isLoading: true,
-        }));
-        await startReportSelection(snippet, null);
-      } catch (err) {
-        console.error('Chat orchestrator error:', err);
-        const errorText =
-          err instanceof Error
-            ? err.message
-            : 'Sorry, something went wrong. Please try again.';
-
-        setSession((prev) => ({
-          ...prev,
-          messages: [...messagesWithUser, createMessage('assistant', errorText, 'error')],
-          mode: 'qualifying',
-          isLoading: false,
-        }));
+        // If the consultant asked for a full (paid) report, route through
+        // the payment-aware path. Otherwise run the free sample.
+        if (result.action.fullReport) {
+          if (latest.selectedReportType !== result.action.reportType) {
+            await selectReportTypeRef.current(result.action.reportType);
+          }
+          await payForFullReportRef.current();
+        } else {
+          await selectReportTypeRef.current(result.action.reportType);
+        }
       }
-    },
-    [startReportSelection],
-  );
+      return;
+    } catch (err) {
+      console.error('Chat orchestrator error:', err);
+      const errorText =
+        err instanceof Error
+          ? err.message
+          : 'Sorry, something went wrong. Please try again.';
+
+      setSession((prev) => ({
+        ...prev,
+        messages: [...messagesWithUser, createMessage('assistant', errorText, 'error')],
+        mode: 'qualifying',
+        isLoading: false,
+      }));
+    }
+  }, []);
 
   const handleFileUpload = useCallback(
     async (fileName: string, content: string) => {
@@ -282,6 +308,12 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
     }
   }, []);
 
+  // Keep a stable ref so sendMessage can dispatch `initiate_review` actions
+  // emitted by the consultant without depending on `selectReportType`.
+  useEffect(() => {
+    selectReportTypeRef.current = selectReportType;
+  }, [selectReportType]);
+
   const payForFullReport = useCallback(async () => {
     const current = sessionRef.current;
     if (
@@ -348,6 +380,10 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
       }));
     }
   }, [connection, wallet]);
+
+  useEffect(() => {
+    payForFullReportRef.current = payForFullReport;
+  }, [payForFullReport]);
 
   return {
     session,
