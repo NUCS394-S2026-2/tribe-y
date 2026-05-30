@@ -15,7 +15,6 @@ interface ChatTranscriptProps {
   selectedReportType: ReportType | null;
   onPayForFullReview: () => void;
   onSelectReportType: (reportType: ReportType) => void;
-  onGenerateFullReportPreview: () => void;
 }
 
 export function ChatTranscript({
@@ -25,7 +24,6 @@ export function ChatTranscript({
   selectedReportType,
   onPayForFullReview,
   onSelectReportType,
-  onGenerateFullReportPreview,
 }: ChatTranscriptProps) {
   return (
     <>
@@ -53,7 +51,6 @@ export function ChatTranscript({
               key={msg.id}
               data={msg.sampleReport}
               onPayForFullReview={onPayForFullReview}
-              onGenerateFullReportPreview={onGenerateFullReportPreview}
             />
           );
         }

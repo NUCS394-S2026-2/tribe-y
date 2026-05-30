@@ -23,7 +23,7 @@ interface WalletShellProps {
  * `useConnection()`. Mounts the modal provider so any descendant can pop
  * the styled connect modal via `WalletMultiButton` or `useWalletModal()`.
  */
-export function WalletShell({ children }: WalletShellProps) {
+export default function WalletShell({ children }: WalletShellProps) {
   const wallets = useMemo(
     () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
     [],

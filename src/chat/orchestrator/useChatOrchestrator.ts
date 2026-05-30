@@ -1,6 +1,5 @@
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { type ReportType } from '../../agents/reportTypes';
 import { invokeReviewer, type X402Quote } from '../../agents/reviewerClient';
@@ -65,14 +64,12 @@ function createInitialSession(): ChatSession {
 interface UseChatOrchestratorReturn {
   session: ChatSession;
   sendMessage: (text: string) => Promise<void>;
-  goToPayment: () => void;
   handleFileUpload: (fileName: string, content: string) => Promise<void>;
   selectReportType: (reportType: ReportType) => Promise<void>;
-  generateFullReportPreview: () => Promise<void>;
+  payForFullReport: () => Promise<void>;
 }
 
 export function useChatOrchestrator(): UseChatOrchestratorReturn {
-  const navigate = useNavigate();
   const { connection } = useConnection();
   const wallet = useWallet();
   const [session, setSession] = useState<ChatSession>(createInitialSession);
@@ -285,7 +282,7 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
     }
   }, []);
 
-  const generateFullReportPreview = useCallback(async () => {
+  const payForFullReport = useCallback(async () => {
     const current = sessionRef.current;
     if (
       !current.activeReviewId ||
@@ -352,28 +349,11 @@ export function useChatOrchestrator(): UseChatOrchestratorReturn {
     }
   }, [connection, wallet]);
 
-  const goToPayment = useCallback(() => {
-    const current = sessionRef.current;
-    if (!current.activeReviewId) return;
-
-    const params = new URLSearchParams({ reviewId: current.activeReviewId });
-    if (current.selectedReportType) {
-      params.set('reportType', current.selectedReportType);
-    }
-
-    const state = current.uploadedFile
-      ? { uploadedFile: current.uploadedFile }
-      : undefined;
-
-    navigate(`/payment?${params.toString()}`, { state });
-  }, [navigate]);
-
   return {
     session,
     sendMessage,
-    goToPayment,
     handleFileUpload,
     selectReportType,
-    generateFullReportPreview,
+    payForFullReport,
   };
 }

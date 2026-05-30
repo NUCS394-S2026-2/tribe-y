@@ -21,7 +21,7 @@ export default function TopNavBar({ onCtaClick }: Props) {
         </nav>
       </div>
       <button className={styles.ctaButton} onClick={onCtaClick}>
-        Connect Sales Agent
+        Connect Consultant Agent
       </button>
     </header>
   );

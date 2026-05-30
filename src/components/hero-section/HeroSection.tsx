@@ -35,7 +35,7 @@ COMPLIANCE_STATUS: ALERT
 
         <div className={styles.buttonGroup}>
           <button className={styles.primaryButton} onClick={onPrimaryClick}>
-            Start Session with Sales Agent
+            Start Session with Consultant Agent
           </button>
         </div>
       </div>
