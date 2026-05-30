@@ -70,10 +70,10 @@ export function CompassChat() {
         <div className={styles.sidebarSub}>C++ Expert Review</div>
         <Link
           to="/docs"
-          className={styles.newChatBtn}
-          aria-label="Open integration documentation"
+          className={styles.sidebarDevLink}
+          aria-label="Integration documentation for developers"
         >
-          Docs
+          For Developers
         </Link>
       </aside>
 

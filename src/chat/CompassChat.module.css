@@ -59,6 +59,32 @@
   border-color: var(--accent);
 }
 
+/* "For Developers" link pinned to the bottom of the sidebar with a 10px gap. */
+.sidebarDevLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  color: var(--contrast);
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+  margin-top: auto;
+  margin-bottom: 10px;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.sidebarDevLink:hover {
+  background: var(--surface-bright);
+  border-color: var(--accent);
+}
+
 /* ── Main ── */
 .main {
   flex: 1;
