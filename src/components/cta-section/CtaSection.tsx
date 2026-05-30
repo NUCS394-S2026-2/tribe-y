@@ -19,7 +19,7 @@ export default function CtaSection({ onCtaClick }: Props) {
             decision-making. Schedule a briefing with our strategic code auditors.
           </p>
           <button className={styles.button} onClick={onCtaClick}>
-            Connect with Sales Agent
+            Connect with Consultant Agent
             <span className="material-symbols-outlined">handshake</span>
           </button>
         </div>

@@ -11,7 +11,6 @@ import styles from './SampleReportMessage.module.css';
 interface SampleReportMessageProps {
   data: SampleReportData;
   onPayForFullReview: () => void;
-  onGenerateFullReportPreview: () => void;
 }
 
 function tallyBySeverity(findings: SampleReportFinding[]) {
@@ -45,7 +44,6 @@ function safeFilename(title: string): string {
 export function SampleReportMessage({
   data,
   onPayForFullReview,
-  onGenerateFullReportPreview,
 }: SampleReportMessageProps) {
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const tally = useMemo(() => tallyBySeverity(data.findings), [data.findings]);
@@ -159,23 +157,9 @@ export function SampleReportMessage({
             Download PDF
           </button>
           {!data.isFullReport && (
-            <>
-              <button
-                type="button"
-                className={styles.btnGold}
-                onClick={onPayForFullReview}
-              >
-                Pay for full report
-              </button>
-              <button
-                type="button"
-                className={styles.btnTest}
-                onClick={onGenerateFullReportPreview}
-                title="Bypass payment — for testing only"
-              >
-                ⚡ Generate full report (test)
-              </button>
-            </>
+            <button type="button" className={styles.btnGold} onClick={onPayForFullReview}>
+              Pay for full report
+            </button>
           )}
         </div>
       </div>

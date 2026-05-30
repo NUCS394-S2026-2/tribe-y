@@ -7,13 +7,8 @@ import styles from './CompassChat.module.css';
 import { useChatOrchestrator } from './orchestrator/useChatOrchestrator';
 
 export function CompassChat() {
-  const {
-    session,
-    sendMessage,
-    handleFileUpload,
-    selectReportType,
-    generateFullReportPreview,
-  } = useChatOrchestrator();
+  const { session, sendMessage, handleFileUpload, selectReportType, payForFullReport } =
+    useChatOrchestrator();
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -90,9 +85,8 @@ export function CompassChat() {
         <CompassChatMessageFeed
           session={session}
           bottomRef={bottomRef}
-          onPayForFullReview={() => void generateFullReportPreview()}
+          onPayForFullReview={() => void payForFullReport()}
           onSelectReportType={(rt) => void selectReportType(rt)}
-          onGenerateFullReportPreview={() => void generateFullReportPreview()}
         />
 
         <CompassChatComposer

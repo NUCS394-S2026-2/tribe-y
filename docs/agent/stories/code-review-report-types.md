@@ -1,7 +1,13 @@
 # Story: Code Review Report Type Selection + Sample PDF
 
 - **Slug:** `code-review-report-types`
-- **Status:** Draft
+- **Status:** Superseded by `code-review-agent-revamp-plan.md` (PRs 1–8).
+  The chat flow now invokes a standalone A2A reviewer service over JSON-RPC
+  and pays via x402 over Solana devnet through an in-chat wallet. The
+  `/payment` and `/vault/:reviewId` routes referenced below were removed in
+  PR 8 along with the `goToPayment` orchestrator hook; the "Pay for full
+  report" button now triggers an in-chat wallet-signed payment instead of
+  navigating to a separate route.
 
 ## User Story
 

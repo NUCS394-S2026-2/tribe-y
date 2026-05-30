@@ -34,13 +34,7 @@ describe('SampleReportMessage', () => {
         /* noop — jsdom does not navigate */
       });
 
-    render(
-      <SampleReportMessage
-        data={data}
-        onPayForFullReview={() => {}}
-        onGenerateFullReportPreview={() => {}}
-      />,
-    );
+    render(<SampleReportMessage data={data} onPayForFullReview={() => {}} />);
 
     const downloadBtn = screen.getByRole('button', { name: /download pdf/i });
     expect(downloadBtn).not.toBeDisabled();
@@ -51,13 +45,7 @@ describe('SampleReportMessage', () => {
 
   it('disables preview + download with a tooltip when artifacts are absent', () => {
     const data = makeData();
-    render(
-      <SampleReportMessage
-        data={data}
-        onPayForFullReview={() => {}}
-        onGenerateFullReportPreview={() => {}}
-      />,
-    );
+    render(<SampleReportMessage data={data} onPayForFullReview={() => {}} />);
 
     const previewBtn = screen.getByRole('button', { name: /preview pdf/i });
     const downloadBtn = screen.getByRole('button', { name: /download pdf/i });
@@ -75,13 +63,7 @@ describe('SampleReportMessage', () => {
         pdfSha256: 'b'.repeat(64),
       },
     });
-    render(
-      <SampleReportMessage
-        data={data}
-        onPayForFullReview={() => {}}
-        onGenerateFullReportPreview={() => {}}
-      />,
-    );
+    render(<SampleReportMessage data={data} onPayForFullReview={() => {}} />);
 
     await userEvent.click(screen.getByRole('button', { name: /preview pdf/i }));
     // The modal renders an iframe pointing at the URL

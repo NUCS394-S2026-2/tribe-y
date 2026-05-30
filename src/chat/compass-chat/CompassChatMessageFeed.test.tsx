@@ -52,7 +52,6 @@ describe('CompassChatMessageFeed', () => {
         bottomRef={createRef()}
         onPayForFullReview={() => undefined}
         onSelectReportType={() => undefined}
-        onGenerateFullReportPreview={() => undefined}
       />,
     );
 
@@ -72,7 +71,6 @@ describe('CompassChatMessageFeed', () => {
         bottomRef={createRef()}
         onPayForFullReview={() => undefined}
         onSelectReportType={() => undefined}
-        onGenerateFullReportPreview={() => undefined}
       />,
     );
 
@@ -87,7 +85,6 @@ describe('CompassChatMessageFeed', () => {
         bottomRef={createRef()}
         onPayForFullReview={() => undefined}
         onSelectReportType={() => undefined}
-        onGenerateFullReportPreview={() => undefined}
       />,
     );
 
