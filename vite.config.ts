@@ -34,6 +34,17 @@ export default defineConfig(({ mode }) => {
     loaded.FIREBASE_PROJECT_ID ?? loaded.VITE_FIREBASE_PROJECT_ID ?? 'tribe-y';
   const functionsBase = `http://127.0.0.1:${functionsPort}/${functionsProjectId}/us-central1`;
 
+  // Default: dev hits the deployed reviewer at tribe-y.web.app so a
+  // fresh `npm run dev` works with zero local setup — no Functions
+  // emulator, no GOOGLE_AI_API_KEY or wallet secret on disk. The agent
+  // card served from prod advertises the direct Cloud Run URL for /rpc,
+  // so only the discovery proxy actually has to hit prod from the dev
+  // server. Set DEV_REVIEWER_TARGET=http://127.0.0.1:5001/... to force
+  // the proxy at a local Functions emulator instead (rarely needed —
+  // only when iterating on `functions/src/reviewer/`).
+  const reviewerProxyTarget = loaded.DEV_REVIEWER_TARGET ?? 'https://tribe-y.web.app';
+  const useEmulatorReviewer = reviewerProxyTarget.startsWith(`http://127.0.0.1:${functionsPort}`);
+
   return {
     plugins: [
       tailwindcss(),
@@ -55,17 +66,17 @@ export default defineConfig(({ mode }) => {
         // Production deployments use the same /rpc and /.well-known/
         // paths via firebase.json rewrites; only the dev proxy differs.
         '/rpc': {
-          target: functionsBase,
+          target: reviewerProxyTarget,
           changeOrigin: true,
-          rewrite: () => '/reviewerRpc',
+          rewrite: useEmulatorReviewer ? () => '/reviewerRpc' : undefined,
           // No upstream proxy timeout — let the function decide.
           timeout: 0,
           proxyTimeout: 0,
         },
         '/.well-known/agent.json': {
-          target: functionsBase,
+          target: reviewerProxyTarget,
           changeOrigin: true,
-          rewrite: () => '/agentCard',
+          rewrite: useEmulatorReviewer ? () => '/agentCard' : undefined,
         },
       },
     },
