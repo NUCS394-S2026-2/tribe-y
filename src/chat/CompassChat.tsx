@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { WalletConnectButton } from '../wallet/WalletConnectButton';
 import { CompassChatComposer } from './compass-chat/CompassChatComposer';
@@ -67,6 +68,13 @@ export function CompassChat() {
       <aside className={styles.sidebar}>
         <div className={styles.sidebarLogo}>compass.tne.ai</div>
         <div className={styles.sidebarSub}>C++ Expert Review</div>
+        <Link
+          to="/docs"
+          className={styles.sidebarDevLink}
+          aria-label="Integration documentation for developers"
+        >
+          For Developers
+        </Link>
       </aside>
 
       <div className={styles.main}>
