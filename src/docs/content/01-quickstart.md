@@ -8,8 +8,6 @@ Set the agent's base URL once and reuse it everywhere:
 export BASE_URL=https://reviewer.tne.ai
 ```
 
-(See [Running against a local instance](#running-against-a-local-instance) at the bottom if you're spinning the agent up yourself.)
-
 ## 1. Discover the agent
 
 ```bash
@@ -57,21 +55,11 @@ Swap `"method": "reviewSample"` for `"method": "reviewFull"`. The first call ret
 
 ## Reference client
 
-`functions/scripts/a2a-client.ts` in the repo is a runnable Node example that exercises every step and prints each response:
+A canonical Node implementation that exercises every step and prints each response:
 
 ```bash
-BASE_URL=$BASE_URL node --experimental-strip-types functions/scripts/a2a-client.ts
-BASE_URL=$BASE_URL PAID=1 node --experimental-strip-types functions/scripts/a2a-client.ts
+BASE_URL=$BASE_URL node --experimental-strip-types a2a-client.ts
+BASE_URL=$BASE_URL PAID=1 node --experimental-strip-types a2a-client.ts
 ```
 
-## Running against a local instance
-
-Only relevant if you're cloning this repo and running the agent yourself — integrators using a deployed instance can skip this section.
-
-The Firebase Hosting emulator caps function rewrites at 60s, which is too tight for a paid review. Hit the Functions emulator directly:
-
-```bash
-export BASE_URL=http://127.0.0.1:5001/<your-firebase-project-id>/us-central1
-```
-
-Then the curl commands above target `$BASE_URL/.well-known/agent.json` → the `agentCard` function and `$BASE_URL/rpc` → the `reviewerRpc` function. Same JSON in, same JSON out.
+Source lives at `functions/scripts/a2a-client.ts` in the project repo. Copy it into your own integration as a starting point.
