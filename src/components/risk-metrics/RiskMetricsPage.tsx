@@ -134,26 +134,6 @@ export default function RiskMetricsPage() {
           </section>
 
           <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Overall Score Calculation</h2>
-            <div className={styles.formula}>
-              <div className={styles.formulaRow}>
-                <span className={styles.formulaLabel}>Overall Score</span>
-                <span className={styles.formulaEq}>=</span>
-                <span className={styles.formulaExpr}>
-                  (Resource Safety × 0.35) + (Exception Safety × 0.30) + (Interface Design
-                  × 0.20) + (Idiomatic C++ × 0.15)
-                </span>
-              </div>
-              <p className={styles.formulaNote}>
-                Weights are adjusted for domain-specific reports. Safety-critical domains
-                (automotive, aerospace, medical) shift more weight toward Resource Safety
-                and Exception Safety; general-purpose and startup reports weight Interface
-                Design and Idiomatic C++ more heavily.
-              </p>
-            </div>
-          </section>
-
-          <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Report Types</h2>
             <div className={styles.reportTypes}>
               {[
