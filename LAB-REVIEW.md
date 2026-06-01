@@ -2,7 +2,7 @@
 
 **Team:** Jack Press, Damini Iyer, Abby Miggiani, Gabriel Hsieh, Yimin Huang, Jefferson Wu, Stanley Hir, Andy Wu, Souvenir Turinumugisha, Fay Ma
 **Date:** 6/1/25
-**Commit reviewed:** ![Commit] [<git sha>](https://github.com/NUCS394-S2026-2/tribe-y)
+**Commit reviewed:** ![Commit](https://github.com/NUCS394-S2026-2/tribe-y)
 
 ## Architecture diagram
 
