@@ -22,7 +22,7 @@ describe('LandingPage', () => {
       </MemoryRouter>,
     );
     expect(
-      screen.getByRole('button', { name: /start session with sales agent/i }),
+      screen.getByRole('button', { name: /start session with consultant agent/i }),
     ).toBeInTheDocument();
   });
 });

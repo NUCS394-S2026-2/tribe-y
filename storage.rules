@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// All reviewer PDFs live under `reports/{sha256}.pdf`. End users never
+// access them directly via Firebase Storage; the reviewer Cloud
+// Function uses the admin SDK (which bypasses these rules) to write the
+// PDF and then hands out short-lived v4 signed URLs as the only way to
+// fetch the artifact. So default-deny is correct.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

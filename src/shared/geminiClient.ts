@@ -7,8 +7,16 @@ export async function createGeminiMessage(params: {
   max_tokens: number;
   system: string;
   messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+  responseMimeType?: 'application/json' | 'text/plain';
 }): Promise<string> {
   const idToken = await getFirebaseIdToken();
+
+  const generationConfig: Record<string, unknown> = {
+    maxOutputTokens: params.max_tokens,
+  };
+  if (params.responseMimeType) {
+    generationConfig.responseMimeType = params.responseMimeType;
+  }
 
   const body = {
     model: params.model,
@@ -17,7 +25,7 @@ export async function createGeminiMessage(params: {
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
     })),
-    generationConfig: { maxOutputTokens: params.max_tokens },
+    generationConfig,
   };
 
   const res = await fetch('/api/gemini/v1/messages', {

@@ -1,0 +1,161 @@
+.markdown {
+  color: var(--contrast);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  font-family:
+    'Inter',
+    'Public Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  color: var(--contrast);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.markdown h1 {
+  font-size: 1.95rem;
+  margin: 0 0 18px;
+}
+
+.markdown h2 {
+  font-size: 1.35rem;
+  margin: 36px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--surface-border);
+  position: relative;
+}
+
+.markdown h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 48px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.markdown h3 {
+  font-size: 1.1rem;
+  margin: 28px 0 10px;
+}
+
+.markdown h4 {
+  font-size: 0.95rem;
+  margin: 22px 0 8px;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.78rem;
+}
+
+.markdown p {
+  margin: 0 0 14px;
+  color: var(--contrast);
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+
+.markdown li {
+  margin: 4px 0;
+}
+
+.markdown li > p {
+  margin: 0;
+}
+
+.markdown blockquote {
+  margin: 14px 0;
+  padding: 8px 14px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.inlineCode {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  padding: 1px 6px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85em;
+  color: var(--accent);
+  border-radius: 2px;
+}
+
+.link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.link:hover {
+  color: var(--contrast);
+  border-bottom-color: var(--accent);
+}
+
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0 20px;
+  font-size: 0.875rem;
+}
+
+.markdown th,
+.markdown td {
+  text-align: left;
+  padding: 8px 12px;
+  border: 1px solid var(--surface-border);
+  vertical-align: top;
+}
+
+.markdown th {
+  background: var(--surface);
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.markdown td {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.markdown hr {
+  border: none;
+  border-top: 1px solid var(--surface-border);
+  margin: 26px 0;
+}
+
+.markdown img {
+  max-width: 100%;
+  border: 1px solid var(--surface-border);
+}
+
+.markdown pre {
+  margin: 0;
+}
+
+/* Task list checkboxes from GFM */
+.markdown input[type='checkbox'] {
+  margin-right: 6px;
+  accent-color: var(--accent);
+}

@@ -48,12 +48,39 @@
   margin-top: 12px;
   width: 100%;
   text-align: left;
+  text-decoration: none;
   transition:
     background 0.15s,
     border-color 0.15s;
 }
 
 .newChatBtn:hover {
+  background: var(--surface-bright);
+  border-color: var(--accent);
+}
+
+/* "For Developers" link pinned to the bottom of the sidebar with a 10px gap. */
+.sidebarDevLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  color: var(--contrast);
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+  margin-top: auto;
+  margin-bottom: 10px;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.sidebarDevLink:hover {
   background: var(--surface-bright);
   border-color: var(--accent);
 }
@@ -71,6 +98,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   padding: 14px 24px;
   border-bottom: 1px solid var(--surface-border);
   font-size: 0.875rem;
@@ -78,6 +106,15 @@
   color: var(--contrast);
   flex-shrink: 0;
   background: var(--surface);
+}
+
+.topbarRight {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
 }
 
 .topbarModel {
@@ -178,38 +215,6 @@
   overflow-x: auto;
   white-space: pre;
   margin-top: 8px;
-}
-
-/* ── Review card ── */
-.reviewCard {
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  padding: 20px;
-  margin-top: 8px;
-}
-
-.reviewCardTitle {
-  font-size: 0.7rem;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-  margin-bottom: 12px;
-}
-
-.reviewCardBody {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  line-height: 1.7;
-  white-space: pre-wrap;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.reviewCardActions {
-  margin-top: 16px;
-  display: flex;
-  gap: 8px;
 }
 
 /* ── Payment card ── */

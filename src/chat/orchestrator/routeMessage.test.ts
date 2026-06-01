@@ -9,6 +9,8 @@ const emptySession: ChatSession = {
   activeReviewId: null,
   isLoading: false,
   uploadedFile: null,
+  pendingCode: null,
+  selectedReportType: null,
 };
 
 describe('routeMessage', () => {
@@ -16,9 +18,9 @@ describe('routeMessage', () => {
     expect(routeMessage(emptySession, 'What does your platform do?')).toBe('sales');
   });
 
-  test('routes C++ code to codeReview', () => {
+  test('routes C++ code to sales (consultant handles everything)', () => {
     expect(routeMessage(emptySession, '#include <iostream>\nint main() {}')).toBe(
-      'codeReview',
+      'sales',
     );
   });
 

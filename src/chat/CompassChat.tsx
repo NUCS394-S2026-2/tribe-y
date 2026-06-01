@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
+import { WalletConnectButton } from '../wallet/WalletConnectButton';
 import { CompassChatComposer } from './compass-chat/CompassChatComposer';
 import { CompassChatMessageFeed } from './compass-chat/CompassChatMessageFeed';
 import styles from './CompassChat.module.css';
 import { useChatOrchestrator } from './orchestrator/useChatOrchestrator';
 
 export function CompassChat() {
-  const { session, sendMessage, goToPayment, handleFileUpload } = useChatOrchestrator();
+  const { session, sendMessage, handleFileUpload, selectReportType, payForFullReport } =
+    useChatOrchestrator();
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -65,6 +68,13 @@ export function CompassChat() {
       <aside className={styles.sidebar}>
         <div className={styles.sidebarLogo}>compass.tne.ai</div>
         <div className={styles.sidebarSub}>C++ Expert Review</div>
+        <Link
+          to="/docs"
+          className={styles.sidebarDevLink}
+          aria-label="Integration documentation for developers"
+        >
+          For Developers
+        </Link>
       </aside>
 
       <div className={styles.main}>
@@ -75,12 +85,16 @@ export function CompassChat() {
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </span>
+          <span className={styles.topbarRight}>
+            <WalletConnectButton />
+          </span>
         </div>
 
         <CompassChatMessageFeed
           session={session}
           bottomRef={bottomRef}
-          onPayForFullReview={goToPayment}
+          onPayForFullReview={() => void payForFullReport()}
+          onSelectReportType={(rt) => void selectReportType(rt)}
         />
 
         <CompassChatComposer

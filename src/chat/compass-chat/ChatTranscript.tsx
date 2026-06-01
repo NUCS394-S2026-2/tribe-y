@@ -1,23 +1,29 @@
 import React from 'react';
 
+import { type ReportType } from '../../agents/reportTypes';
 import type { ChatMessage } from '../../shared/types/ChatSession';
 import styles from '../CompassChat.module.css';
 import { BotTypingIndicator } from './BotTypingIndicator';
-import { ExpertReviewCard } from './ExpertReviewCard';
+import { ReportTypeSelectorMessage } from './ReportTypeSelectorMessage';
+import { SampleReportMessage } from './SampleReportMessage';
 import { UserMessageRow } from './UserMessageRow';
 
 interface ChatTranscriptProps {
   messages: ChatMessage[];
   botLoading: boolean;
-  showPayCta: boolean;
+  selectorDisabled: boolean;
+  selectedReportType: ReportType | null;
   onPayForFullReview: () => void;
+  onSelectReportType: (reportType: ReportType) => void;
 }
 
 export function ChatTranscript({
   messages,
   botLoading,
-  showPayCta,
+  selectorDisabled,
+  selectedReportType,
   onPayForFullReview,
+  onSelectReportType,
 }: ChatTranscriptProps) {
   return (
     <>
@@ -26,12 +32,24 @@ export function ChatTranscript({
           return <UserMessageRow key={msg.id} message={msg} />;
         }
 
-        if (msg.kind === 'teaser') {
+        if (msg.kind === 'report-type-selector') {
           return (
-            <ExpertReviewCard
+            <ReportTypeSelectorMessage
               key={msg.id}
-              teaserReview={msg.text}
-              showPayButton={showPayCta}
+              selectedReportType={
+                msg.reportTypeSelector?.selectedReportType ?? selectedReportType
+              }
+              disabled={selectorDisabled}
+              onSelect={onSelectReportType}
+            />
+          );
+        }
+
+        if (msg.kind === 'sample-report' && msg.sampleReport) {
+          return (
+            <SampleReportMessage
+              key={msg.id}
+              data={msg.sampleReport}
               onPayForFullReview={onPayForFullReview}
             />
           );
