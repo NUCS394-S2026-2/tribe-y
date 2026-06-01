@@ -23,6 +23,13 @@
   color: var(--contrast);
   padding: 10px 12px;
   letter-spacing: -0.03em;
+  text-decoration: none;
+  display: block;
+  transition: color 0.15s;
+}
+
+.sidebarLogo:hover {
+  color: var(--accent);
 }
 
 .sidebarSub {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildAgentCard, deriveRpcEndpoint } from './agentCard.js';
-import { REVIEWER_WALLET_ADDRESS, REVIEW_FULL_PRICE_LAMPORTS } from './wallet.js';
+import { REVIEW_FULL_PRICE_LAMPORTS, REVIEWER_WALLET_ADDRESS } from './wallet.js';
 
 describe('buildAgentCard', () => {
   it('returns the expected shape', () => {

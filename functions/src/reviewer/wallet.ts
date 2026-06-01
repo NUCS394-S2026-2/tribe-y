@@ -17,7 +17,7 @@ export const REVIEWER_WALLET_ADDRESS: string =
 /**
  * The Solana network the reviewer wallet operates on.
  */
-export const REVIEWER_NETWORK: 'solana-devnet' = 'solana-devnet';
+export const REVIEWER_NETWORK = 'solana-devnet' as const;
 
 /**
  * Solana RPC URL. Defaults to public devnet endpoint; can be overridden by

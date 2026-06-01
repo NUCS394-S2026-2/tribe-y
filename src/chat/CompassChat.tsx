@@ -66,7 +66,9 @@ export function CompassChat() {
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
-        <div className={styles.sidebarLogo}>compass.tne.ai</div>
+        <Link to="/" className={styles.sidebarLogo}>
+          compass.tne.ai
+        </Link>
         <div className={styles.sidebarSub}>C++ Expert Review</div>
         <Link
           to="/docs"

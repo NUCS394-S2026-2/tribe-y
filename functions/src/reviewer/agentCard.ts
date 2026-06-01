@@ -1,6 +1,6 @@
 import { onRequest } from 'firebase-functions/v2/https';
 
-import { REVIEWER_WALLET_ADDRESS, REVIEW_FULL_PRICE_LAMPORTS } from './wallet.js';
+import { REVIEW_FULL_PRICE_LAMPORTS, REVIEWER_WALLET_ADDRESS } from './wallet.js';
 
 // NOTE: This endpoint is INTENTIONALLY PUBLIC — no Firebase auth.
 // `GET /.well-known/agent.json` is the A2A discovery document. By the

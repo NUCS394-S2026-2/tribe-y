@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 
 import {
   claimPayment as defaultClaimPayment,
-  verifyPayment as defaultVerifyPayment,
   type PaymentReceipt,
+  verifyPayment as defaultVerifyPayment,
   type VerifyPaymentResult,
 } from './verifyPayment.js';
 

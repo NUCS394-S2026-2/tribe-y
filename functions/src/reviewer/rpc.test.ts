@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   dispatchRpc,
   JSON_RPC_ERRORS,
-  parseErrorEnvelope,
   type JsonRpcErrorEnvelope,
   type JsonRpcSuccess,
+  parseErrorEnvelope,
 } from './rpc.js';
 
 describe('dispatchRpc', () => {

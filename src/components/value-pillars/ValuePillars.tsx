@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 import styles from './ValuePillars.module.css';
 
@@ -17,9 +18,9 @@ export default function ValuePillars() {
               entire repositories to surface structural integrity and long-term
               scalability issues.
             </p>
-            <span className={styles.link}>
-              Protocol details <span className="material-symbols-outlined">east</span>
-            </span>
+            <Link to="/sample" className={styles.link}>
+              Sample audit <span className="material-symbols-outlined">east</span>
+            </Link>
           </div>
 
           <div className={styles.card}>
@@ -32,9 +33,9 @@ export default function ValuePillars() {
               code&quot; into specific financial liability assessments ready for the
               boardroom.
             </p>
-            <a href="#metrics" className={styles.link}>
+            <Link to="/risk-metrics" className={styles.link}>
               Risk metrics <span className="material-symbols-outlined">east</span>
-            </a>
+            </Link>
           </div>
 
           <div className={styles.card}>
@@ -47,9 +48,9 @@ export default function ValuePillars() {
               billing for high-precision auditing, ensuring complete transparency and cost
               control.
             </p>
-            <span className={styles.link}>
-              Financial standards <span className="material-symbols-outlined">east</span>
-            </span>
+            <Link to="/financial-standards" className={styles.link}>
+              X.402 payment flow <span className="material-symbols-outlined">east</span>
+            </Link>
           </div>
         </div>
       </div>

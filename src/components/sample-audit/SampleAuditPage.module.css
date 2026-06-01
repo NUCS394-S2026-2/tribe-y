@@ -1,0 +1,515 @@
+.page {
+  min-height: 100vh;
+  background-color: var(--primary);
+  color: var(--text-main);
+}
+
+.main {
+  padding-top: 4rem;
+}
+
+/* ── Report Banner ─────────────────────────────────────────────────────────── */
+
+.reportBanner {
+  background-color: var(--surface);
+  border-bottom: 2px solid var(--accent);
+}
+
+.bannerInner {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 2rem;
+}
+
+.bannerBrand {
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.bannerMeta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+}
+
+.reportTitle {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  color: var(--contrast);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 0.875rem;
+}
+
+.reportDate {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+
+.container {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+.section {
+  margin-bottom: 4.5rem;
+}
+
+/* ── Section headings ────────────────────────────────────────────────────────── */
+
+.sectionHeadGroup {
+  margin-bottom: 1.5rem;
+}
+
+.sectionNum {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.sectionTitle {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 900;
+  color: var(--contrast);
+  letter-spacing: -0.02em;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--surface-border);
+  margin: 0 0 1.75rem;
+}
+
+/* ── Executive Scorecard ──────────────────────────────────────────────────────── */
+
+.scorecardLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+}
+
+.scorecard {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+/* Big score box */
+.scoreBigBox {
+  border: 2px solid;
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 10rem;
+  flex-shrink: 0;
+  background-color: var(--surface);
+}
+
+.bigScore {
+  font-size: 5rem;
+  font-weight: 900;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+}
+
+.bigScoreDenom {
+  font-size: 1.125rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.gradeLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.12em;
+  margin-top: 0.875rem;
+}
+
+/* Dimension table */
+.dimTable {
+  flex: 1;
+  min-width: 18rem;
+}
+
+.dimTableHeader {
+  display: grid;
+  grid-template-columns: 1fr 5rem 3.5rem;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid var(--surface-border);
+  margin-bottom: 0.125rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.alignRight {
+  text-align: right;
+}
+
+.dimRow {
+  padding: 0.625rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dimRowMain {
+  display: grid;
+  grid-template-columns: 1fr 5rem 3.5rem;
+  align-items: baseline;
+  margin-bottom: 0.3rem;
+}
+
+.dimName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--contrast);
+}
+
+.dimScore {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.dimGrade {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.dimDesc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Severity summary */
+.severityRow {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sevBadge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid currentColor;
+  letter-spacing: 0.05em;
+}
+
+.sev_critical {
+  color: #ef4444;
+}
+.sev_high {
+  color: #f97316;
+}
+.sev_medium {
+  color: #f59e0b;
+}
+.sev_low {
+  color: var(--accent);
+}
+
+/* ── Prose ───────────────────────────────────────────────────────────────────── */
+
+.prose {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: 1.75rem;
+}
+
+.inlineCode {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875em;
+  color: var(--accent);
+  background-color: rgba(34, 211, 238, 0.08);
+  padding: 0.1em 0.35em;
+}
+
+.subsectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--contrast);
+  margin-bottom: 1rem;
+}
+
+/* ── Scoring Rationale / progress bars ───────────────────────────────────────── */
+
+.rationaleList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.rationaleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.35rem;
+}
+
+.rationaleName {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--contrast);
+}
+
+.rationaleScore {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.progressTrack {
+  height: 3px;
+  background-color: var(--surface-border);
+  margin-bottom: 0.4rem;
+}
+
+.progressFill {
+  height: 100%;
+}
+
+.rationaleDesc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Methodology ─────────────────────────────────────────────────────────────── */
+
+.sliceInfo {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 0.875rem;
+}
+
+/* Numbered code block */
+.numberedCode {
+  background-color: var(--surface);
+  border: 1px solid var(--surface-border);
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.75;
+}
+
+.codeLine {
+  display: flex;
+}
+
+.codeLine:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.lineNum {
+  min-width: 3rem;
+  padding: 0 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+  user-select: none;
+  border-right: 1px solid var(--surface-border);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.lineContent {
+  padding: 0 1rem;
+  color: var(--text-main);
+  white-space: pre;
+}
+
+/* ── Findings ────────────────────────────────────────────────────────────────── */
+
+.findings {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+.finding {
+  border-left: 3px solid var(--surface-border);
+  padding: 1.5rem 1.5rem 1.25rem 1.375rem;
+  background-color: var(--surface);
+}
+
+.finding_medium {
+  border-left-color: #f59e0b;
+}
+
+.finding_low {
+  border-left-color: var(--accent);
+}
+
+.findingMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.sevChip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+}
+
+.chip_medium {
+  color: #f59e0b;
+}
+.chip_low {
+  color: var(--accent);
+}
+
+.findingLineRef {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.findingTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--contrast);
+  margin-bottom: 0.875rem;
+  line-height: 1.3;
+}
+
+.findingDesc {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+
+.subLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  margin-bottom: 0.5rem;
+}
+
+.evidenceCode {
+  background-color: var(--primary);
+  border: 1px solid var(--surface-border);
+  padding: 1rem 1.25rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: var(--text-main);
+  overflow-x: auto;
+  white-space: pre;
+  margin-bottom: 1rem;
+}
+
+.findingRefs {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.6;
+  border-top: 1px solid var(--surface-border);
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+/* ── Conclusion ──────────────────────────────────────────────────────────────── */
+
+.upsellList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upsellList li {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  padding-left: 1.5rem;
+  position: relative;
+  line-height: 1.65;
+}
+
+.upsellList li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+/* ── CTA ─────────────────────────────────────────────────────────────────────── */
+
+.cta {
+  margin-top: 1rem;
+  padding: 2.5rem;
+  background-color: var(--surface);
+  border: 1px solid var(--surface-border);
+  text-align: center;
+}
+
+.ctaTitle {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--contrast);
+  margin-bottom: 0.75rem;
+}
+
+.ctaText {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.ctaButton {
+  display: inline-block;
+  padding: 0.875rem 2rem;
+  background-color: var(--accent);
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.ctaButton:hover,
+.ctaButton:focus-visible {
+  background-color: var(--contrast);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

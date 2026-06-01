@@ -1,7 +1,7 @@
 import { onRequest, type Request } from 'firebase-functions/v2/https';
 
 import { buildMethodHandlers, googleAiApiKey, methodHandlers } from './methods/index.js';
-import { REVIEWER_WALLET_ADDRESS, REVIEW_FULL_PRICE_LAMPORTS } from './wallet.js';
+import { REVIEW_FULL_PRICE_LAMPORTS, REVIEWER_WALLET_ADDRESS } from './wallet.js';
 import { checkX402Payment, type X402Quote } from './x402Middleware.js';
 
 // NOTE: This endpoint is INTENTIONALLY PUBLIC — no Firebase auth.
