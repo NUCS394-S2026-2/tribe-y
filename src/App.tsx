@@ -7,8 +7,6 @@ import RiskMetricsPage from './components/risk-metrics/RiskMetricsPage';
 import SampleAuditPage from './components/sample-audit/SampleAuditPage';
 import ScrollToTop from './components/scroll-to-top/ScrollToTop';
 import FinancialStandardsPage from './components/x402-payment-flow/X402PaymentFlowPage';
-import { PaymentPage } from './payment/PaymentPage';
-import { VaultPage } from './vault/VaultPage';
 
 function App() {
   return (
@@ -17,8 +15,6 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/chat" element={<CompassChat />} />
-        <Route path="/payment" element={<PaymentPage />} />
-        <Route path="/vault/:reviewId" element={<VaultPage />} />
         <Route path="/sample" element={<SampleAuditPage />} />
         <Route path="/financial-standards" element={<FinancialStandardsPage />} />
         <Route path="/risk-metrics" element={<RiskMetricsPage />} />
