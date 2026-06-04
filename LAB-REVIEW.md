@@ -16,19 +16,19 @@
 
 ### Diagram vs. reality (top 3 mismatches from madge)
 
-1. ...
-2. ...
-3. ...
+1. The `functions/src/reviewer/` subsystem almost certainly does not appear on the hand-drawn diagram, because it lives outside `./src` and never shows up in the frontend dependency graph. (Forgot it existed, or underestimated it.)
+2. `useChatOrchestrator.ts` (395 lines) is the real center of gravity of the chat flow — confirm the drawn diagram gives it the weight the code does.
+3. <add the third after comparing — look for any UI component importing directly from a service/data layer.>
 
 ### Bus factor overlay
 
 Annotated diagram: `docs/architecture-bus-factor.png`
 
-- Pink files (concentrated ownership): <count>
-- Pink files that are also hotspots (large or frequently edited): <list>
-- Pink files that are also architectural centers (many other files import them): <list>
+- Pink files (concentrated ownership): many — but most are **`Edits: 1`**, i.e. just-created files from the 5/28–5/30 reviewer/docs push. These are "new," not "fragile," and we are ignoring them.
+- Pink files that are **also hotspots** (large AND ≥3 edits, one author): `functions/src/reviewer/pdf/render.ts` (615 lines), `functions/src/reviewer/rpc.ts` (261 lines, 4 edits), `functions/src/reviewer/verifyPayment.ts` (266 lines).
+- Pink files that are **also architectural centers**: `functions/src/reviewer/rpc.ts` — the JSON-RPC entry point that every reviewer method routes through; `src/agents/reviewerClient.ts` (244 lines) — the only frontend bridge into that backend.
 
-Biggest single-person dependency: <one sentence — "If X is unavailable, we can't Y">
+**Biggest single-person dependency:** The entire `functions/src/reviewer/` subsystem — including the largest file in the repo (`pdf/render.ts`, 615 lines) and the JSON-RPC entry point (`rpc.ts`, 261 lines) — is ~100% written by a single author. If that person is unavailable for a week, no one else can change payment verification (`verifyPayment.ts`) or server-side PDF generation — which is the product's core paid feature.
 
 ## Top 5 findings
 
@@ -48,13 +48,12 @@ Biggest single-person dependency: <one sentence — "If X is unavailable, we can
 - **Unused exports (ts-prune):** ~6 genuinely unused after filtering `(used in module)` false positives — notably `useUser` hook, and orphan types in `stages.ts`, `sessionStore.ts`, `CodeReview.ts`, `VaultReceipt.ts`.
 
 ## What we'd fix first, and why
+Finding #1 first: the reviewer backend is simultaneously the most concentrated (one author), the largest (615-line file), and the most business-critical (it *is* the paid product). The cheapest immediate mitigation is not a rewrite but knowledge transfer — a walkthrough + a short `functions/src/reviewer/README.md` (one already exists; expand it) so a second person can at least navigate it. The CSS duplication (#2, #3) is a fast, low-risk win: extract one shared stylesheet/layout and import it.
 
-<2–3 sentences>
 
 ## Lessons for the next project
 
-Each phrased as "Next time, we will \_\_\_":
+1. **(structure)** Next time, we will keep one shared stylesheet/layout primitive from day one and *import* it — never copy CSS between pages — so a style change happens in exactly one place.
+2. **(structure)** Next time, we will not let any single subsystem (like the reviewer backend) be touched by only one person — we will require at least one commit or review from a second teammate before a subsystem grows past a few files.
+3. **(process)** Next time, we will run `ts-prune` and `jscpd` in CI from the first week, so dead exports and duplicated blocks get flagged on the PR that introduces them instead of being discovered at the end.
 
-1. ...
-2. ...
-3. ...
