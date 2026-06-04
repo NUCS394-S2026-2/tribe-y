@@ -91,7 +91,7 @@ How we use the project tool:
 - Strict TypeScript enabled across the repo
 - No `@ts-ignore` or `any` without formal justification
 - PRs require implementation notes, screenshots, and testing evidence
-- Team Blue used feature branches and code review before merging
+- Tribe Y used feature branches and code review before merging
 
 ### What changed since Iteration 0
 
