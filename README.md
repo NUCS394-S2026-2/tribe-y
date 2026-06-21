@@ -50,8 +50,8 @@ The entire user journey runs through `/chat`. The other routes are explanatory p
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url>
-cd compass-tne-ai
+git clone https://github.com/NUCS394-S2026-2/tribe-y.git
+cd tribe-y
 npm install
 ```
 
