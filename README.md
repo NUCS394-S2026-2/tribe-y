@@ -31,7 +31,10 @@ The entire user journey runs through `/chat`. The other routes are explanatory p
 - **React 19 SPA** with `react-router-dom` (routes in `src/App.tsx`).
 - **Chat orchestrator** (`src/chat/orchestrator/`) owns in-memory session state, runs the routing classifier, and dispatches to stateless agent services in `src/agents/`.
 - **Solana wallet adapter** (`src/wallet/`) — Phantom + Solflare adapters wrapped in a `WalletShell` that is lazy-loaded so the wallet bundle is not shipped on initial page load.
-- **Firebase** — Auth, Firestore (`firestore.rules`), and Cloud Functions in `functions/src/reviewer/` that proxy Gemini, gate full reviews on payment status (HTTP 402 when unpaid via `x402Middleware.ts`), verify Solana payments (`verifyPayment.ts`), and serve the agent card / JSON-RPC endpoint.
+- **Firebase** — Auth, Firestore (`firestore.rules`), and Cloud Functions exported from `functions/src/index.ts`:
+  - `geminiMessages` (`functions/src/geminiMessages.ts`) — authenticated Gemini proxy used by the chat.
+  - `agentCard` (`functions/src/reviewer/agentCard.ts`) — A2A discovery document at `/.well-known/agent.json`.
+  - `reviewerRpc` (`functions/src/reviewer/rpc.ts`) — public JSON-RPC endpoint that gates full reviews behind `x402Middleware.ts` (HTTP 402 until `verifyPayment.ts` confirms a finalized Solana transaction).
 
 ---
 
@@ -147,10 +150,11 @@ src/
   shared/              Firebase init, routing classifier, hooks, types, styles
   wallet/              Solana wallet shell (lazy-loaded), connect button, pay quote
 functions/src/
-  geminiMessages.ts    HTTP Gemini proxy
-  middleware/          Auth verification
-  reviewer/            JSON-RPC endpoint, agent card, x402 middleware, payment verification, PDF generation
-vite-plugins/api-proxy.ts  Dev-only Gemini proxy plugin (mirrors the deployed function)
+  index.ts             Function exports (geminiMessages, agentCard, reviewerRpc)
+  geminiMessages.ts    Authenticated Gemini proxy for the chat
+  middleware/          verifyAuth
+  reviewer/            agent card, JSON-RPC endpoint, x402 middleware, payment verification, PDF generation, server-side Gemini call
+vite-plugins/api-proxy.ts  Dev-only Gemini proxy plugin (mirrors geminiMessages for `npm run dev`)
 ```
 
 ---
